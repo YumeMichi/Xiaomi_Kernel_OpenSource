@@ -15,3 +15,5 @@ obj-$(CONFIG_SMB1398_CHARGER)		+= smb1398-charger.o pmic-voter.o
 obj-$(CONFIG_QPNP_SMBLITE)		+= step-chg-jeita.o battery.o qpnp-smblite.o smblite-lib.o pmic-voter.o storm-watch.o schgm-flashlite.o
 obj-$(CONFIG_QPNP_VM_BMS)		+= qpnp-vm-bms.o batterydata-lib.o batterydata-interface.o
 obj-$(CONFIG_QPNP_LINEAR_CHARGER)	+= qpnp-linear-charger.o
+
+obj-$(CONFIG_QPNP_SMB5_PIPA)		+= step-chg-jeita-pipa.o battery.o qpnp-smb5-pipa.o smb5-lib-pipa.o pmic-voter.o storm-watch.o schgm-flash.o
