@@ -65,10 +65,6 @@ ifdef CONFIG_SND_SOC_WCD938X_SLAVE
 	WCD938X_SLAVE_OBJS += wcd938x-slave.o
 endif
 
-ifneq (,$(filter $(TARGET_PRODUCT), dagu pipa))
-	CDEFINES += -DCONFIG_MMHARDWARE_DETECTION
-endif
-
 LINUX_INC +=	-Iinclude/linux
 
 INCS +=		$(COMMON_INC) \

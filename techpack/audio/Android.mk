@@ -18,9 +18,6 @@ include $(MY_LOCAL_PATH)/include/uapi/Android.mk
 include $(MY_LOCAL_PATH)/ipc/Android.mk
 include $(MY_LOCAL_PATH)/dsp/Android.mk
 include $(MY_LOCAL_PATH)/dsp/codecs/Android.mk
-ifeq ($(TARGET_PRODUCT), $(filter $(TARGET_PRODUCT), dagu pipa))
-include $(MY_LOCAL_PATH)/dsp/mmhardware/Android.mk
-endif
 include $(MY_LOCAL_PATH)/soc/Android.mk
 include $(MY_LOCAL_PATH)/asoc/Android.mk
 include $(MY_LOCAL_PATH)/asoc/codecs/Android.mk
