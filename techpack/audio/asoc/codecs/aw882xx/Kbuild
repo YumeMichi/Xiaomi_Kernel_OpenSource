@@ -80,10 +80,6 @@ ifdef CONFIG_SND_SOC_AW882XX
 	AW882XX_OBJS += src/aw882xx_spin.o
 endif
 
-ifeq ($(CONFIG_MACH_XIAOMI_PIPA), y)
-CDEFINES += -DCONFIG_MMHARDWARE_DETECTION
-endif
-
 LINUX_INC += -Iinclude/linux
 
 INCS +=	$(COMMON_INC) \
