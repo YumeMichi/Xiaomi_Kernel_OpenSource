@@ -17,3 +17,5 @@ obj-$(CONFIG_QPNP_VM_BMS)		+= qpnp-vm-bms.o batterydata-lib.o batterydata-interf
 obj-$(CONFIG_QPNP_LINEAR_CHARGER)	+= qpnp-linear-charger.o
 
 obj-$(CONFIG_QPNP_SMB5_PIPA)		+= step-chg-jeita-pipa.o battery.o qpnp-smb5-pipa.o smb5-lib-pipa.o pmic-voter.o storm-watch.o schgm-flash.o
+obj-$(CONFIG_QPNP_FG_GEN4_PIPA)		+= qpnp-fg-gen4-pipa.o fg-memif.o fg-util.o fg-alg.o pmic-voter.o
+obj-$(CONFIG_FUDA_1665)			+= nu1665.o
