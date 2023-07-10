@@ -47,7 +47,9 @@
 #include "debug.h"
 #include "xhci.h"
 
+#ifndef CONFIG_NO_PS_USB3
 #include "../pd/ps5169.h"
+#endif
 
 static bool bc12_compliance;
 module_param(bc12_compliance, bool, 0644);
@@ -68,6 +70,10 @@ MODULE_PARM_DESC(bc12_compliance, "Disable sending dp pulse for CDP");
 /* XHCI registers */
 #define USB3_HCSPARAMS1		(0x4)
 #define USB3_PORTSC		(0x420)
+
+#define DWC3_LLUCTL    0xd024
+/* Force Gen1 speed on Gen2 link */
+#define DWC3_LLUCTL_FORCE_GEN1 BIT(10)
 
 /**
  *  USB QSCRATCH Hardware registers
@@ -366,6 +372,7 @@ struct dwc3_msm {
 	u64			dummy_gsi_db;
 	dma_addr_t		dummy_gsi_db_dma;
 	int			orientation_override;
+	bool			force_gen1;
 	bool			usb_data_enabled;
 };
 
@@ -520,9 +527,12 @@ static inline bool dwc3_msm_is_superspeed(struct dwc3_msm *mdwc)
 	if (mdwc->in_host_mode) {
 		ret = dwc3_msm_is_host_superspeed(mdwc);
 		dev_info(mdwc->dev, "%s: host SS:%d.\n", __func__,ret);
-	} else {
+	} else if (mdwc->in_device_mode) {
 		ret =  dwc3_msm_is_dev_superspeed(mdwc);
 		dev_info(mdwc->dev, "%s: device SS:%d.\n", __func__, ret);
+	} else {
+		dev_info(mdwc->dev, "%s: Null Insert.\n", __func__);
+		return 0;
 	}
 
 	return ret;
@@ -2301,6 +2311,9 @@ static void dwc3_msm_power_collapse_por(struct dwc3_msm *mdwc)
 		dwc3_en_sleep_mode(dwc);
 	}
 
+	/* Force Gen1 speed on Gen2 controller if required */
+	if (mdwc->force_gen1)
+		 dwc3_msm_write_reg_field(mdwc->base, DWC3_LLUCTL,  DWC3_LLUCTL_FORCE_GEN1, 1);
 }
 
 static int dwc3_msm_prepare_suspend(struct dwc3_msm *mdwc)
@@ -3615,9 +3628,9 @@ static ssize_t super_speed_show(struct device *dev, struct device_attribute *att
 				char *buf)
 {
 	int ret=0;
-	struct dwc3_msm *mdwc = dev_get_drvdata(dev);
+	//struct dwc3_msm *mdwc = dev_get_drvdata(dev);
 
-	ret = dwc3_msm_is_superspeed(mdwc);
+	//ret = dwc3_msm_is_superspeed(mdwc);
 	pr_err("super speed value: %d \n",ret);
 	return snprintf(buf, PAGE_SIZE, "%s\n",
 			ret ? "true" : "false");
@@ -4120,6 +4133,7 @@ static int dwc3_msm_probe(struct platform_device *pdev)
 	}
 
 	mutex_init(&mdwc->suspend_resume_mutex);
+	mdwc->force_gen1 = of_property_read_bool(node,  "qcom,force-gen1");
 
 	/* set the initial value */
 	mdwc->usb_data_enabled = true;
@@ -4496,8 +4510,10 @@ static int dwc3_otg_start_host(struct dwc3_msm *mdwc, int on)
 		schedule_delayed_work(&mdwc->perf_vote_work,
 				msecs_to_jiffies(1000 * PM_QOS_SAMPLE_SEC));
 
+#ifndef CONFIG_NO_PS_USB3
 		if (!has_dp_flag)
 			ps5169_cfg_usb();
+#endif
 
 	} else {
 		dev_dbg(mdwc->dev, "%s: turn off host\n", __func__);
@@ -4619,8 +4635,10 @@ static int dwc3_otg_start_peripheral(struct dwc3_msm *mdwc, int on)
 		schedule_delayed_work(&mdwc->perf_vote_work,
 				msecs_to_jiffies(1000 * PM_QOS_SAMPLE_SEC));
 
+#ifndef CONFIG_NO_PS_USB3
 		if (!has_dp_flag)
 			ps5169_cfg_usb();
+#endif
 
 	} else {
 		dev_dbg(mdwc->dev, "%s: turn off gadget %s\n",

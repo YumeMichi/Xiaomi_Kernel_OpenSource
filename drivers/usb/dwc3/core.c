@@ -1341,8 +1341,12 @@ static void dwc3_get_properties(struct dwc3 *dwc)
 				 &dwc->fladj);
 	dwc->enable_bus_suspend = device_property_read_bool(dev,
 					"snps,bus-suspend-enable");
-	dwc->usb3_u1u2_disable = device_property_read_bool(dev,
-					"snps,usb3-u1u2-disable");
+	dwc->close_u1u2_function = device_property_read_bool(dev,
+					"snps,close-u1u2-function");
+	dev_err(dev, "dwc->close_u1u2_function=%d\n", dwc->close_u1u2_function);
+	if (!dwc->close_u1u2_function)
+		dwc->usb3_u1u2_disable = device_property_read_bool(dev,
+						"snps,usb3-u1u2-disable");
 	dwc->disable_clk_gating = device_property_read_bool(dev,
 					"snps,disable-clk-gating");
 

@@ -22,7 +22,10 @@
 #include <linux/usb/usbpd.h>
 #include <linux/pmic-voter.h>
 #include "usbpd.h"
+
+#ifndef CONFIG_NO_PS_USB3
 #include "ps5169.h"
+#endif
 
 enum usbpd_state {
 	PE_UNKNOWN,
@@ -1019,11 +1022,9 @@ static int pd_select_pdo(struct usbpd *pd, int pdo_pos, int uv, int ua)
 	pd->requested_current = curr;
 	pd->requested_pdo = pdo_pos;
 
-#ifdef CONFIG_MACH_XIAOMI_DAGU
 	if ((pd->requested_pdo == 1) && (pd->requested_current > 2500)) {
 		pd->requested_current = 2500;
 	}
-#endif
 
 	return 0;
 }
@@ -1130,19 +1131,11 @@ static int pd_eval_src_caps(struct usbpd *pd)
 
 	/* Select the first PDO (vSafe5V) immediately. */
 	/* Select thr first PDO for zimi adapter*/
-#ifndef CONFIG_MACH_XIAOMI_MUNCH
 	if (pd->batt_2s && pd->adapter_id == 0xA819)
 		pd_select_pdo(pd, 2, 0, 0);
 	else if (pd->request_reject == 1) {
-#ifndef CONFIG_MACH_XIAOMI_DAGU
-		if (pd->rdo == 0) {
-			usbpd_err(&pd->dev, "Invalid rdo, first pdo %08x\n", first_pdo);
-			pd_select_pdo(pd, 1, 0, 0);
-		}
-		usbpd_err(&pd->dev, "request reject setted!\n");
-#endif
+		;
 	} else
-#endif
 		pd_select_pdo(pd, 1, 0, 0);
 
 	return 0;
@@ -1958,17 +1951,6 @@ static void handle_vdm_tx(struct usbpd *pd, enum pd_sop_type sop_type)
 	 * PD 3.0: For initiated SVDMs, source must first ensure Rp is set
 	 * to SinkTxNG to indicate the start of an AMS
 	 */
-#ifndef CONFIG_MACH_XIAOMI_DAGU
-	if (VDM_IS_SVDM(vdm_hdr) &&
-		SVDM_HDR_CMD_TYPE(vdm_hdr) == SVDM_CMD_TYPE_INITIATOR &&
-		pd->current_pr == PR_SRC && !in_src_ams(pd)) {
-		/* Set SinkTxNG and reschedule sm_work to send again */
-		start_src_ams(pd, true);
-		mutex_unlock(&pd->svid_handler_lock);
-		return;
-	}
-#endif
-
 	ret = pd_send_msg(pd, MSG_VDM, pd->vdm_tx->data,
 			pd->vdm_tx->size, sop_type);
 	if (ret) {
@@ -2988,10 +2970,6 @@ static void handle_state_snk_wait_for_capabilities(struct usbpd *pd,
 					pd->received_pdos[i] = 0x00;
 		}
 
-#ifndef CONFIG_MACH_XIAOMI_MUNCH
-		if (pd->request_reject)
-			pd->request_reject = false;
-#endif
 		pd->src_cap_id++;
 
 		usbpd_set_state(pd, PE_SNK_EVALUATE_CAPABILITY);
@@ -3887,6 +3865,12 @@ static void handle_disconnect(struct usbpd *pd)
 					POWER_SUPPLY_PROP_HAS_DP, &pval);
 		}
 	}
+
+	if (pd->ps_psy) {
+		pval.intval = 0;
+		power_supply_set_property(pd->ps_psy,
+				POWER_SUPPLY_PROP_PS_EN, &pval);
+	}
 }
 
 static void handle_hard_reset(struct usbpd *pd)
@@ -4017,13 +4001,8 @@ sm_done:
 	spin_unlock_irqrestore(&pd->rx_lock, flags);
 
 	/* requeue if there are any new/pending RX messages */
-	if (!ret &&
-		((!IS_ENABLED(CONFIG_MACH_XIAOMI_MUNCH) &&
-		  !IS_ENABLED(CONFIG_MACH_XIAOMI_DAGU)) || !pd->sm_queued)
-	) {
-		usbpd_dbg(&pd->dev, "Requeuing new/pending RX messages\n");
+	if (!ret && !pd->sm_queued)
 		kick_sm(pd, 0);
-	}
 
 	if (!pd->sm_queued)
 		pm_relax(&pd->dev);
@@ -4990,8 +4969,7 @@ static ssize_t usbpd_verifed_store(struct device *dev,
 		}
 	}
 
-	if (!pd->verifed && !pd->pps_found && !pd->fix_pdo_5v
-			&& (!IS_ENABLED(CONFIG_MACH_XIAOMI_DAGU) || !pd->has_dp))
+	if (!pd->verifed && !pd->pps_found && !pd->fix_pdo_5v && !pd->has_dp)
 		schedule_delayed_work(&pd->fixed_pdo_work, 5 * HZ);
 
 	return size;
@@ -5659,11 +5637,9 @@ static void usbpd_fixed_pdo_workfunc(struct work_struct *w)
 	union power_supply_propval val = {0};
 	int ret;
 
-#ifdef CONFIG_MACH_XIAOMI_DAGU
 	if (pd->has_dp) {
 		return;
 	}
-#endif
 
 	ret = power_supply_get_property(pd->usb_psy,
 			POWER_SUPPLY_PROP_PD_ACTIVE, &val);
@@ -5744,7 +5720,7 @@ static void usbpd_pdo_workfunc(struct work_struct *w)
 					pd->is_support_2s = true;
 			}
 			if (pps_max_watts < max_volt * max_curr) {
-				if (!IS_ENABLED(CONFIG_MACH_XIAOMI_DAGU) || max_volt < 20000)
+				if (max_volt < 20000)
 					pps_max_watts = max_volt * max_curr;
 				if(pps_max_watts >120000000 && pps_max_watts < 130000000)
 					pps_max_watts = 120000000;
@@ -5765,11 +5741,7 @@ static void usbpd_pdo_workfunc(struct work_struct *w)
 		pps_max_mwatt = pps_max_watts / 1000  / 1000;
 		if (pps_max_mwatt != pd->apdo_max) {
 			pd->apdo_max = pps_max_mwatt;
-#ifdef CONFIG_MACH_XIAOMI_MUNCH
-			val.intval = pps_max_mwatt;
-#else
 			val.intval = min(pps_max_mwatt, pd->power_max);
-#endif
 			power_supply_set_property(pd->usb_psy,
 					POWER_SUPPLY_PROP_APDO_MAX, &val);
 			usbpd_err(&pd->dev, "pps_max_watts[%d]\n", pps_max_mwatt);
