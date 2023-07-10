@@ -13,7 +13,7 @@ void crm_timer_reset(struct cam_req_mgr_timer *crm_timer)
 	CAM_DBG(CAM_CRM, "Starting timer to fire in %d ms. (jiffies=%lu)\n",
 		crm_timer->expires, jiffies);
 	mod_timer(&crm_timer->sys_timer,
-		(jiffies + msecs_to_jiffies(crm_timer->expires)));
+		  (jiffies + msecs_to_jiffies(crm_timer->expires)));
 }
 
 void crm_timer_callback(struct timer_list *timer_data)
@@ -28,8 +28,7 @@ void crm_timer_callback(struct timer_list *timer_data)
 	crm_timer_reset(timer);
 }
 
-void crm_timer_modify(struct cam_req_mgr_timer *crm_timer,
-	int32_t expires)
+void crm_timer_modify(struct cam_req_mgr_timer *crm_timer, int32_t expires)
 {
 	CAM_DBG(CAM_CRM, "new time %d", expires);
 	if (crm_timer) {
@@ -38,17 +37,17 @@ void crm_timer_modify(struct cam_req_mgr_timer *crm_timer,
 	}
 }
 
-int crm_timer_init(struct cam_req_mgr_timer **timer,
-	int32_t expires, void *parent, void (*timer_cb)(struct timer_list *))
+int crm_timer_init(struct cam_req_mgr_timer **timer, int32_t expires,
+		   void *parent, void (*timer_cb)(struct timer_list *))
 {
-	int                       ret = 0;
+	int ret = 0;
 	struct cam_req_mgr_timer *crm_timer = NULL;
 
 	CAM_DBG(CAM_CRM, "init timer %d %pK", expires, *timer);
 	if (*timer == NULL) {
 		if (g_cam_req_mgr_timer_cachep) {
 			crm_timer = kmem_cache_alloc(g_cam_req_mgr_timer_cachep,
-					__GFP_ZERO | GFP_KERNEL);
+						     __GFP_ZERO | GFP_KERNEL);
 			if (!crm_timer) {
 				ret = -ENOMEM;
 				goto end;
@@ -67,8 +66,7 @@ int crm_timer_init(struct cam_req_mgr_timer **timer,
 
 		crm_timer->expires = expires;
 		crm_timer->parent = parent;
-		timer_setup(&crm_timer->sys_timer,
-			crm_timer->timer_cb, 0);
+		timer_setup(&crm_timer->sys_timer, crm_timer->timer_cb, 0);
 		crm_timer_reset(crm_timer);
 		*timer = crm_timer;
 	} else {

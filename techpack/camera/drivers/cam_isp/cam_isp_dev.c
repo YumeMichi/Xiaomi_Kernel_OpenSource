@@ -21,9 +21,10 @@
 
 static struct cam_isp_dev g_isp_dev;
 
-static void cam_isp_dev_iommu_fault_handler(
-	struct iommu_domain *domain, struct device *dev, unsigned long iova,
-	int flags, void *token, uint32_t buf_info)
+static void cam_isp_dev_iommu_fault_handler(struct iommu_domain *domain,
+					    struct device *dev,
+					    unsigned long iova, int flags,
+					    void *token, uint32_t buf_info)
 {
 	int i = 0;
 	struct cam_node *node = NULL;
@@ -36,19 +37,16 @@ static void cam_isp_dev_iommu_fault_handler(
 	node = (struct cam_node *)token;
 
 	for (i = 0; i < node->ctx_size; i++)
-		cam_context_dump_pf_info(&(node->ctx_list[i]), iova,
-			buf_info);
+		cam_context_dump_pf_info(&(node->ctx_list[i]), iova, buf_info);
 }
 
 static const struct of_device_id cam_isp_dt_match[] = {
-	{
-		.compatible = "qcom,cam-isp"
-	},
+	{ .compatible = "qcom,cam-isp" },
 	{}
 };
 
 static int cam_isp_subdev_open(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+			       struct v4l2_subdev_fh *fh)
 {
 	mutex_lock(&g_isp_dev.isp_mutex);
 	g_isp_dev.open_cnt++;
@@ -58,7 +56,7 @@ static int cam_isp_subdev_open(struct v4l2_subdev *sd,
 }
 
 static int cam_isp_subdev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				struct v4l2_subdev_fh *fh)
 {
 	int rc = 0;
 	struct cam_node *node = v4l2_get_subdevdata(sd);
@@ -99,8 +97,7 @@ static int cam_isp_dev_remove(struct platform_device *pdev)
 	for (i = 0; i < CAM_CTX_MAX; i++) {
 		rc = cam_isp_context_deinit(&g_isp_dev.ctx_isp[i]);
 		if (rc)
-			CAM_ERR(CAM_ISP, "ISP context %d deinit failed",
-				 i);
+			CAM_ERR(CAM_ISP, "ISP context %d deinit failed", i);
 	}
 
 	rc = cam_subdev_remove(&g_isp_dev.sd);
@@ -115,19 +112,19 @@ static int cam_isp_dev_probe(struct platform_device *pdev)
 {
 	int rc = -1;
 	int i;
-	struct cam_hw_mgr_intf         hw_mgr_intf;
-	struct cam_node               *node;
+	struct cam_hw_mgr_intf hw_mgr_intf;
+	struct cam_node *node;
 	int iommu_hdl = -1;
 
 	g_isp_dev.sd.internal_ops = &cam_isp_subdev_internal_ops;
 	/* Initialize the v4l2 subdevice first. (create cam_node) */
 	rc = cam_subdev_probe(&g_isp_dev.sd, pdev, CAM_ISP_DEV_NAME,
-		CAM_IFE_DEVICE_TYPE);
+			      CAM_IFE_DEVICE_TYPE);
 	if (rc) {
 		CAM_ERR(CAM_ISP, "ISP cam_subdev_probe failed!");
 		goto err;
 	}
-	node = (struct cam_node *) g_isp_dev.sd.token;
+	node = (struct cam_node *)g_isp_dev.sd.token;
 
 	memset(&hw_mgr_intf, 0, sizeof(hw_mgr_intf));
 	rc = cam_isp_hw_mgr_init(pdev->dev.of_node, &hw_mgr_intf, &iommu_hdl);
@@ -138,10 +135,9 @@ static int cam_isp_dev_probe(struct platform_device *pdev)
 
 	for (i = 0; i < CAM_CTX_MAX; i++) {
 		rc = cam_isp_context_init(&g_isp_dev.ctx_isp[i],
-			&g_isp_dev.ctx[i],
-			&node->crm_node_intf,
-			&node->hw_mgr_intf,
-			i);
+					  &g_isp_dev.ctx[i],
+					  &node->crm_node_intf,
+					  &node->hw_mgr_intf, i);
 		if (rc) {
 			CAM_ERR(CAM_ISP, "ISP context init failed!");
 			goto unregister;
@@ -149,14 +145,14 @@ static int cam_isp_dev_probe(struct platform_device *pdev)
 	}
 
 	rc = cam_node_init(node, &hw_mgr_intf, g_isp_dev.ctx, CAM_CTX_MAX,
-		CAM_ISP_DEV_NAME);
+			   CAM_ISP_DEV_NAME);
 	if (rc) {
 		CAM_ERR(CAM_ISP, "ISP node init failed!");
 		goto unregister;
 	}
 
-	cam_smmu_set_client_page_fault_handler(iommu_hdl,
-		cam_isp_dev_iommu_fault_handler, node);
+	cam_smmu_set_client_page_fault_handler(
+		iommu_hdl, cam_isp_dev_iommu_fault_handler, node);
 
 	mutex_init(&g_isp_dev.isp_mutex);
 
@@ -168,7 +164,6 @@ unregister:
 err:
 	return rc;
 }
-
 
 static struct platform_driver isp_driver = {
 	.probe = cam_isp_dev_probe,

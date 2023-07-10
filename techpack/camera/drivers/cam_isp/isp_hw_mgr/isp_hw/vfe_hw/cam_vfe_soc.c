@@ -9,7 +9,7 @@
 #include "cam_debug_util.h"
 
 static bool cam_vfe_cpas_cb(uint32_t client_handle, void *userdata,
-	struct cam_cpas_irq_data *irq_data)
+			    struct cam_cpas_irq_data *irq_data)
 {
 	bool error_handled = false;
 
@@ -22,9 +22,9 @@ static bool cam_vfe_cpas_cb(uint32_t client_handle, void *userdata,
 	case CAM_CAMNOC_IRQ_IFE0_UBWC_ENCODE_ERROR:
 	case CAM_CAMNOC_IRQ_IFE1_WRITE_UBWC_ENCODE_ERROR:
 		CAM_ERR_RATE_LIMIT(CAM_ISP,
-			"IFE UBWC Encode error type=%d status=%x",
-			irq_data->irq_type,
-			irq_data->u.enc_err.encerr_status.value);
+				   "IFE UBWC Encode error type=%d status=%x",
+				   irq_data->irq_type,
+				   irq_data->u.enc_err.encerr_status.value);
 		error_handled = true;
 		break;
 	default:
@@ -53,15 +53,15 @@ static int cam_vfe_get_dt_properties(struct cam_hw_soc_info *soc_info)
 
 	vfe_soc_private->is_ife_lite = false;
 	if (strnstr(soc_info->compatible, "lite",
-		strlen(soc_info->compatible)) != NULL) {
+		    strlen(soc_info->compatible)) != NULL) {
 		vfe_soc_private->is_ife_lite = true;
 		goto end;
 	}
 
 	switch (soc_info->hw_version) {
 	case CAM_CPAS_TITAN_480_V100:
-		num_ubwc_cfg = of_property_count_u32_elems(of_node,
-			"ubwc-static-cfg");
+		num_ubwc_cfg =
+			of_property_count_u32_elems(of_node, "ubwc-static-cfg");
 
 		if (num_ubwc_cfg < 0 || num_ubwc_cfg > UBWC_STATIC_CONFIG_MAX) {
 			CAM_ERR(CAM_ISP, "wrong num_ubwc_cfg: %d",
@@ -71,8 +71,8 @@ static int cam_vfe_get_dt_properties(struct cam_hw_soc_info *soc_info)
 		}
 
 		for (i = 0; i < num_ubwc_cfg; i++) {
-			rc = of_property_read_u32_index(of_node,
-				"ubwc-static-cfg", i,
+			rc = of_property_read_u32_index(
+				of_node, "ubwc-static-cfg", i,
 				&vfe_soc_private->ubwc_static_ctrl[i]);
 			if (rc < 0) {
 				CAM_ERR(CAM_ISP,
@@ -89,14 +89,14 @@ end:
 	return rc;
 }
 
-static int cam_vfe_request_platform_resource(
-	struct cam_hw_soc_info *soc_info,
-	irq_handler_t vfe_irq_handler, void *irq_data)
+static int cam_vfe_request_platform_resource(struct cam_hw_soc_info *soc_info,
+					     irq_handler_t vfe_irq_handler,
+					     void *irq_data)
 {
 	int rc = 0;
 
 	rc = cam_soc_util_request_platform_resource(soc_info, vfe_irq_handler,
-		irq_data);
+						    irq_data);
 	if (rc)
 		CAM_ERR(CAM_ISP,
 			"Error! Request platform resource failed rc=%d", rc);
@@ -117,14 +117,13 @@ static int cam_vfe_release_platform_resource(struct cam_hw_soc_info *soc_info)
 }
 
 int cam_vfe_init_soc_resources(struct cam_hw_soc_info *soc_info,
-	irq_handler_t vfe_irq_handler, void *irq_data)
+			       irq_handler_t vfe_irq_handler, void *irq_data)
 {
-	int                               rc = 0;
-	struct cam_vfe_soc_private       *soc_private;
-	struct cam_cpas_register_params   cpas_register_param;
+	int rc = 0;
+	struct cam_vfe_soc_private *soc_private;
+	struct cam_cpas_register_params cpas_register_param;
 
-	soc_private = kzalloc(sizeof(struct cam_vfe_soc_private),
-		GFP_KERNEL);
+	soc_private = kzalloc(sizeof(struct cam_vfe_soc_private), GFP_KERNEL);
 	if (!soc_private) {
 		CAM_DBG(CAM_ISP, "Error! soc_private Alloc Failed");
 		return -ENOMEM;
@@ -144,14 +143,15 @@ int cam_vfe_init_soc_resources(struct cam_hw_soc_info *soc_info,
 		goto free_soc_private;
 	}
 
-	rc = cam_soc_util_get_option_clk_by_name(soc_info,
-		CAM_VFE_DSP_CLK_NAME, &soc_private->dsp_clk,
-		&soc_private->dsp_clk_index, &soc_private->dsp_clk_rate);
+	rc = cam_soc_util_get_option_clk_by_name(soc_info, CAM_VFE_DSP_CLK_NAME,
+						 &soc_private->dsp_clk,
+						 &soc_private->dsp_clk_index,
+						 &soc_private->dsp_clk_rate);
 	if (rc)
 		CAM_WARN(CAM_ISP, "Option clk get failed with rc %d", rc);
 
 	rc = cam_vfe_request_platform_resource(soc_info, vfe_irq_handler,
-		irq_data);
+					       irq_data);
 	if (rc < 0) {
 		CAM_ERR(CAM_ISP,
 			"Error! Request platform resources failed rc=%d", rc);
@@ -184,8 +184,8 @@ free_soc_private:
 
 int cam_vfe_deinit_soc_resources(struct cam_hw_soc_info *soc_info)
 {
-	int                               rc = 0;
-	struct cam_vfe_soc_private       *soc_private;
+	int rc = 0;
+	struct cam_vfe_soc_private *soc_private;
 
 	if (!soc_info) {
 		CAM_ERR(CAM_ISP, "Error! soc_info NULL");
@@ -209,8 +209,7 @@ int cam_vfe_deinit_soc_resources(struct cam_hw_soc_info *soc_info)
 
 	rc = cam_soc_util_clk_put(&soc_private->dsp_clk);
 	if (rc < 0)
-		CAM_ERR(CAM_ISP,
-			"Error Put dsp clk failed rc=%d", rc);
+		CAM_ERR(CAM_ISP, "Error Put dsp clk failed rc=%d", rc);
 
 	kfree(soc_private);
 
@@ -219,10 +218,10 @@ int cam_vfe_deinit_soc_resources(struct cam_hw_soc_info *soc_info)
 
 int cam_vfe_enable_soc_resources(struct cam_hw_soc_info *soc_info)
 {
-	int                               rc = 0;
-	struct cam_vfe_soc_private       *soc_private;
-	struct cam_ahb_vote               ahb_vote;
-	struct cam_axi_vote               axi_vote = {0};
+	int rc = 0;
+	struct cam_vfe_soc_private *soc_private;
+	struct cam_ahb_vote ahb_vote;
+	struct cam_axi_vote axi_vote = { 0 };
 
 	if (!soc_info) {
 		CAM_ERR(CAM_ISP, "Error! Invalid params");
@@ -231,16 +230,15 @@ int cam_vfe_enable_soc_resources(struct cam_hw_soc_info *soc_info)
 	}
 	soc_private = soc_info->soc_private;
 
-	ahb_vote.type       = CAM_VOTE_ABSOLUTE;
+	ahb_vote.type = CAM_VOTE_ABSOLUTE;
 	ahb_vote.vote.level = CAM_LOWSVS_VOTE;
 	axi_vote.num_paths = 1;
 	if (strnstr(soc_info->compatible, "lite",
-		strlen(soc_info->compatible))) {
+		    strlen(soc_info->compatible))) {
 		axi_vote.axi_path[0].path_data_type =
 			CAM_AXI_PATH_DATA_IFE_RDI1;
 	} else {
-		axi_vote.axi_path[0].path_data_type =
-			CAM_AXI_PATH_DATA_IFE_VID;
+		axi_vote.axi_path[0].path_data_type = CAM_AXI_PATH_DATA_IFE_VID;
 	}
 
 	axi_vote.axi_path[0].transac_type = CAM_AXI_TRANSACTION_WRITE;
@@ -256,7 +254,7 @@ int cam_vfe_enable_soc_resources(struct cam_hw_soc_info *soc_info)
 	}
 
 	rc = cam_soc_util_enable_platform_resource(soc_info, true,
-		CAM_TURBO_VOTE, true);
+						   CAM_TURBO_VOTE, true);
 	if (rc) {
 		CAM_ERR(CAM_ISP, "Error! enable platform failed rc=%d", rc);
 		goto stop_cpas;
@@ -271,10 +269,10 @@ end:
 }
 
 int cam_vfe_soc_enable_clk(struct cam_hw_soc_info *soc_info,
-	const char *clk_name)
+			   const char *clk_name)
 {
-	int  rc = 0;
-	struct cam_vfe_soc_private       *soc_private;
+	int rc = 0;
+	struct cam_vfe_soc_private *soc_private;
 
 	if (!soc_info) {
 		CAM_ERR(CAM_ISP, "Error Invalid params");
@@ -285,20 +283,21 @@ int cam_vfe_soc_enable_clk(struct cam_hw_soc_info *soc_info,
 
 	if (strcmp(clk_name, CAM_VFE_DSP_CLK_NAME) == 0) {
 		rc = cam_soc_util_clk_enable(soc_private->dsp_clk,
-			CAM_VFE_DSP_CLK_NAME, soc_private->dsp_clk_rate);
+					     CAM_VFE_DSP_CLK_NAME,
+					     soc_private->dsp_clk_rate);
 		if (rc)
-			CAM_ERR(CAM_ISP,
-			"Error enable dsp clk failed rc=%d", rc);
+			CAM_ERR(CAM_ISP, "Error enable dsp clk failed rc=%d",
+				rc);
 	}
 
 	return rc;
 }
 
 int cam_vfe_soc_disable_clk(struct cam_hw_soc_info *soc_info,
-	const char *clk_name)
+			    const char *clk_name)
 {
-	int  rc = 0;
-	struct cam_vfe_soc_private       *soc_private;
+	int rc = 0;
+	struct cam_vfe_soc_private *soc_private;
 
 	if (!soc_info) {
 		CAM_ERR(CAM_ISP, "Error Invalid params");
@@ -309,20 +308,19 @@ int cam_vfe_soc_disable_clk(struct cam_hw_soc_info *soc_info,
 
 	if (strcmp(clk_name, CAM_VFE_DSP_CLK_NAME) == 0) {
 		rc = cam_soc_util_clk_disable(soc_private->dsp_clk,
-			CAM_VFE_DSP_CLK_NAME);
+					      CAM_VFE_DSP_CLK_NAME);
 		if (rc)
-			CAM_ERR(CAM_ISP,
-			"Error enable dsp clk failed rc=%d", rc);
+			CAM_ERR(CAM_ISP, "Error enable dsp clk failed rc=%d",
+				rc);
 	}
 
 	return rc;
 }
 
-
 int cam_vfe_disable_soc_resources(struct cam_hw_soc_info *soc_info)
 {
 	int rc = 0;
-	struct cam_vfe_soc_private       *soc_private;
+	struct cam_vfe_soc_private *soc_private;
 
 	if (!soc_info) {
 		CAM_ERR(CAM_ISP, "Error! Invalid params");

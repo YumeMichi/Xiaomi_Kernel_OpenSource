@@ -53,7 +53,7 @@ int cam_req_mgr_util_init(void)
 		goto bitmap_alloc_fail;
 	}
 	hdl_tbl->bits = bitmap_size * BITS_PER_BYTE;
-        hdl_count = 0;
+	hdl_count = 0;
 	return rc;
 
 bitmap_alloc_fail:
@@ -97,8 +97,8 @@ int cam_req_mgr_util_free_hdls(void)
 	for (i = 0; i < CAM_REQ_MGR_MAX_HANDLES_V2; i++) {
 		if (hdl_tbl->hdl[i].state == HDL_ACTIVE) {
 			CAM_WARN(CAM_CRM, "Dev handle = %x session_handle = %x",
-				hdl_tbl->hdl[i].hdl_value,
-				hdl_tbl->hdl[i].session_hdl);
+				 hdl_tbl->hdl[i].hdl_value,
+				 hdl_tbl->hdl[i].session_hdl);
 			hdl_tbl->hdl[i].state = HDL_FREE;
 			clear_bit(i, hdl_tbl->bitmap);
 		}
@@ -315,8 +315,8 @@ static int cam_destroy_hdl(int32_t dev_hdl, int dev_hdl_type)
 	}
 
 	hdl_tbl->hdl[idx].state = HDL_FREE;
-	hdl_tbl->hdl[idx].ops   = NULL;
-	hdl_tbl->hdl[idx].priv  = NULL;
+	hdl_tbl->hdl[idx].ops = NULL;
+	hdl_tbl->hdl[idx].priv = NULL;
 	clear_bit(idx, hdl_tbl->bitmap);
 	hdl_count--;
 	spin_unlock_bh(&hdl_tbl_lock);

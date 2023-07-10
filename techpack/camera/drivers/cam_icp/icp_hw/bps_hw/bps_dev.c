@@ -29,7 +29,7 @@ EXPORT_SYMBOL(cam_bps_hw_info);
 static char bps_dev_name[8];
 
 static bool cam_bps_cpas_cb(uint32_t client_handle, void *userdata,
-	struct cam_cpas_irq_data *irq_data)
+			    struct cam_cpas_irq_data *irq_data)
 {
 	bool error_handled = false;
 
@@ -38,7 +38,8 @@ static bool cam_bps_cpas_cb(uint32_t client_handle, void *userdata,
 
 	switch (irq_data->irq_type) {
 	case CAM_CAMNOC_IRQ_IPE_BPS_UBWC_DECODE_ERROR:
-		CAM_ERR_RATE_LIMIT(CAM_ICP,
+		CAM_ERR_RATE_LIMIT(
+			CAM_ICP,
 			"IPE/BPS UBWC Decode error type=%d status=%x thr_err=%d, fcl_err=%d, len_md_err=%d, format_err=%d",
 			irq_data->irq_type,
 			irq_data->u.dec_err.decerr_status.value,
@@ -49,8 +50,8 @@ static bool cam_bps_cpas_cb(uint32_t client_handle, void *userdata,
 		error_handled = true;
 		break;
 	case CAM_CAMNOC_IRQ_IPE_BPS_UBWC_ENCODE_ERROR:
-		CAM_ERR_RATE_LIMIT(CAM_ICP,
-			"IPE/BPS UBWC Encode error type=%d status=%x",
+		CAM_ERR_RATE_LIMIT(
+			CAM_ICP, "IPE/BPS UBWC Encode error type=%d status=%x",
 			irq_data->irq_type,
 			irq_data->u.enc_err.encerr_status.value);
 		error_handled = true;
@@ -63,8 +64,8 @@ static bool cam_bps_cpas_cb(uint32_t client_handle, void *userdata,
 }
 
 int cam_bps_register_cpas(struct cam_hw_soc_info *soc_info,
-			struct cam_bps_device_core_info *core_info,
-			uint32_t hw_idx)
+			  struct cam_bps_device_core_info *core_info,
+			  uint32_t hw_idx)
 {
 	struct cam_cpas_register_params cpas_register_params;
 	int rc;
@@ -87,19 +88,19 @@ int cam_bps_register_cpas(struct cam_hw_soc_info *soc_info,
 
 int cam_bps_probe(struct platform_device *pdev)
 {
-	struct cam_hw_info            *bps_dev = NULL;
-	struct cam_hw_intf            *bps_dev_intf = NULL;
-	const struct of_device_id         *match_dev = NULL;
-	struct cam_bps_device_core_info   *core_info = NULL;
-	struct cam_bps_device_hw_info     *hw_info = NULL;
-	int                                rc = 0;
+	struct cam_hw_info *bps_dev = NULL;
+	struct cam_hw_intf *bps_dev_intf = NULL;
+	const struct of_device_id *match_dev = NULL;
+	struct cam_bps_device_core_info *core_info = NULL;
+	struct cam_bps_device_hw_info *hw_info = NULL;
+	int rc = 0;
 
 	bps_dev_intf = kzalloc(sizeof(struct cam_hw_intf), GFP_KERNEL);
 	if (!bps_dev_intf)
 		return -ENOMEM;
 
-	of_property_read_u32(pdev->dev.of_node,
-		"cell-index", &bps_dev_intf->hw_idx);
+	of_property_read_u32(pdev->dev.of_node, "cell-index",
+			     &bps_dev_intf->hw_idx);
 
 	bps_dev = kzalloc(sizeof(struct cam_hw_info), GFP_KERNEL);
 	if (!bps_dev) {
@@ -108,8 +109,8 @@ int cam_bps_probe(struct platform_device *pdev)
 	}
 
 	memset(bps_dev_name, 0, sizeof(bps_dev_name));
-	snprintf(bps_dev_name, sizeof(bps_dev_name),
-		"bps%1u", bps_dev_intf->hw_idx);
+	snprintf(bps_dev_name, sizeof(bps_dev_name), "bps%1u",
+		 bps_dev_intf->hw_idx);
 
 	bps_dev->soc_info.pdev = pdev;
 	bps_dev->soc_info.dev = &pdev->dev;
@@ -120,8 +121,8 @@ int cam_bps_probe(struct platform_device *pdev)
 	bps_dev_intf->hw_ops.process_cmd = cam_bps_process_cmd;
 	bps_dev_intf->hw_type = CAM_ICP_DEV_BPS;
 	platform_set_drvdata(pdev, bps_dev_intf);
-	bps_dev->core_info = kzalloc(sizeof(struct cam_bps_device_core_info),
-					GFP_KERNEL);
+	bps_dev->core_info =
+		kzalloc(sizeof(struct cam_bps_device_core_info), GFP_KERNEL);
 	if (!bps_dev->core_info) {
 		kfree(bps_dev);
 		kfree(bps_dev_intf);
@@ -129,8 +130,8 @@ int cam_bps_probe(struct platform_device *pdev)
 	}
 	core_info = (struct cam_bps_device_core_info *)bps_dev->core_info;
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev) {
 		CAM_ERR(CAM_ICP, "No bps hardware info");
 		kfree(bps_dev->core_info);
@@ -143,7 +144,7 @@ int cam_bps_probe(struct platform_device *pdev)
 	core_info->bps_hw_info = hw_info;
 
 	rc = cam_bps_init_soc_resources(&bps_dev->soc_info, cam_bps_irq,
-		bps_dev);
+					bps_dev);
 	if (rc < 0) {
 		CAM_ERR(CAM_ICP, "failed to init_soc");
 		kfree(bps_dev->core_info);
@@ -151,11 +152,10 @@ int cam_bps_probe(struct platform_device *pdev)
 		kfree(bps_dev_intf);
 		return rc;
 	}
-	CAM_DBG(CAM_ICP, "soc info : %pK",
-		(void *)&bps_dev->soc_info);
+	CAM_DBG(CAM_ICP, "soc info : %pK", (void *)&bps_dev->soc_info);
 
-	rc = cam_bps_register_cpas(&bps_dev->soc_info,
-			core_info, bps_dev_intf->hw_idx);
+	rc = cam_bps_register_cpas(&bps_dev->soc_info, core_info,
+				   bps_dev_intf->hw_idx);
 	if (rc < 0) {
 		kfree(bps_dev->core_info);
 		kfree(bps_dev);
@@ -166,8 +166,7 @@ int cam_bps_probe(struct platform_device *pdev)
 	mutex_init(&bps_dev->hw_mutex);
 	spin_lock_init(&bps_dev->hw_lock);
 	init_completion(&bps_dev->hw_complete);
-	CAM_DBG(CAM_ICP, "BPS%d probe successful",
-		bps_dev_intf->hw_idx);
+	CAM_DBG(CAM_ICP, "BPS%d probe successful", bps_dev_intf->hw_idx);
 
 	return rc;
 }

@@ -3,7 +3,6 @@
  * Copyright (c) 2017-2019, The Linux Foundation. All rights reserved.
  */
 
-
 #include <linux/module.h>
 #include "cam_ife_csid_core.h"
 #include "cam_ife_csid170.h"
@@ -12,10 +11,10 @@
 #include "cam_ife_csid480.h"
 #include "cam_ife_csid_dev.h"
 
-#define CAM_CSID_DRV_NAME                    "csid_17x"
-#define CAM_CSID_VERSION_V170                 0x10070000
-#define CAM_CSID_VERSION_V175                 0x10070050
-#define CAM_CSID_VERSION_V480                 0x40080000
+#define CAM_CSID_DRV_NAME "csid_17x"
+#define CAM_CSID_VERSION_V170 0x10070000
+#define CAM_CSID_VERSION_V175 0x10070050
+#define CAM_CSID_VERSION_V480 0x40080000
 
 static struct cam_ife_csid_hw_info cam_ife_csid170_hw_info = {
 	.csid_reg = &cam_ife_csid_170_reg_offset,

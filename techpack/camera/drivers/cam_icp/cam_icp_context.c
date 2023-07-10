@@ -23,12 +23,12 @@
 static const char icp_dev_name[] = "cam-icp";
 
 static int cam_icp_context_dump_active_request(void *data, unsigned long iova,
-	uint32_t buf_info)
+					       uint32_t buf_info)
 {
 	struct cam_context *ctx = (struct cam_context *)data;
-	struct cam_ctx_request          *req = NULL;
-	struct cam_ctx_request          *req_temp = NULL;
-	struct cam_hw_mgr_dump_pf_data  *pf_dbg_entry = NULL;
+	struct cam_ctx_request *req = NULL;
+	struct cam_ctx_request *req_temp = NULL;
+	struct cam_hw_mgr_dump_pf_data *pf_dbg_entry = NULL;
 	int rc = 0;
 	bool b_mem_found = false;
 
@@ -43,16 +43,16 @@ static int cam_icp_context_dump_active_request(void *data, unsigned long iova,
 		goto end;
 	}
 
-	CAM_INFO(CAM_ICP, "iommu fault for icp ctx %d state %d",
-		ctx->ctx_id, ctx->state);
+	CAM_INFO(CAM_ICP, "iommu fault for icp ctx %d state %d", ctx->ctx_id,
+		 ctx->state);
 
-	list_for_each_entry_safe(req, req_temp,
-			&ctx->active_req_list, list) {
+	list_for_each_entry_safe (req, req_temp, &ctx->active_req_list, list) {
 		pf_dbg_entry = &(req->pf_data);
 		CAM_INFO(CAM_ICP, "req_id : %lld", req->request_id);
 
 		rc = cam_context_dump_pf_info_to_hw(ctx, pf_dbg_entry->packet,
-			iova, buf_info, &b_mem_found);
+						    iova, buf_info,
+						    &b_mem_found);
 		if (rc)
 			CAM_ERR(CAM_ICP, "Failed to dump pf info");
 
@@ -66,7 +66,7 @@ end:
 }
 
 static int __cam_icp_acquire_dev_in_available(struct cam_context *ctx,
-	struct cam_acquire_dev_cmd *cmd)
+					      struct cam_acquire_dev_cmd *cmd)
 {
 	int rc;
 
@@ -80,7 +80,7 @@ static int __cam_icp_acquire_dev_in_available(struct cam_context *ctx,
 }
 
 static int __cam_icp_release_dev_in_acquired(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+					     struct cam_release_dev_cmd *cmd)
 {
 	int rc;
 
@@ -94,7 +94,7 @@ static int __cam_icp_release_dev_in_acquired(struct cam_context *ctx,
 }
 
 static int __cam_icp_start_dev_in_acquired(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+					   struct cam_start_stop_dev_cmd *cmd)
 {
 	int rc;
 
@@ -108,7 +108,7 @@ static int __cam_icp_start_dev_in_acquired(struct cam_context *ctx,
 }
 
 static int __cam_icp_flush_dev_in_ready(struct cam_context *ctx,
-	struct cam_flush_dev_cmd *cmd)
+					struct cam_flush_dev_cmd *cmd)
 {
 	int rc;
 
@@ -120,7 +120,7 @@ static int __cam_icp_flush_dev_in_ready(struct cam_context *ctx,
 }
 
 static int __cam_icp_config_dev_in_ready(struct cam_context *ctx,
-	struct cam_config_dev_cmd *cmd)
+					 struct cam_config_dev_cmd *cmd)
 {
 	int rc;
 	size_t len;
@@ -128,8 +128,8 @@ static int __cam_icp_config_dev_in_ready(struct cam_context *ctx,
 	struct cam_packet *packet;
 	size_t remain_len = 0;
 
-	rc = cam_mem_get_cpu_buf((int32_t) cmd->packet_handle,
-		&packet_addr, &len);
+	rc = cam_mem_get_cpu_buf((int32_t)cmd->packet_handle, &packet_addr,
+				 &len);
 	if (rc) {
 		CAM_ERR(CAM_ICP, "[%s][%d] Can not get packet address",
 			ctx->dev_name, ctx->ctx_id);
@@ -139,7 +139,7 @@ static int __cam_icp_config_dev_in_ready(struct cam_context *ctx,
 
 	remain_len = len;
 	if ((len < sizeof(struct cam_packet)) ||
-		(cmd->offset >= (len - sizeof(struct cam_packet)))) {
+	    (cmd->offset >= (len - sizeof(struct cam_packet)))) {
 		CAM_ERR(CAM_CTXT,
 			"Invalid offset, len: %zu cmd offset: %llu sizeof packet: %zu",
 			len, cmd->offset, sizeof(struct cam_packet));
@@ -147,8 +147,8 @@ static int __cam_icp_config_dev_in_ready(struct cam_context *ctx,
 	}
 
 	remain_len -= (size_t)cmd->offset;
-	packet = (struct cam_packet *) ((uint8_t *)packet_addr +
-		(uint32_t)cmd->offset);
+	packet = (struct cam_packet *)((uint8_t *)packet_addr +
+				       (uint32_t)cmd->offset);
 
 	rc = cam_packet_util_validate_packet(packet, remain_len);
 	if (rc) {
@@ -157,10 +157,8 @@ static int __cam_icp_config_dev_in_ready(struct cam_context *ctx,
 		return rc;
 	}
 
-	if (((packet->header.op_code & 0xff) ==
-		CAM_ICP_OPCODE_IPE_SETTINGS) ||
-		((packet->header.op_code & 0xff) ==
-		CAM_ICP_OPCODE_BPS_SETTINGS))
+	if (((packet->header.op_code & 0xff) == CAM_ICP_OPCODE_IPE_SETTINGS) ||
+	    ((packet->header.op_code & 0xff) == CAM_ICP_OPCODE_BPS_SETTINGS))
 		rc = cam_context_config_dev_to_hw(ctx, cmd);
 	else
 		rc = cam_context_prepare_dev_to_hw(ctx, cmd);
@@ -172,7 +170,7 @@ static int __cam_icp_config_dev_in_ready(struct cam_context *ctx,
 }
 
 static int __cam_icp_stop_dev_in_ready(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+				       struct cam_start_stop_dev_cmd *cmd)
 {
 	int rc;
 
@@ -186,7 +184,7 @@ static int __cam_icp_stop_dev_in_ready(struct cam_context *ctx,
 }
 
 static int __cam_icp_release_dev_in_ready(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+					  struct cam_release_dev_cmd *cmd)
 {
 	int rc;
 
@@ -201,8 +199,8 @@ static int __cam_icp_release_dev_in_ready(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_icp_handle_buf_done_in_ready(void *ctx,
-	uint32_t evt_id, void *done)
+static int __cam_icp_handle_buf_done_in_ready(void *ctx, uint32_t evt_id,
+					      void *done)
 {
 	return cam_context_buf_done_from_hw(ctx, done, evt_id);
 }
@@ -259,7 +257,7 @@ static struct cam_ctx_ops
 };
 
 int cam_icp_context_init(struct cam_icp_context *ctx,
-	struct cam_hw_mgr_intf *hw_intf, uint32_t ctx_id)
+			 struct cam_hw_mgr_intf *hw_intf, uint32_t ctx_id)
 {
 	int rc;
 
@@ -269,8 +267,8 @@ int cam_icp_context_init(struct cam_icp_context *ctx,
 		goto err;
 	}
 
-	rc = cam_context_init(ctx->base, icp_dev_name, CAM_ICP, ctx_id,
-		NULL, hw_intf, ctx->req_base, CAM_CTX_REQ_MAX);
+	rc = cam_context_init(ctx->base, icp_dev_name, CAM_ICP, ctx_id, NULL,
+			      hw_intf, ctx->req_base, CAM_CTX_REQ_MAX);
 	if (rc) {
 		CAM_ERR(CAM_ICP, "Camera Context Base init failed");
 		goto err;

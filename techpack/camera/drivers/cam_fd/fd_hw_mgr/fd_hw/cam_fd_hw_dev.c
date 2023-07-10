@@ -48,16 +48,14 @@ static int cam_fd_hw_dev_probe(struct platform_device *pdev)
 		kfree(fd_hw_intf);
 		return -ENOMEM;
 	}
-	of_property_read_u32(pdev->dev.of_node,
-			"cell-index", &hw_idx);
+	of_property_read_u32(pdev->dev.of_node, "cell-index", &hw_idx);
 
 	fd_hw_intf->hw_priv = fd_hw;
 	fd_hw->core_info = fd_core;
 	fd_hw_intf->hw_idx = hw_idx;
 
 	memset(fd_dev_name, 0, sizeof(fd_dev_name));
-	snprintf(fd_dev_name, sizeof(fd_dev_name),
-		"fd%1u", fd_hw_intf->hw_idx);
+	snprintf(fd_dev_name, sizeof(fd_dev_name), "fd%1u", fd_hw_intf->hw_idx);
 
 	fd_hw->hw_state = CAM_HW_STATE_POWER_DOWN;
 	fd_hw->soc_info.pdev = pdev;
@@ -86,8 +84,8 @@ static int cam_fd_hw_dev_probe(struct platform_device *pdev)
 	fd_hw_intf->hw_ops.process_cmd = cam_fd_hw_process_cmd;
 	fd_hw_intf->hw_type = CAM_HW_FD;
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev || !match_dev->data) {
 		CAM_ERR(CAM_FD, "No Of_match data, %pK", match_dev);
 		rc = -EINVAL;
@@ -110,8 +108,8 @@ static int cam_fd_hw_dev_probe(struct platform_device *pdev)
 
 	memset(&init_args, 0x0, sizeof(init_args));
 	memset(&deinit_args, 0x0, sizeof(deinit_args));
-    init_args.reset_required = true;
-    rc = cam_fd_hw_init(fd_hw, &init_args, sizeof(init_args));
+	init_args.reset_required = true;
+	rc = cam_fd_hw_init(fd_hw, &init_args, sizeof(init_args));
 	if (rc) {
 		CAM_ERR(CAM_FD, "Failed to hw init, rc=%d", rc);
 		goto deinit_platform_res;

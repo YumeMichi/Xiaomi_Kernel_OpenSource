@@ -14,7 +14,8 @@
 #include "cam_debug_util.h"
 
 int cam_jpeg_enc_init_soc_resources(struct cam_hw_soc_info *soc_info,
-	irq_handler_t jpeg_enc_irq_handler, void *irq_data)
+				    irq_handler_t jpeg_enc_irq_handler,
+				    void *irq_data)
 {
 	int rc;
 
@@ -22,9 +23,8 @@ int cam_jpeg_enc_init_soc_resources(struct cam_hw_soc_info *soc_info,
 	if (rc)
 		return rc;
 
-	rc = cam_soc_util_request_platform_resource(soc_info,
-		jpeg_enc_irq_handler,
-		irq_data);
+	rc = cam_soc_util_request_platform_resource(
+		soc_info, jpeg_enc_irq_handler, irq_data);
 	if (rc)
 		CAM_ERR(CAM_JPEG, "init soc failed %d", rc);
 
@@ -35,8 +35,8 @@ int cam_jpeg_enc_enable_soc_resources(struct cam_hw_soc_info *soc_info)
 {
 	int rc;
 
-	rc = cam_soc_util_enable_platform_resource(soc_info, true,
-		CAM_SVS_VOTE, true);
+	rc = cam_soc_util_enable_platform_resource(soc_info, true, CAM_SVS_VOTE,
+						   true);
 	if (rc)
 		CAM_ERR(CAM_JPEG, "enable platform failed %d", rc);
 

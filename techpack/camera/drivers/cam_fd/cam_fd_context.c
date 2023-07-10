@@ -13,8 +13,9 @@
 static const char fd_dev_name[] = "cam-fd";
 
 /* Functions in Available state */
-static int __cam_fd_ctx_acquire_dev_in_available(struct cam_context *ctx,
-	struct cam_acquire_dev_cmd *cmd)
+static int
+__cam_fd_ctx_acquire_dev_in_available(struct cam_context *ctx,
+				      struct cam_acquire_dev_cmd *cmd)
 {
 	int rc;
 
@@ -32,7 +33,7 @@ static int __cam_fd_ctx_acquire_dev_in_available(struct cam_context *ctx,
 
 /* Functions in Acquired state */
 static int __cam_fd_ctx_release_dev_in_acquired(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+						struct cam_release_dev_cmd *cmd)
 {
 	int rc;
 
@@ -49,7 +50,7 @@ static int __cam_fd_ctx_release_dev_in_acquired(struct cam_context *ctx,
 }
 
 static int __cam_fd_ctx_config_dev_in_acquired(struct cam_context *ctx,
-	struct cam_config_dev_cmd *cmd)
+					       struct cam_config_dev_cmd *cmd)
 {
 	int rc;
 
@@ -62,8 +63,9 @@ static int __cam_fd_ctx_config_dev_in_acquired(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_fd_ctx_start_dev_in_acquired(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+static int
+__cam_fd_ctx_start_dev_in_acquired(struct cam_context *ctx,
+				   struct cam_start_stop_dev_cmd *cmd)
 {
 	int rc;
 
@@ -80,8 +82,9 @@ static int __cam_fd_ctx_start_dev_in_acquired(struct cam_context *ctx,
 }
 
 /* Functions in Activated state */
-static int __cam_fd_ctx_stop_dev_in_activated(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+static int
+__cam_fd_ctx_stop_dev_in_activated(struct cam_context *ctx,
+				   struct cam_start_stop_dev_cmd *cmd)
 {
 	int rc;
 
@@ -97,8 +100,9 @@ static int __cam_fd_ctx_stop_dev_in_activated(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_fd_ctx_release_dev_in_activated(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+static int
+__cam_fd_ctx_release_dev_in_activated(struct cam_context *ctx,
+				      struct cam_release_dev_cmd *cmd)
 {
 	int rc;
 
@@ -118,7 +122,7 @@ static int __cam_fd_ctx_release_dev_in_activated(struct cam_context *ctx,
 }
 
 static int __cam_fd_ctx_flush_dev_in_activated(struct cam_context *ctx,
-	struct cam_flush_dev_cmd *cmd)
+					       struct cam_flush_dev_cmd *cmd)
 {
 	int rc;
 
@@ -128,8 +132,8 @@ static int __cam_fd_ctx_flush_dev_in_activated(struct cam_context *ctx,
 
 	return rc;
 }
-static int __cam_fd_ctx_config_dev_in_activated(
-	struct cam_context *ctx, struct cam_config_dev_cmd *cmd)
+static int __cam_fd_ctx_config_dev_in_activated(struct cam_context *ctx,
+						struct cam_config_dev_cmd *cmd)
 {
 	int rc;
 
@@ -142,8 +146,8 @@ static int __cam_fd_ctx_config_dev_in_activated(
 	return rc;
 }
 
-static int __cam_fd_ctx_handle_irq_in_activated(void *context,
-	uint32_t evt_id, void *evt_data)
+static int __cam_fd_ctx_handle_irq_in_activated(void *context, uint32_t evt_id,
+						void *evt_data)
 {
 	int rc;
 
@@ -204,10 +208,9 @@ static struct cam_ctx_ops
 	},
 };
 
-
 int cam_fd_context_init(struct cam_fd_context *fd_ctx,
-	struct cam_context *base_ctx, struct cam_hw_mgr_intf *hw_intf,
-	uint32_t ctx_id)
+			struct cam_context *base_ctx,
+			struct cam_hw_mgr_intf *hw_intf, uint32_t ctx_id)
 {
 	int rc;
 
@@ -218,8 +221,8 @@ int cam_fd_context_init(struct cam_fd_context *fd_ctx,
 
 	memset(fd_ctx, 0, sizeof(*fd_ctx));
 
-	rc = cam_context_init(base_ctx, fd_dev_name, CAM_FD, ctx_id,
-		NULL, hw_intf, fd_ctx->req_base, CAM_CTX_REQ_MAX);
+	rc = cam_context_init(base_ctx, fd_dev_name, CAM_FD, ctx_id, NULL,
+			      hw_intf, fd_ctx->req_base, CAM_CTX_REQ_MAX);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Camera Context Base init failed, rc=%d", rc);
 		return rc;

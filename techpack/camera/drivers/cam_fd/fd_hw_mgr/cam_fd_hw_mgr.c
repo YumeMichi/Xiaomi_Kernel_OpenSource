@@ -24,7 +24,7 @@
 static struct cam_fd_hw_mgr g_fd_hw_mgr;
 
 static int cam_fd_mgr_util_packet_validate(struct cam_packet *packet,
-	size_t remain_len)
+					   size_t remain_len)
 {
 	struct cam_cmd_buf_desc *cmd_desc = NULL;
 	int i, rc;
@@ -46,9 +46,9 @@ static int cam_fd_mgr_util_packet_validate(struct cam_packet *packet,
 
 	if (cam_packet_util_validate_packet(packet, remain_len)) {
 		CAM_ERR(CAM_FD, "invalid packet:%d %d %d %d %d",
-			packet->kmd_cmd_buf_index,
-			packet->num_cmd_buf, packet->cmd_buf_offset,
-			packet->io_configs_offset, packet->header.size);
+			packet->kmd_cmd_buf_index, packet->num_cmd_buf,
+			packet->cmd_buf_offset, packet->io_configs_offset,
+			packet->header.size);
 		return -EINVAL;
 	}
 
@@ -67,14 +67,14 @@ static int cam_fd_mgr_util_packet_validate(struct cam_packet *packet,
 	}
 
 	if ((packet->header.op_code & 0xff) !=
-		CAM_PACKET_OPCODES_FD_FRAME_UPDATE) {
+	    CAM_PACKET_OPCODES_FD_FRAME_UPDATE) {
 		CAM_ERR(CAM_FD, "Invalid op_code %u",
 			packet->header.op_code & 0xff);
 		return -EINVAL;
 	}
 
-	cmd_desc = (struct cam_cmd_buf_desc *) ((uint8_t *)&packet->payload +
-		packet->cmd_buf_offset);
+	cmd_desc = (struct cam_cmd_buf_desc *)((uint8_t *)&packet->payload +
+					       packet->cmd_buf_offset);
 
 	for (i = 0; i < packet->num_cmd_buf; i++) {
 		/*
@@ -85,7 +85,7 @@ static int cam_fd_mgr_util_packet_validate(struct cam_packet *packet,
 			continue;
 
 		if ((cmd_desc[i].meta_data != CAM_FD_CMD_BUFFER_ID_GENERIC) &&
-			(cmd_desc[i].meta_data != CAM_FD_CMD_BUFFER_ID_CDM)) {
+		    (cmd_desc[i].meta_data != CAM_FD_CMD_BUFFER_ID_CDM)) {
 			CAM_ERR(CAM_FD, "Invalid meta_data [%d] %u", i,
 				cmd_desc[i].meta_data);
 			return -EINVAL;
@@ -93,8 +93,7 @@ static int cam_fd_mgr_util_packet_validate(struct cam_packet *packet,
 
 		CAM_DBG(CAM_FD,
 			"CmdBuf[%d] hdl=%d, offset=%d, size=%d, len=%d, type=%d, meta_data=%d",
-			i,
-			cmd_desc[i].mem_handle, cmd_desc[i].offset,
+			i, cmd_desc[i].mem_handle, cmd_desc[i].offset,
 			cmd_desc[i].size, cmd_desc[i].length, cmd_desc[i].type,
 			cmd_desc[i].meta_data);
 
@@ -108,9 +107,8 @@ static int cam_fd_mgr_util_packet_validate(struct cam_packet *packet,
 	return 0;
 }
 
-static int cam_fd_mgr_util_put_ctx(
-	struct list_head *src_list,
-	struct cam_fd_hw_mgr_ctx **fd_ctx)
+static int cam_fd_mgr_util_put_ctx(struct list_head *src_list,
+				   struct cam_fd_hw_mgr_ctx **fd_ctx)
 {
 	int rc = 0;
 	struct cam_fd_hw_mgr_ctx *ctx_ptr = NULL;
@@ -125,17 +123,16 @@ static int cam_fd_mgr_util_put_ctx(
 	return rc;
 }
 
-static int cam_fd_mgr_util_get_ctx(
-	struct list_head *src_list,
-	struct cam_fd_hw_mgr_ctx **fd_ctx)
+static int cam_fd_mgr_util_get_ctx(struct list_head *src_list,
+				   struct cam_fd_hw_mgr_ctx **fd_ctx)
 {
 	int rc = 0;
 	struct cam_fd_hw_mgr_ctx *ctx_ptr = NULL;
 
 	mutex_lock(&g_fd_hw_mgr.ctx_mutex);
 	if (!list_empty(src_list)) {
-		ctx_ptr = list_first_entry(src_list,
-			struct cam_fd_hw_mgr_ctx, list);
+		ctx_ptr = list_first_entry(src_list, struct cam_fd_hw_mgr_ctx,
+					   list);
 		list_del_init(&ctx_ptr->list);
 	} else {
 		CAM_ERR(CAM_FD, "No more free fd hw mgr ctx");
@@ -147,9 +144,9 @@ static int cam_fd_mgr_util_get_ctx(
 	return rc;
 }
 
-static int cam_fd_mgr_util_put_frame_req(
-	struct list_head *src_list,
-	struct cam_fd_mgr_frame_request **frame_req)
+static int
+cam_fd_mgr_util_put_frame_req(struct list_head *src_list,
+			      struct cam_fd_mgr_frame_request **frame_req)
 {
 	int rc = 0;
 	struct cam_fd_mgr_frame_request *req_ptr = NULL;
@@ -166,17 +163,17 @@ static int cam_fd_mgr_util_put_frame_req(
 	return rc;
 }
 
-static int cam_fd_mgr_util_get_frame_req(
-	struct list_head *src_list,
-	struct cam_fd_mgr_frame_request **frame_req)
+static int
+cam_fd_mgr_util_get_frame_req(struct list_head *src_list,
+			      struct cam_fd_mgr_frame_request **frame_req)
 {
 	int rc = 0;
 	struct cam_fd_mgr_frame_request *req_ptr = NULL;
 
 	mutex_lock(&g_fd_hw_mgr.frame_req_mutex);
 	if (!list_empty(src_list)) {
-		req_ptr = list_first_entry(src_list,
-			struct cam_fd_mgr_frame_request, list);
+		req_ptr = list_first_entry(
+			src_list, struct cam_fd_mgr_frame_request, list);
 		list_del_init(&req_ptr->list);
 	} else {
 		CAM_DBG(CAM_FD, "Frame req not available");
@@ -189,7 +186,8 @@ static int cam_fd_mgr_util_get_frame_req(
 }
 
 static int cam_fd_mgr_util_get_device(struct cam_fd_hw_mgr *hw_mgr,
-	struct cam_fd_hw_mgr_ctx *hw_ctx, struct cam_fd_device **hw_device)
+				      struct cam_fd_hw_mgr_ctx *hw_ctx,
+				      struct cam_fd_device **hw_device)
 {
 	if (!hw_mgr || !hw_ctx || !hw_device) {
 		CAM_ERR(CAM_FD, "Invalid input %pK %pK %pK", hw_mgr, hw_ctx,
@@ -198,7 +196,7 @@ static int cam_fd_mgr_util_get_device(struct cam_fd_hw_mgr *hw_mgr,
 	}
 
 	if ((hw_ctx->device_index < 0) ||
-		(hw_ctx->device_index >= CAM_FD_HW_MAX)) {
+	    (hw_ctx->device_index >= CAM_FD_HW_MAX)) {
 		CAM_ERR(CAM_FD, "Invalid device indx %d", hw_ctx->device_index);
 		return -EINVAL;
 	}
@@ -212,7 +210,7 @@ static int cam_fd_mgr_util_get_device(struct cam_fd_hw_mgr *hw_mgr,
 }
 
 static int cam_fd_mgr_util_release_device(struct cam_fd_hw_mgr *hw_mgr,
-	struct cam_fd_hw_mgr_ctx *hw_ctx)
+					  struct cam_fd_hw_mgr_ctx *hw_ctx)
 {
 	struct cam_fd_device *hw_device;
 	struct cam_fd_hw_release_args hw_release_args;
@@ -247,9 +245,10 @@ static int cam_fd_mgr_util_release_device(struct cam_fd_hw_mgr *hw_mgr,
 	return rc;
 }
 
-static int cam_fd_mgr_util_select_device(struct cam_fd_hw_mgr *hw_mgr,
-	struct cam_fd_hw_mgr_ctx *hw_ctx,
-	struct cam_fd_acquire_dev_info *fd_acquire_args)
+static int
+cam_fd_mgr_util_select_device(struct cam_fd_hw_mgr *hw_mgr,
+			      struct cam_fd_hw_mgr_ctx *hw_ctx,
+			      struct cam_fd_acquire_dev_info *fd_acquire_args)
 {
 	int i, rc;
 	struct cam_fd_hw_reserve_args hw_reserve_args;
@@ -266,16 +265,15 @@ static int cam_fd_mgr_util_select_device(struct cam_fd_hw_mgr *hw_mgr,
 	/* Check if a device is free which can satisfy the requirements */
 	for (i = 0; i < hw_mgr->num_devices; i++) {
 		hw_device = &hw_mgr->hw_device[i];
-		CAM_DBG(CAM_FD,
-			"[%d] : num_ctxts=%d, modes=%d, raw_results=%d",
+		CAM_DBG(CAM_FD, "[%d] : num_ctxts=%d, modes=%d, raw_results=%d",
 			i, hw_device->num_ctxts,
 			hw_device->hw_caps.supported_modes,
 			hw_device->hw_caps.raw_results_available);
 		if ((hw_device->num_ctxts == 0) &&
-			(fd_acquire_args->mode &
-			hw_device->hw_caps.supported_modes) &&
-			(!fd_acquire_args->get_raw_results ||
-			hw_device->hw_caps.raw_results_available)) {
+		    (fd_acquire_args->mode &
+		     hw_device->hw_caps.supported_modes) &&
+		    (!fd_acquire_args->get_raw_results ||
+		     hw_device->hw_caps.raw_results_available)) {
 			CAM_DBG(CAM_FD, "Found dedicated HW Index=%d", i);
 			hw_device->num_ctxts++;
 			break;
@@ -290,9 +288,9 @@ static int cam_fd_mgr_util_select_device(struct cam_fd_hw_mgr *hw_mgr,
 		for (i = 0; i < hw_mgr->num_devices; i++) {
 			hw_device = &hw_mgr->hw_device[i];
 			if ((fd_acquire_args->mode &
-				hw_device->hw_caps.supported_modes) &&
-				(!fd_acquire_args->get_raw_results ||
-				hw_device->hw_caps.raw_results_available)) {
+			     hw_device->hw_caps.supported_modes) &&
+			    (!fd_acquire_args->get_raw_results ||
+			     hw_device->hw_caps.raw_results_available)) {
 				hw_device->num_ctxts++;
 				CAM_DBG(CAM_FD, "Found sharing HW Index=%d", i);
 				break;
@@ -337,8 +335,8 @@ static int cam_fd_mgr_util_select_device(struct cam_fd_hw_mgr *hw_mgr,
 	return 0;
 }
 
-static int cam_fd_mgr_util_pdev_get_hw_intf(struct device_node *of_node,
-	int i, struct cam_hw_intf **device_hw_intf)
+static int cam_fd_mgr_util_pdev_get_hw_intf(struct device_node *of_node, int i,
+					    struct cam_hw_intf **device_hw_intf)
 {
 	struct device_node *device_node = NULL;
 	struct platform_device *child_pdev = NULL;
@@ -392,7 +390,9 @@ put_node:
 }
 
 static int cam_fd_packet_generic_blob_handler(void *user_data,
-	uint32_t blob_type, uint32_t blob_size, uint8_t *blob_data)
+					      uint32_t blob_type,
+					      uint32_t blob_size,
+					      uint8_t *blob_data)
 {
 	struct cam_fd_hw_cmd_prestart_args *prestart_args =
 		(struct cam_fd_hw_cmd_prestart_args *)user_data;
@@ -452,8 +452,8 @@ static int cam_fd_mgr_util_parse_generic_cmd_buffer(
 	struct cam_cmd_buf_desc *cmd_desc = NULL;
 	int i, rc = 0;
 
-	cmd_desc = (struct cam_cmd_buf_desc *) ((uint8_t *)&packet->payload +
-		packet->cmd_buf_offset);
+	cmd_desc = (struct cam_cmd_buf_desc *)((uint8_t *)&packet->payload +
+					       packet->cmd_buf_offset);
 
 	for (i = 0; i < packet->num_cmd_buf; i++) {
 		if (!cmd_desc[i].length)
@@ -466,8 +466,9 @@ static int cam_fd_mgr_util_parse_generic_cmd_buffer(
 		if (rc)
 			return rc;
 
-		rc = cam_packet_util_process_generic_cmd_buffer(&cmd_desc[i],
-			cam_fd_packet_generic_blob_handler, prestart_args);
+		rc = cam_packet_util_process_generic_cmd_buffer(
+			&cmd_desc[i], cam_fd_packet_generic_blob_handler,
+			prestart_args);
 		if (rc)
 			CAM_ERR(CAM_FD, "Failed in processing blobs %d", rc);
 
@@ -478,7 +479,9 @@ static int cam_fd_mgr_util_parse_generic_cmd_buffer(
 }
 
 static int cam_fd_mgr_util_get_buf_map_requirement(uint32_t direction,
-	uint32_t resource_type, bool *need_io_map, bool *need_cpu_map)
+						   uint32_t resource_type,
+						   bool *need_io_map,
+						   bool *need_cpu_map)
 {
 	if (!need_io_map || !need_cpu_map) {
 		CAM_ERR(CAM_FD, "Invalid input pointers %pK %pK", need_io_map,
@@ -494,7 +497,7 @@ static int cam_fd_mgr_util_get_buf_map_requirement(uint32_t direction,
 			break;
 		default:
 			CAM_WARN(CAM_FD, "Invalid port: dir %d, id %d",
-				direction, resource_type);
+				 direction, resource_type);
 			return -EINVAL;
 		}
 	} else if (direction == CAM_BUF_OUTPUT) {
@@ -513,7 +516,7 @@ static int cam_fd_mgr_util_get_buf_map_requirement(uint32_t direction,
 			break;
 		default:
 			CAM_WARN(CAM_FD, "Invalid port: dir %d, id %d",
-				direction, resource_type);
+				 direction, resource_type);
 			return -EINVAL;
 		}
 	} else {
@@ -524,8 +527,8 @@ static int cam_fd_mgr_util_get_buf_map_requirement(uint32_t direction,
 	return 0;
 }
 
-static int cam_fd_mgr_util_prepare_io_buf_info(int32_t iommu_hdl,
-	struct cam_hw_prepare_update_args *prepare,
+static int cam_fd_mgr_util_prepare_io_buf_info(
+	int32_t iommu_hdl, struct cam_hw_prepare_update_args *prepare,
 	struct cam_fd_hw_io_buffer *input_buf,
 	struct cam_fd_hw_io_buffer *output_buf, uint32_t io_buf_size)
 {
@@ -540,19 +543,20 @@ static int cam_fd_mgr_util_prepare_io_buf_info(int32_t iommu_hdl,
 
 	/* Get IO Buf information */
 	num_out_buf = 0;
-	num_in_buf  = 0;
-	io_cfg = (struct cam_buf_io_cfg *) ((uint8_t *)
-		&prepare->packet->payload + prepare->packet->io_configs_offset);
+	num_in_buf = 0;
+	io_cfg =
+		(struct cam_buf_io_cfg *)((uint8_t *)&prepare->packet->payload +
+					  prepare->packet->io_configs_offset);
 
 	for (i = 0; i < prepare->packet->num_io_configs; i++) {
 		CAM_DBG(CAM_FD,
 			"IOConfig[%d] : handle[%d] Dir[%d] Res[%d] Fence[%d], Format[%d]",
 			i, io_cfg[i].mem_handle[0], io_cfg[i].direction,
-			io_cfg[i].resource_type,
-			io_cfg[i].fence, io_cfg[i].format);
+			io_cfg[i].resource_type, io_cfg[i].fence,
+			io_cfg[i].format);
 
 		if ((num_in_buf >= io_buf_size) ||
-			(num_out_buf >= io_buf_size)) {
+		    (num_out_buf >= io_buf_size)) {
 			CAM_ERR(CAM_FD, "Invalid number of buffers %d %d %d",
 				num_in_buf, num_out_buf, io_buf_size);
 			return -EINVAL;
@@ -562,9 +566,9 @@ static int cam_fd_mgr_util_prepare_io_buf_info(int32_t iommu_hdl,
 			io_cfg[i].direction, io_cfg[i].resource_type,
 			&need_io_map, &need_cpu_map);
 		if (rc) {
-			CAM_WARN(CAM_FD, "Invalid io buff [%d] : %d %d %d",
-				i, io_cfg[i].direction,
-				io_cfg[i].resource_type, rc);
+			CAM_WARN(CAM_FD, "Invalid io buff [%d] : %d %d %d", i,
+				 io_cfg[i].direction, io_cfg[i].resource_type,
+				 rc);
 			continue;
 		}
 
@@ -578,8 +582,8 @@ static int cam_fd_mgr_util_prepare_io_buf_info(int32_t iommu_hdl,
 
 			if (need_io_map) {
 				rc = cam_mem_get_io_buf(
-					io_cfg[i].mem_handle[plane],
-					iommu_hdl, &io_addr[plane], &size);
+					io_cfg[i].mem_handle[plane], iommu_hdl,
+					&io_addr[plane], &size);
 				if (rc) {
 					CAM_ERR(CAM_FD,
 						"Failed to get io buf %u %u %u %d",
@@ -606,8 +610,8 @@ static int cam_fd_mgr_util_prepare_io_buf_info(int32_t iommu_hdl,
 				rc = cam_mem_get_cpu_buf(
 					io_cfg[i].mem_handle[plane],
 					&cpu_addr[plane], &size);
-				if (rc || ((io_addr[plane] & 0xFFFFFFFF)
-					!= io_addr[plane])) {
+				if (rc || ((io_addr[plane] & 0xFFFFFFFF) !=
+					   io_addr[plane])) {
 					CAM_ERR(CAM_FD,
 						"Invalid cpu buf %d %d %d %d",
 						io_cfg[i].direction,
@@ -675,7 +679,7 @@ static int cam_fd_mgr_util_prepare_io_buf_info(int32_t iommu_hdl,
 		}
 	}
 
-	prepare->num_in_map_entries  = num_in_buf;
+	prepare->num_in_map_entries = num_in_buf;
 	prepare->num_out_map_entries = num_out_buf;
 	return rc;
 }
@@ -703,11 +707,11 @@ static int cam_fd_mgr_util_prepare_hw_update_entries(
 	}
 
 	kmd_buf_addr = (uint32_t *)((uint8_t *)kmd_buf_info->cpu_addr +
-		kmd_buf_info->used_bytes);
+				    kmd_buf_info->used_bytes);
 	kmd_buf_max_size = kmd_buf_info->size - kmd_buf_info->used_bytes;
 
 	prestart_args->cmd_buf_addr = kmd_buf_addr;
-	prestart_args->size  = kmd_buf_max_size;
+	prestart_args->size = kmd_buf_max_size;
 	prestart_args->pre_config_buf_size = 0;
 	prestart_args->post_config_buf_size = 0;
 
@@ -743,7 +747,7 @@ static int cam_fd_mgr_util_prepare_hw_update_entries(
 		}
 
 		hw_entry[num_ent].handle = kmd_buf_info->handle;
-		hw_entry[num_ent].len  = prestart_args->pre_config_buf_size;
+		hw_entry[num_ent].len = prestart_args->pre_config_buf_size;
 		hw_entry[num_ent].offset = kmd_buf_info->offset;
 
 		kmd_buf_info->used_bytes += prestart_args->pre_config_buf_size;
@@ -755,8 +759,9 @@ static int cam_fd_mgr_util_prepare_hw_update_entries(
 	 * set the cmd_desc to point the first command descriptor in the
 	 * packet and update hw entries with CDM command buffers
 	 */
-	cmd_desc = (struct cam_cmd_buf_desc *)((uint8_t *)
-		&prepare->packet->payload + prepare->packet->cmd_buf_offset);
+	cmd_desc = (struct cam_cmd_buf_desc *)((uint8_t *)&prepare->packet
+						       ->payload +
+					       prepare->packet->cmd_buf_offset);
 
 	for (i = 0; i < prepare->packet->num_cmd_buf; i++) {
 		if (!cmd_desc[i].length)
@@ -785,11 +790,11 @@ static int cam_fd_mgr_util_prepare_hw_update_entries(
 		}
 
 		hw_entry[num_ent].handle = kmd_buf_info->handle;
-		hw_entry[num_ent].len    = prestart_args->post_config_buf_size;
+		hw_entry[num_ent].len = prestart_args->post_config_buf_size;
 		hw_entry[num_ent].offset = kmd_buf_info->offset;
 
 		kmd_buf_info->used_bytes += prestart_args->post_config_buf_size;
-		kmd_buf_info->offset     += prestart_args->post_config_buf_size;
+		kmd_buf_info->offset += prestart_args->post_config_buf_size;
 
 		num_ent++;
 	}
@@ -823,12 +828,14 @@ static int cam_fd_mgr_util_submit_frame(void *priv, void *data)
 	/* Check if we have any frames pending in high priority list */
 	if (!list_empty(&hw_mgr->frame_pending_list_high)) {
 		CAM_DBG(CAM_FD, "Pending frames in high priority list");
-		frame_req = list_first_entry(&hw_mgr->frame_pending_list_high,
-			struct cam_fd_mgr_frame_request, list);
+		frame_req =
+			list_first_entry(&hw_mgr->frame_pending_list_high,
+					 struct cam_fd_mgr_frame_request, list);
 	} else if (!list_empty(&hw_mgr->frame_pending_list_normal)) {
 		CAM_DBG(CAM_FD, "Pending frames in normal priority list");
-		frame_req = list_first_entry(&hw_mgr->frame_pending_list_normal,
-			struct cam_fd_mgr_frame_request, list);
+		frame_req =
+			list_first_entry(&hw_mgr->frame_pending_list_normal,
+					 struct cam_fd_mgr_frame_request, list);
 	} else {
 		mutex_unlock(&hw_mgr->frame_req_mutex);
 		CAM_DBG(CAM_FD, "No pending frames");
@@ -848,7 +855,8 @@ static int cam_fd_mgr_util_submit_frame(void *priv, void *data)
 	if (hw_device->ready_to_process == false) {
 		mutex_unlock(&hw_device->lock);
 		mutex_unlock(&hw_mgr->frame_req_mutex);
-		CAM_DBG(CAM_FD, "FrameSubmit : Frame[%lld] HW is busy", frame_req->request_id);
+		CAM_DBG(CAM_FD, "FrameSubmit : Frame[%lld] HW is busy",
+			frame_req->request_id);
 		return -EBUSY;
 	}
 
@@ -897,8 +905,8 @@ put_req_into_free_list:
 	return rc;
 }
 
-static int cam_fd_mgr_util_schedule_frame_worker_task(
-	struct cam_fd_hw_mgr *hw_mgr)
+static int
+cam_fd_mgr_util_schedule_frame_worker_task(struct cam_fd_hw_mgr *hw_mgr)
 {
 	int32_t rc = 0;
 	struct crm_workq_task *task;
@@ -948,7 +956,7 @@ static int32_t cam_fd_mgr_workq_irq_cb(void *priv, void *data)
 
 	/* Get the frame from processing list */
 	rc = cam_fd_mgr_util_get_frame_req(&hw_mgr->frame_processing_list,
-		&frame_req);
+					   &frame_req);
 	if (rc || !frame_req) {
 		/*
 		 * This can happen if reset is triggered while no frames
@@ -987,8 +995,8 @@ static int32_t cam_fd_mgr_workq_irq_cb(void *priv, void *data)
 		if (hw_device->hw_intf->hw_ops.process_cmd) {
 			rc = hw_device->hw_intf->hw_ops.process_cmd(
 				hw_device->hw_intf->hw_priv,
-				CAM_FD_HW_CMD_FRAME_DONE,
-				&frame_done_args, sizeof(frame_done_args));
+				CAM_FD_HW_CMD_FRAME_DONE, &frame_done_args,
+				sizeof(frame_done_args));
 			if (rc) {
 				CAM_ERR(CAM_FD, "Failed in CMD_PRESTART %d",
 					rc);
@@ -1014,7 +1022,7 @@ notify_context:
 		buf_data.request_id = frame_req->request_id;
 
 		rc = frame_req->hw_ctx->event_cb(frame_req->hw_ctx->cb_priv,
-			frame_abort, &buf_data);
+						 frame_abort, &buf_data);
 		if (rc)
 			CAM_ERR(CAM_FD, "Error in event cb handling %d", rc);
 	}
@@ -1035,7 +1043,7 @@ notify_context:
 
 put_req_in_free_list:
 	rc = cam_fd_mgr_util_put_frame_req(&hw_mgr->frame_free_list,
-		&frame_req);
+					   &frame_req);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Failed in putting frame req in free list");
 		/* continue */
@@ -1088,16 +1096,15 @@ static int cam_fd_mgr_hw_get_caps(void *hw_mgr_priv, void *hw_get_caps_args)
 	struct cam_fd_hw_mgr *hw_mgr = hw_mgr_priv;
 	struct cam_query_cap_cmd *query = hw_get_caps_args;
 	struct cam_fd_query_cap_cmd query_fd;
-	void __user *caps_handle =
-		u64_to_user_ptr(query->caps_handle);
+	void __user *caps_handle = u64_to_user_ptr(query->caps_handle);
 
 	if (copy_from_user(&query_fd, caps_handle,
-		sizeof(struct cam_fd_query_cap_cmd))) {
+			   sizeof(struct cam_fd_query_cap_cmd))) {
 		CAM_ERR(CAM_FD, "Failed in copy from user, rc=%d", rc);
 		return -EFAULT;
 	}
 
-	query_fd  = hw_mgr->fd_caps;
+	query_fd = hw_mgr->fd_caps;
 
 	CAM_DBG(CAM_FD,
 		"IOMMU device(%d, %d), CDM(%d, %d), versions %d.%d, %d.%d",
@@ -1109,7 +1116,7 @@ static int cam_fd_mgr_hw_get_caps(void *hw_mgr_priv, void *hw_get_caps_args)
 		query_fd.hw_caps.wrapper_version.minor);
 
 	if (copy_to_user(caps_handle, &query_fd,
-		sizeof(struct cam_fd_query_cap_cmd)))
+			 sizeof(struct cam_fd_query_cap_cmd)))
 		rc = -EFAULT;
 
 	return rc;
@@ -1130,8 +1137,8 @@ static int cam_fd_mgr_hw_acquire(void *hw_mgr_priv, void *hw_acquire_args)
 	}
 
 	if (copy_from_user(&fd_acquire_args,
-		(void __user *)acquire_args->acquire_info,
-		sizeof(struct cam_fd_acquire_dev_info))) {
+			   (void __user *)acquire_args->acquire_info,
+			   sizeof(struct cam_fd_acquire_dev_info))) {
 		CAM_ERR(CAM_FD, "Copy from user failed");
 		return -EFAULT;
 	}
@@ -1143,8 +1150,8 @@ static int cam_fd_mgr_hw_acquire(void *hw_mgr_priv, void *hw_acquire_args)
 	/* get a free fd hw mgr ctx */
 	rc = cam_fd_mgr_util_get_ctx(&hw_mgr->free_ctx_list, &hw_ctx);
 	if (rc || !hw_ctx) {
-		CAM_ERR(CAM_FD, "Get hw context failed, rc=%d, hw_ctx=%pK",
-			rc, hw_ctx);
+		CAM_ERR(CAM_FD, "Get hw context failed, rc=%d, hw_ctx=%pK", rc,
+			hw_ctx);
 		return -EINVAL;
 	}
 
@@ -1197,8 +1204,8 @@ static int cam_fd_mgr_hw_release(void *hw_mgr_priv, void *hw_release_args)
 	int rc;
 
 	if (!hw_mgr_priv || !hw_release_args) {
-		CAM_ERR(CAM_FD, "Invalid arguments %pK, %pK",
-			hw_mgr_priv, hw_release_args);
+		CAM_ERR(CAM_FD, "Invalid arguments %pK, %pK", hw_mgr_priv,
+			hw_release_args);
 		return -EINVAL;
 	}
 
@@ -1229,11 +1236,11 @@ static int cam_fd_mgr_hw_start(void *hw_mgr_priv, void *mgr_start_args)
 	struct cam_fd_device *hw_device;
 	struct cam_fd_hw_init_args hw_init_args;
 
-    struct cam_hw_info *fd_hw;
+	struct cam_hw_info *fd_hw;
 	struct cam_fd_core *fd_core;
 	if (!hw_mgr_priv || !hw_mgr_start_args) {
-		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK",
-			hw_mgr_priv, hw_mgr_start_args);
+		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK", hw_mgr_priv,
+			hw_mgr_start_args);
 		return -EINVAL;
 	}
 
@@ -1254,19 +1261,19 @@ static int cam_fd_mgr_hw_start(void *hw_mgr_priv, void *mgr_start_args)
 
 	hw_device->ready_to_process = true;
 
-    fd_hw = (struct cam_hw_info *)hw_device->hw_intf->hw_priv;
+	fd_hw = (struct cam_hw_info *)hw_device->hw_intf->hw_priv;
 	fd_core = (struct cam_fd_core *)fd_hw->core_info;
-    if (hw_device->hw_intf->hw_ops.init) {
+	if (hw_device->hw_intf->hw_ops.init) {
 		hw_init_args.hw_ctx = hw_ctx;
 		hw_init_args.ctx_hw_private = hw_ctx->ctx_hw_private;
-        if (fd_core->hw_static_info->enable_errata_wa.skip_reset)
-            hw_init_args.reset_required = false;
-        else
-            hw_init_args.reset_required = true;
-        rc = hw_device->hw_intf->hw_ops.init(
-                hw_device->hw_intf->hw_priv, &hw_init_args,
-                sizeof(hw_init_args));
-        if (rc) {
+		if (fd_core->hw_static_info->enable_errata_wa.skip_reset)
+			hw_init_args.reset_required = false;
+		else
+			hw_init_args.reset_required = true;
+		rc = hw_device->hw_intf->hw_ops.init(
+			hw_device->hw_intf->hw_priv, &hw_init_args,
+			sizeof(hw_init_args));
+		if (rc) {
 			CAM_ERR(CAM_FD, "Failed in HW Init %d", rc);
 			return rc;
 		}
@@ -1279,7 +1286,7 @@ static int cam_fd_mgr_hw_start(void *hw_mgr_priv, void *mgr_start_args)
 }
 
 static int cam_fd_mgr_hw_flush_req(void *hw_mgr_priv,
-	struct cam_hw_flush_args *flush_args)
+				   struct cam_hw_flush_args *flush_args)
 {
 	int rc = 0;
 	struct cam_fd_mgr_frame_request *frame_req, *req_temp, *flush_req;
@@ -1307,10 +1314,11 @@ static int cam_fd_mgr_hw_flush_req(void *hw_mgr_priv,
 	mutex_lock(&hw_mgr->frame_req_mutex);
 	for (i = 0; i < flush_args->num_req_active; i++) {
 		flush_req = (struct cam_fd_mgr_frame_request *)
-			flush_args->flush_req_active[i];
+				    flush_args->flush_req_active[i];
 
-		list_for_each_entry_safe(frame_req, req_temp,
-			&hw_mgr->frame_pending_list_high, list) {
+		list_for_each_entry_safe (frame_req, req_temp,
+					  &hw_mgr->frame_pending_list_high,
+					  list) {
 			if (frame_req->hw_ctx != hw_ctx)
 				continue;
 
@@ -1321,8 +1329,9 @@ static int cam_fd_mgr_hw_flush_req(void *hw_mgr_priv,
 			break;
 		}
 
-		list_for_each_entry_safe(frame_req, req_temp,
-			&hw_mgr->frame_pending_list_normal, list) {
+		list_for_each_entry_safe (frame_req, req_temp,
+					  &hw_mgr->frame_pending_list_normal,
+					  list) {
 			if (frame_req->hw_ctx != hw_ctx)
 				continue;
 
@@ -1333,8 +1342,9 @@ static int cam_fd_mgr_hw_flush_req(void *hw_mgr_priv,
 			break;
 		}
 
-		list_for_each_entry_safe(frame_req, req_temp,
-			&hw_mgr->frame_processing_list, list) {
+		list_for_each_entry_safe (frame_req, req_temp,
+					  &hw_mgr->frame_processing_list,
+					  list) {
 			if (frame_req->hw_ctx != hw_ctx)
 				continue;
 
@@ -1345,24 +1355,23 @@ static int cam_fd_mgr_hw_flush_req(void *hw_mgr_priv,
 
 			mutex_lock(&hw_device->lock);
 			if ((hw_device->ready_to_process == true) ||
-				(hw_device->cur_hw_ctx != hw_ctx))
+			    (hw_device->cur_hw_ctx != hw_ctx))
 				goto unlock_dev_flush_req;
 
 			if (hw_device->hw_intf->hw_ops.stop) {
 				hw_stop_args.hw_ctx = hw_ctx;
 				rc = hw_device->hw_intf->hw_ops.stop(
 					hw_device->hw_intf->hw_priv,
-					&hw_stop_args,
-					sizeof(hw_stop_args));
+					&hw_stop_args, sizeof(hw_stop_args));
 				if (rc) {
-					CAM_ERR(CAM_FD,
-						"Failed in HW Stop %d", rc);
+					CAM_ERR(CAM_FD, "Failed in HW Stop %d",
+						rc);
 					goto unlock_dev_flush_req;
 				}
 				hw_device->ready_to_process = true;
 			}
 
-unlock_dev_flush_req:
+		unlock_dev_flush_req:
 			mutex_unlock(&hw_device->lock);
 			break;
 		}
@@ -1371,16 +1380,16 @@ unlock_dev_flush_req:
 
 	for (i = 0; i < flush_args->num_req_pending; i++) {
 		flush_req = (struct cam_fd_mgr_frame_request *)
-			flush_args->flush_req_pending[i];
+				    flush_args->flush_req_pending[i];
 		cam_fd_mgr_util_put_frame_req(&hw_mgr->frame_free_list,
-			&flush_req);
+					      &flush_req);
 	}
 
 	return rc;
 }
 
 static int cam_fd_mgr_hw_flush_ctx(void *hw_mgr_priv,
-	struct cam_hw_flush_args *flush_args)
+				   struct cam_hw_flush_args *flush_args)
 {
 	int rc = 0;
 	struct cam_fd_mgr_frame_request *frame_req, *req_temp, *flush_req;
@@ -1405,26 +1414,25 @@ static int cam_fd_mgr_hw_flush_ctx(void *hw_mgr_priv,
 		return rc;
 	}
 
-
 	mutex_lock(&hw_mgr->frame_req_mutex);
-	list_for_each_entry_safe(frame_req, req_temp,
-		&hw_mgr->frame_pending_list_high, list) {
+	list_for_each_entry_safe (frame_req, req_temp,
+				  &hw_mgr->frame_pending_list_high, list) {
 		if (frame_req->hw_ctx != hw_ctx)
 			continue;
 
 		list_del_init(&frame_req->list);
 	}
 
-	list_for_each_entry_safe(frame_req, req_temp,
-		&hw_mgr->frame_pending_list_normal, list) {
+	list_for_each_entry_safe (frame_req, req_temp,
+				  &hw_mgr->frame_pending_list_normal, list) {
 		if (frame_req->hw_ctx != hw_ctx)
 			continue;
 
 		list_del_init(&frame_req->list);
 	}
 
-	list_for_each_entry_safe(frame_req, req_temp,
-		&hw_mgr->frame_processing_list, list) {
+	list_for_each_entry_safe (frame_req, req_temp,
+				  &hw_mgr->frame_processing_list, list) {
 		if (frame_req->hw_ctx != hw_ctx)
 			continue;
 
@@ -1432,7 +1440,7 @@ static int cam_fd_mgr_hw_flush_ctx(void *hw_mgr_priv,
 		CAM_DBG(CAM_FD, "Request deleted from frame processing list");
 		mutex_lock(&hw_device->lock);
 		if ((hw_device->ready_to_process == true) ||
-			(hw_device->cur_hw_ctx != hw_ctx))
+		    (hw_device->cur_hw_ctx != hw_ctx))
 			goto unlock_dev_flush_ctx;
 
 		if (hw_device->hw_intf->hw_ops.stop) {
@@ -1447,41 +1455,40 @@ static int cam_fd_mgr_hw_flush_ctx(void *hw_mgr_priv,
 			hw_device->ready_to_process = true;
 		}
 
-unlock_dev_flush_ctx:
-	mutex_unlock(&hw_device->lock);
+	unlock_dev_flush_ctx:
+		mutex_unlock(&hw_device->lock);
 	}
 	mutex_unlock(&hw_mgr->frame_req_mutex);
 
 	for (i = 0; i < flush_args->num_req_pending; i++) {
 		flush_req = (struct cam_fd_mgr_frame_request *)
-			flush_args->flush_req_pending[i];
+				    flush_args->flush_req_pending[i];
 		CAM_DBG(CAM_FD, "flush pending req %llu",
 			flush_req->request_id);
 		cam_fd_mgr_util_put_frame_req(&hw_mgr->frame_free_list,
-			&flush_req);
+					      &flush_req);
 	}
 
 	for (i = 0; i < flush_args->num_req_active; i++) {
 		flush_req = (struct cam_fd_mgr_frame_request *)
-			flush_args->flush_req_active[i];
+				    flush_args->flush_req_active[i];
 		CAM_DBG(CAM_FD, "flush active req %llu", flush_req->request_id);
 		cam_fd_mgr_util_put_frame_req(&hw_mgr->frame_free_list,
-			&flush_req);
+					      &flush_req);
 	}
 
 	return rc;
 }
 
-static int cam_fd_mgr_hw_flush(void *hw_mgr_priv,
-	void *hw_flush_args)
+static int cam_fd_mgr_hw_flush(void *hw_mgr_priv, void *hw_flush_args)
 {
 	int rc = 0;
 	struct cam_hw_flush_args *flush_args =
 		(struct cam_hw_flush_args *)hw_flush_args;
 
 	if (!hw_mgr_priv || !hw_flush_args) {
-		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK",
-			hw_mgr_priv, hw_flush_args);
+		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK", hw_mgr_priv,
+			hw_flush_args);
 		return -EINVAL;
 	}
 
@@ -1512,8 +1519,8 @@ static int cam_fd_mgr_hw_stop(void *hw_mgr_priv, void *mgr_stop_args)
 	int rc = 0;
 
 	if (!hw_mgr_priv || !hw_mgr_stop_args) {
-		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK",
-			hw_mgr_priv, hw_mgr_stop_args);
+		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK", hw_mgr_priv,
+			hw_mgr_stop_args);
 		return -EINVAL;
 	}
 
@@ -1552,11 +1559,11 @@ static int cam_fd_mgr_hw_stop(void *hw_mgr_priv, void *mgr_stop_args)
 }
 
 static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
-	void *hw_prepare_update_args)
+					void *hw_prepare_update_args)
 {
 	struct cam_fd_hw_mgr *hw_mgr = (struct cam_fd_hw_mgr *)hw_mgr_priv;
 	struct cam_hw_prepare_update_args *prepare =
-		(struct cam_hw_prepare_update_args *) hw_prepare_update_args;
+		(struct cam_hw_prepare_update_args *)hw_prepare_update_args;
 	struct cam_fd_hw_mgr_ctx *hw_ctx;
 	struct cam_fd_device *hw_device;
 	struct cam_kmd_buf_info kmd_buf;
@@ -1565,8 +1572,8 @@ static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
 	struct cam_fd_mgr_frame_request *frame_req;
 
 	if (!hw_mgr_priv || !hw_prepare_update_args) {
-		CAM_ERR(CAM_FD, "Invalid args %pK %pK",
-			hw_mgr_priv, hw_prepare_update_args);
+		CAM_ERR(CAM_FD, "Invalid args %pK %pK", hw_mgr_priv,
+			hw_prepare_update_args);
 		return -EINVAL;
 	}
 
@@ -1583,7 +1590,7 @@ static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
 	}
 
 	rc = cam_fd_mgr_util_packet_validate(prepare->packet,
-		prepare->remain_len);
+					     prepare->remain_len);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Error in packet validation %d", rc);
 		goto error;
@@ -1597,12 +1604,12 @@ static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
 
 	CAM_DBG(CAM_FD,
 		"KMD Buf : hdl=%d, cpu_addr=%pK, offset=%d, size=%d, used=%d",
-		kmd_buf.handle, kmd_buf.cpu_addr, kmd_buf.offset,
-		kmd_buf.size, kmd_buf.used_bytes);
+		kmd_buf.handle, kmd_buf.cpu_addr, kmd_buf.offset, kmd_buf.size,
+		kmd_buf.used_bytes);
 
 	/* We do not expect any patching, but just do it anyway */
-	rc = cam_packet_util_process_patches(prepare->packet,
-		hw_mgr->device_iommu.non_secure, -1);
+	rc = cam_packet_util_process_patches(
+		prepare->packet, hw_mgr->device_iommu.non_secure, -1);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Patch FD packet failed, rc=%d", rc);
 		return rc;
@@ -1614,7 +1621,7 @@ static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
 	prestart_args.request_id = prepare->packet->header.request_id;
 
 	rc = cam_fd_mgr_util_parse_generic_cmd_buffer(hw_ctx, prepare->packet,
-		&prestart_args);
+						      &prestart_args);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Error in parsing gerneric cmd buffer %d", rc);
 		goto error;
@@ -1629,8 +1636,8 @@ static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
 		goto error;
 	}
 
-	rc = cam_fd_mgr_util_prepare_hw_update_entries(hw_mgr, prepare,
-		&prestart_args, &kmd_buf);
+	rc = cam_fd_mgr_util_prepare_hw_update_entries(
+		hw_mgr, prepare, &prestart_args, &kmd_buf);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Error in hw update entries %d", rc);
 		goto error;
@@ -1638,10 +1645,10 @@ static int cam_fd_mgr_hw_prepare_update(void *hw_mgr_priv,
 
 	/* get a free frame req from free list */
 	rc = cam_fd_mgr_util_get_frame_req(&hw_mgr->frame_free_list,
-		&frame_req);
+					   &frame_req);
 	if (rc || !frame_req) {
-		CAM_ERR(CAM_FD, "Get frame_req failed, rc=%d, hw_ctx=%pK",
-			rc, hw_ctx);
+		CAM_ERR(CAM_FD, "Get frame_req failed, rc=%d, hw_ctx=%pK", rc,
+			hw_ctx);
 		return -ENOMEM;
 	}
 
@@ -1668,7 +1675,7 @@ static int cam_fd_mgr_hw_config(void *hw_mgr_priv, void *hw_config_args)
 {
 	struct cam_fd_hw_mgr *hw_mgr = (struct cam_fd_hw_mgr *)hw_mgr_priv;
 	struct cam_hw_config_args *config =
-		(struct cam_hw_config_args *) hw_config_args;
+		(struct cam_hw_config_args *)hw_config_args;
 	struct cam_fd_hw_mgr_ctx *hw_ctx;
 	struct cam_fd_mgr_frame_request *frame_req;
 	int rc;
@@ -1732,16 +1739,15 @@ remove_and_put_free_list:
 
 	if (hw_ctx->priority == CAM_FD_PRIORITY_HIGH) {
 		CAM_DBG(CAM_FD, "Removing frame into prio0 queue");
-		cam_fd_mgr_util_get_frame_req(
-			&hw_mgr->frame_pending_list_high, &frame_req);
+		cam_fd_mgr_util_get_frame_req(&hw_mgr->frame_pending_list_high,
+					      &frame_req);
 	} else {
 		CAM_DBG(CAM_FD, "Removing frame into prio1 queue");
 		cam_fd_mgr_util_get_frame_req(
 			&hw_mgr->frame_pending_list_normal, &frame_req);
 	}
 put_free_list:
-	cam_fd_mgr_util_put_frame_req(&hw_mgr->frame_free_list,
-		&frame_req);
+	cam_fd_mgr_util_put_frame_req(&hw_mgr->frame_free_list, &frame_req);
 
 	return rc;
 }
@@ -1763,7 +1769,7 @@ int cam_fd_hw_mgr_deinit(struct device_node *of_node)
 }
 
 int cam_fd_hw_mgr_init(struct device_node *of_node,
-	struct cam_hw_mgr_intf *hw_mgr_intf)
+		       struct cam_hw_mgr_intf *hw_mgr_intf)
 {
 	int count, i, rc = 0;
 	struct cam_hw_intf *hw_intf = NULL;
@@ -1818,8 +1824,8 @@ int cam_fd_hw_mgr_init(struct device_node *of_node,
 
 			rc = hw_device->hw_intf->hw_ops.process_cmd(
 				hw_device->hw_intf->hw_priv,
-				CAM_FD_HW_CMD_REGISTER_CALLBACK,
-				&irq_cb_args, sizeof(irq_cb_args));
+				CAM_FD_HW_CMD_REGISTER_CALLBACK, &irq_cb_args,
+				sizeof(irq_cb_args));
 			if (rc) {
 				CAM_ERR(CAM_FD,
 					"Failed in REGISTER_CALLBACK %d", rc);
@@ -1862,8 +1868,7 @@ int cam_fd_hw_mgr_init(struct device_node *of_node,
 	g_fd_hw_mgr.cdm_iommu.non_secure = -1;
 	g_fd_hw_mgr.cdm_iommu.secure = -1;
 
-	rc = cam_smmu_get_handle("fd",
-		&g_fd_hw_mgr.device_iommu.non_secure);
+	rc = cam_smmu_get_handle("fd", &g_fd_hw_mgr.device_iommu.non_secure);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Get iommu handle failed, rc=%d", rc);
 		goto destroy_mutex;
@@ -1876,8 +1881,7 @@ int cam_fd_hw_mgr_init(struct device_node *of_node,
 	CAM_DBG(CAM_FD, "iommu handles : device(%d, %d), cdm(%d, %d)",
 		g_fd_hw_mgr.device_iommu.non_secure,
 		g_fd_hw_mgr.device_iommu.secure,
-		g_fd_hw_mgr.cdm_iommu.non_secure,
-		g_fd_hw_mgr.cdm_iommu.secure);
+		g_fd_hw_mgr.cdm_iommu.non_secure, g_fd_hw_mgr.cdm_iommu.secure);
 
 	/* Init hw mgr contexts and add to free list */
 	for (i = 0; i < CAM_CTX_MAX; i++) {
@@ -1904,7 +1908,8 @@ int cam_fd_hw_mgr_init(struct device_node *of_node,
 	}
 
 	rc = cam_req_mgr_workq_create("cam_fd_worker", CAM_FD_WORKQ_NUM_TASK,
-		&g_fd_hw_mgr.work, CRM_WORKQ_USAGE_IRQ, 0);
+				      &g_fd_hw_mgr.work, CRM_WORKQ_USAGE_IRQ,
+				      0);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Unable to create a worker, rc=%d", rc);
 		goto detach_smmu;

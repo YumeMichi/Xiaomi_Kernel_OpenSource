@@ -9,7 +9,7 @@
 #include "cam_ife_csid_core.h"
 #include "cam_ife_csid_dev.h"
 
-#define CAM_CSID_LITE_DRV_NAME                    "csid_lite"
+#define CAM_CSID_LITE_DRV_NAME "csid_lite"
 
 static struct cam_ife_csid_hw_info cam_ife_csid_lite_17x_hw_info = {
 	.csid_reg = &cam_ife_csid_lite_17x_reg_offset,

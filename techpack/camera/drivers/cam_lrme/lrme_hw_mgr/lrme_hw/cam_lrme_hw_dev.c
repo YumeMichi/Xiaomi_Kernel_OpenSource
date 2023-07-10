@@ -22,23 +22,23 @@
 #include "cam_smmu_api.h"
 
 static int cam_lrme_hw_dev_util_cdm_acquire(struct cam_lrme_core *lrme_core,
-	struct cam_hw_info *lrme_hw)
+					    struct cam_hw_info *lrme_hw)
 {
 	int rc, i;
 	struct cam_cdm_bl_request *cdm_cmd;
 	struct cam_cdm_acquire_data cdm_acquire;
 	struct cam_lrme_cdm_info *hw_cdm_info;
 
-	hw_cdm_info = kzalloc(sizeof(struct cam_lrme_cdm_info),
-		GFP_KERNEL);
+	hw_cdm_info = kzalloc(sizeof(struct cam_lrme_cdm_info), GFP_KERNEL);
 	if (!hw_cdm_info) {
 		CAM_ERR(CAM_LRME, "No memory for hw_cdm_info");
 		return -ENOMEM;
 	}
 
 	cdm_cmd = kzalloc((sizeof(struct cam_cdm_bl_request) +
-		((CAM_LRME_MAX_HW_ENTRIES - 1) *
-		sizeof(struct cam_cdm_bl_cmd))), GFP_KERNEL);
+			   ((CAM_LRME_MAX_HW_ENTRIES - 1) *
+			    sizeof(struct cam_cdm_bl_cmd))),
+			  GFP_KERNEL);
 	if (!cdm_cmd) {
 		CAM_ERR(CAM_LRME, "No memory for cdm_cmd");
 		kfree(hw_cdm_info);
@@ -112,8 +112,8 @@ static int cam_lrme_hw_dev_probe(struct platform_device *pdev)
 	init_completion(&lrme_core->reset_complete);
 
 	rc = cam_req_mgr_workq_create("cam_lrme_hw_worker",
-		CAM_LRME_HW_WORKQ_NUM_TASK,
-		&lrme_core->work, CRM_WORKQ_USAGE_IRQ, 0);
+				      CAM_LRME_HW_WORKQ_NUM_TASK,
+				      &lrme_core->work, CRM_WORKQ_USAGE_IRQ, 0);
 	if (rc) {
 		CAM_ERR(CAM_LRME, "Unable to create a workq, rc=%d", rc);
 		goto free_memory;
@@ -123,8 +123,8 @@ static int cam_lrme_hw_dev_probe(struct platform_device *pdev)
 		lrme_core->work->task.pool[i].payload =
 			&lrme_core->work_data[i];
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev || !match_dev->data) {
 		CAM_ERR(CAM_LRME, "No Of_match data, %pK", match_dev);
 		rc = -EINVAL;
@@ -133,8 +133,8 @@ static int cam_lrme_hw_dev_probe(struct platform_device *pdev)
 	hw_info = (struct cam_lrme_hw_info *)match_dev->data;
 	lrme_core->hw_info = hw_info;
 
-	rc = cam_lrme_soc_init_resources(&lrme_hw->soc_info,
-		cam_lrme_hw_irq, lrme_hw);
+	rc = cam_lrme_soc_init_resources(&lrme_hw->soc_info, cam_lrme_hw_irq,
+					 lrme_hw);
 	if (rc) {
 		CAM_ERR(CAM_LRME, "Failed to init soc, rc=%d", rc);
 		goto destroy_workqueue;
@@ -195,9 +195,8 @@ static int cam_lrme_hw_dev_probe(struct platform_device *pdev)
 		goto detach_smmu;
 	}
 
-	rc = cam_lrme_mgr_register_device(&lrme_hw_intf,
-		&lrme_core->device_iommu,
-		&lrme_core->cdm_iommu);
+	rc = cam_lrme_mgr_register_device(
+		&lrme_hw_intf, &lrme_core->device_iommu, &lrme_core->cdm_iommu);
 	if (rc) {
 		CAM_ERR(CAM_LRME, "Failed to register device");
 		goto detach_smmu;

@@ -17,34 +17,32 @@
 static const char jpeg_dev_name[] = "cam-jpeg";
 
 static int cam_jpeg_context_dump_active_request(void *data, unsigned long iova,
-	uint32_t buf_info)
+						uint32_t buf_info)
 {
-
 	struct cam_context *ctx = (struct cam_context *)data;
-	struct cam_ctx_request          *req = NULL;
-	struct cam_ctx_request          *req_temp = NULL;
-	struct cam_hw_mgr_dump_pf_data  *pf_dbg_entry = NULL;
+	struct cam_ctx_request *req = NULL;
+	struct cam_ctx_request *req_temp = NULL;
+	struct cam_hw_mgr_dump_pf_data *pf_dbg_entry = NULL;
 	int rc = 0;
 	int closest_port;
 	bool b_mem_found = false;
-
 
 	if (!ctx) {
 		CAM_ERR(CAM_JPEG, "Invalid ctx");
 		return -EINVAL;
 	}
 
-	CAM_INFO(CAM_JPEG, "iommu fault for jpeg ctx %d state %d",
-		ctx->ctx_id, ctx->state);
+	CAM_INFO(CAM_JPEG, "iommu fault for jpeg ctx %d state %d", ctx->ctx_id,
+		 ctx->state);
 
-	list_for_each_entry_safe(req, req_temp,
-			&ctx->active_req_list, list) {
+	list_for_each_entry_safe (req, req_temp, &ctx->active_req_list, list) {
 		pf_dbg_entry = &(req->pf_data);
 		closest_port = -1;
 		CAM_INFO(CAM_JPEG, "req_id : %lld ", req->request_id);
 
 		rc = cam_context_dump_pf_info_to_hw(ctx, pf_dbg_entry->packet,
-			iova, buf_info, &b_mem_found);
+						    iova, buf_info,
+						    &b_mem_found);
 		if (rc)
 			CAM_ERR(CAM_JPEG, "Failed to dump pf info");
 
@@ -55,8 +53,9 @@ static int cam_jpeg_context_dump_active_request(void *data, unsigned long iova,
 	return rc;
 }
 
-static int __cam_jpeg_ctx_acquire_dev_in_available(struct cam_context *ctx,
-	struct cam_acquire_dev_cmd *cmd)
+static int
+__cam_jpeg_ctx_acquire_dev_in_available(struct cam_context *ctx,
+					struct cam_acquire_dev_cmd *cmd)
 {
 	int rc;
 
@@ -69,8 +68,9 @@ static int __cam_jpeg_ctx_acquire_dev_in_available(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_jpeg_ctx_release_dev_in_acquired(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+static int
+__cam_jpeg_ctx_release_dev_in_acquired(struct cam_context *ctx,
+				       struct cam_release_dev_cmd *cmd)
 {
 	int rc;
 
@@ -84,7 +84,7 @@ static int __cam_jpeg_ctx_release_dev_in_acquired(struct cam_context *ctx,
 }
 
 static int __cam_jpeg_ctx_flush_dev_in_acquired(struct cam_context *ctx,
-	struct cam_flush_dev_cmd *cmd)
+						struct cam_flush_dev_cmd *cmd)
 {
 	int rc;
 
@@ -96,19 +96,21 @@ static int __cam_jpeg_ctx_flush_dev_in_acquired(struct cam_context *ctx,
 }
 
 static int __cam_jpeg_ctx_config_dev_in_acquired(struct cam_context *ctx,
-	struct cam_config_dev_cmd *cmd)
+						 struct cam_config_dev_cmd *cmd)
 {
 	return cam_context_prepare_dev_to_hw(ctx, cmd);
 }
 
 static int __cam_jpeg_ctx_handle_buf_done_in_acquired(void *ctx,
-	uint32_t evt_id, void *done)
+						      uint32_t evt_id,
+						      void *done)
 {
 	return cam_context_buf_done_from_hw(ctx, done, evt_id);
 }
 
-static int __cam_jpeg_ctx_stop_dev_in_acquired(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+static int
+__cam_jpeg_ctx_stop_dev_in_acquired(struct cam_context *ctx,
+				    struct cam_start_stop_dev_cmd *cmd)
 {
 	int rc;
 
@@ -153,9 +155,8 @@ static struct cam_ctx_ops
 };
 
 int cam_jpeg_context_init(struct cam_jpeg_context *ctx,
-	struct cam_context *ctx_base,
-	struct cam_hw_mgr_intf *hw_intf,
-	uint32_t ctx_id)
+			  struct cam_context *ctx_base,
+			  struct cam_hw_mgr_intf *hw_intf, uint32_t ctx_id)
 {
 	int rc;
 	int i;
@@ -173,8 +174,8 @@ int cam_jpeg_context_init(struct cam_jpeg_context *ctx,
 	for (i = 0; i < CAM_CTX_REQ_MAX; i++)
 		ctx->req_base[i].req_priv = ctx;
 
-	rc = cam_context_init(ctx_base, jpeg_dev_name, CAM_JPEG, ctx_id,
-		NULL, hw_intf, ctx->req_base, CAM_CTX_REQ_MAX);
+	rc = cam_context_init(ctx_base, jpeg_dev_name, CAM_JPEG, ctx_id, NULL,
+			      hw_intf, ctx->req_base, CAM_CTX_REQ_MAX);
 	if (rc) {
 		CAM_ERR(CAM_JPEG, "Camera Context Base init failed");
 		goto err;

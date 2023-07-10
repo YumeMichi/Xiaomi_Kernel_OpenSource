@@ -10,15 +10,16 @@
 #include "cam_common_util.h"
 #include "cam_debug_util.h"
 
-int cam_common_util_get_string_index(const char **strings,
-	uint32_t num_strings, const char *matching_string, uint32_t *index)
+int cam_common_util_get_string_index(const char **strings, uint32_t num_strings,
+				     const char *matching_string,
+				     uint32_t *index)
 {
 	int i;
 
 	for (i = 0; i < num_strings; i++) {
 		if (strnstr(strings[i], matching_string, strlen(strings[i]))) {
-			CAM_DBG(CAM_UTIL, "matched %s : %d\n",
-				matching_string, i);
+			CAM_DBG(CAM_UTIL, "matched %s : %d\n", matching_string,
+				i);
 			*index = i;
 			return 0;
 		}
@@ -38,7 +39,7 @@ uint32_t cam_common_util_remove_duplicate_arr(int32_t *arr, uint32_t num)
 	}
 
 	for (i = 1; i < num; i++) {
-		for (j = 0; j < wr_idx ; j++) {
+		for (j = 0; j < wr_idx; j++) {
 			if (arr[i] == arr[j])
 				break;
 		}

@@ -31,10 +31,10 @@ static void cam_sync_print_fence_table(void)
 
 	for (idx = 0; idx < CAM_SYNC_MAX_OBJS; idx++) {
 		spin_lock_bh(&sync_dev->row_spinlocks[idx]);
-		CAM_INFO(CAM_SYNC,
+		CAM_INFO(
+			CAM_SYNC,
 			"index[%u]: sync_id=%d, name=%s, type=%d, state=%d, ref_cnt=%d",
-			idx,
-			sync_dev->sync_table[idx].sync_id,
+			idx, sync_dev->sync_table[idx].sync_id,
 			sync_dev->sync_table[idx].name,
 			sync_dev->sync_table[idx].type,
 			sync_dev->sync_table[idx].state,
@@ -64,7 +64,7 @@ int cam_sync_create(int32_t *sync_obj, const char *name)
 
 	spin_lock_bh(&sync_dev->row_spinlocks[idx]);
 	rc = cam_sync_init_row(sync_dev->sync_table, idx, name,
-		CAM_SYNC_TYPE_INDV);
+			       CAM_SYNC_TYPE_INDV);
 	if (rc) {
 		CAM_ERR(CAM_SYNC, "Error: Unable to init row at idx = %ld",
 			idx);
@@ -80,8 +80,8 @@ int cam_sync_create(int32_t *sync_obj, const char *name)
 	return rc;
 }
 
-int cam_sync_register_callback(sync_callback cb_func,
-	void *userdata, int32_t sync_obj)
+int cam_sync_register_callback(sync_callback cb_func, void *userdata,
+			       int32_t sync_obj)
 {
 	struct sync_callback_info *sync_cb;
 	struct sync_table_row *row = NULL;
@@ -109,8 +109,8 @@ int cam_sync_register_callback(sync_callback cb_func,
 
 	/* Trigger callback if sync object is already in SIGNALED state */
 	if ((row->state == CAM_SYNC_STATE_SIGNALED_SUCCESS ||
-		row->state == CAM_SYNC_STATE_SIGNALED_ERROR) &&
-		(!row->remaining)) {
+	     row->state == CAM_SYNC_STATE_SIGNALED_ERROR) &&
+	    (!row->remaining)) {
 		if (trigger_cb_without_switch) {
 			CAM_DBG(CAM_SYNC, "Invoke callback for sync object:%d",
 				sync_obj);
@@ -123,12 +123,12 @@ int cam_sync_register_callback(sync_callback cb_func,
 			sync_cb->cb_data = userdata;
 			sync_cb->sync_obj = sync_obj;
 			INIT_WORK(&sync_cb->cb_dispatch_work,
-				cam_sync_util_cb_dispatch);
+				  cam_sync_util_cb_dispatch);
 			sync_cb->status = row->state;
 			CAM_DBG(CAM_SYNC, "Enqueue callback for sync object:%d",
 				sync_cb->sync_obj);
 			queue_work(sync_dev->work_queue,
-				&sync_cb->cb_dispatch_work);
+				   &sync_cb->cb_dispatch_work);
 			spin_unlock_bh(&sync_dev->row_spinlocks[sync_obj]);
 		}
 
@@ -145,8 +145,8 @@ int cam_sync_register_callback(sync_callback cb_func,
 	return 0;
 }
 
-int cam_sync_deregister_callback(sync_callback cb_func,
-	void *userdata, int32_t sync_obj)
+int cam_sync_deregister_callback(sync_callback cb_func, void *userdata,
+				 int32_t sync_obj)
 {
 	struct sync_table_row *row = NULL;
 	struct sync_callback_info *sync_cb, *temp;
@@ -166,11 +166,10 @@ int cam_sync_deregister_callback(sync_callback cb_func,
 		return -EINVAL;
 	}
 
-	CAM_DBG(CAM_SYNC, "deregistered callback for sync object:%d",
-		sync_obj);
-	list_for_each_entry_safe(sync_cb, temp, &row->callback_list, list) {
+	CAM_DBG(CAM_SYNC, "deregistered callback for sync object:%d", sync_obj);
+	list_for_each_entry_safe (sync_cb, temp, &row->callback_list, list) {
 		if (sync_cb->callback_func == cb_func &&
-			sync_cb->cb_data == userdata) {
+		    sync_cb->cb_data == userdata) {
 			list_del_init(&sync_cb->list);
 			kfree(sync_cb);
 			found = true;
@@ -206,8 +205,7 @@ int cam_sync_signal(int32_t sync_obj, uint32_t status)
 
 	if (row->type == CAM_SYNC_TYPE_GROUP) {
 		spin_unlock_bh(&sync_dev->row_spinlocks[sync_obj]);
-		CAM_ERR(CAM_SYNC,
-			"Error: Signaling a GROUP sync object = %d",
+		CAM_ERR(CAM_SYNC, "Error: Signaling a GROUP sync object = %d",
 			sync_obj);
 		return -EINVAL;
 	}
@@ -221,10 +219,9 @@ int cam_sync_signal(int32_t sync_obj, uint32_t status)
 	}
 
 	if (status != CAM_SYNC_STATE_SIGNALED_SUCCESS &&
-		status != CAM_SYNC_STATE_SIGNALED_ERROR) {
+	    status != CAM_SYNC_STATE_SIGNALED_ERROR) {
 		spin_unlock_bh(&sync_dev->row_spinlocks[sync_obj]);
-		CAM_ERR(CAM_SYNC,
-			"Error: signaling with undefined status = %d",
+		CAM_ERR(CAM_SYNC, "Error: signaling with undefined status = %d",
 			status);
 		return -EINVAL;
 	}
@@ -249,17 +246,13 @@ int cam_sync_signal(int32_t sync_obj, uint32_t status)
 	 * Now iterate over all parents of this object and if they too need to
 	 * be signaled dispatch cb's
 	 */
-	list_for_each_entry_safe(parent_info,
-		temp_parent_info,
-		&parents_list,
-		list) {
+	list_for_each_entry_safe (parent_info, temp_parent_info, &parents_list,
+				  list) {
 		parent_row = sync_dev->sync_table + parent_info->sync_id;
 		spin_lock_bh(&sync_dev->row_spinlocks[parent_info->sync_id]);
 		parent_row->remaining--;
 
-		rc = cam_sync_util_update_parent_state(
-			parent_row,
-			status);
+		rc = cam_sync_util_update_parent_state(parent_row, status);
 		if (rc) {
 			CAM_ERR(CAM_SYNC, "Invalid parent state %d",
 				parent_row->state);
@@ -270,8 +263,8 @@ int cam_sync_signal(int32_t sync_obj, uint32_t status)
 		}
 
 		if (!parent_row->remaining)
-			cam_sync_util_dispatch_signaled_cb(
-				parent_info->sync_id, parent_row->state);
+			cam_sync_util_dispatch_signaled_cb(parent_info->sync_id,
+							   parent_row->state);
 
 		spin_unlock_bh(&sync_dev->row_spinlocks[parent_info->sync_id]);
 		list_del_init(&parent_info->list);
@@ -298,13 +291,12 @@ int cam_sync_merge(int32_t *sync_obj, uint32_t num_objs, int32_t *merged_obj)
 	}
 
 	if (cam_sync_validate_sync_objects(sync_obj, num_objs)) {
-		CAM_ERR(CAM_SYNC,
-			"The objects passed for merge are not valid");
+		CAM_ERR(CAM_SYNC, "The objects passed for merge are not valid");
 		return -EINVAL;
 	}
 
-	if (cam_common_util_remove_duplicate_arr(sync_obj, num_objs)
-		!= num_objs) {
+	if (cam_common_util_remove_duplicate_arr(sync_obj, num_objs) !=
+	    num_objs) {
 		CAM_ERR(CAM_SYNC, "The obj list has duplicate fence");
 		return -EINVAL;
 	}
@@ -317,9 +309,8 @@ int cam_sync_merge(int32_t *sync_obj, uint32_t num_objs, int32_t *merged_obj)
 	} while (bit);
 
 	spin_lock_bh(&sync_dev->row_spinlocks[idx]);
-	rc = cam_sync_init_group_object(sync_dev->sync_table,
-		idx, sync_obj,
-		num_objs);
+	rc = cam_sync_init_group_object(sync_dev->sync_table, idx, sync_obj,
+					num_objs);
 	if (rc < 0) {
 		CAM_ERR(CAM_SYNC, "Error: Unable to init row at idx = %ld",
 			idx);
@@ -399,11 +390,11 @@ int cam_sync_wait(int32_t sync_obj, uint64_t timeout_ms)
 	}
 
 	timeleft = wait_for_completion_timeout(&row->signaled,
-		msecs_to_jiffies(timeout_ms));
+					       msecs_to_jiffies(timeout_ms));
 
 	if (!timeleft) {
-		CAM_ERR(CAM_SYNC,
-			"Error: timed out for sync obj = %d", sync_obj);
+		CAM_ERR(CAM_SYNC, "Error: timed out for sync obj = %d",
+			sync_obj);
 		rc = -ETIMEDOUT;
 	} else {
 		switch (row->state) {
@@ -438,19 +429,15 @@ static int cam_sync_handle_create(struct cam_private_ioctl_arg *k_ioctl)
 	if (!k_ioctl->ioctl_ptr)
 		return -EINVAL;
 
-	if (copy_from_user(&sync_create,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+	if (copy_from_user(&sync_create, u64_to_user_ptr(k_ioctl->ioctl_ptr),
+			   k_ioctl->size))
 		return -EFAULT;
 
-	result = cam_sync_create(&sync_create.sync_obj,
-		sync_create.name);
+	result = cam_sync_create(&sync_create.sync_obj, sync_create.name);
 
 	if (!result)
-		if (copy_to_user(
-			u64_to_user_ptr(k_ioctl->ioctl_ptr),
-			&sync_create,
-			k_ioctl->size))
+		if (copy_to_user(u64_to_user_ptr(k_ioctl->ioctl_ptr),
+				 &sync_create, k_ioctl->size))
 			return -EFAULT;
 
 	return result;
@@ -467,9 +454,8 @@ static int cam_sync_handle_signal(struct cam_private_ioctl_arg *k_ioctl)
 	if (!k_ioctl->ioctl_ptr)
 		return -EINVAL;
 
-	if (copy_from_user(&sync_signal,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+	if (copy_from_user(&sync_signal, u64_to_user_ptr(k_ioctl->ioctl_ptr),
+			   k_ioctl->size))
 		return -EFAULT;
 
 	/* need to get ref for UMD signaled fences */
@@ -481,8 +467,7 @@ static int cam_sync_handle_signal(struct cam_private_ioctl_arg *k_ioctl)
 		return rc;
 	}
 
-	return cam_sync_signal(sync_signal.sync_obj,
-		sync_signal.sync_state);
+	return cam_sync_signal(sync_signal.sync_obj, sync_signal.sync_state);
 }
 
 static int cam_sync_handle_merge(struct cam_private_ioctl_arg *k_ioctl)
@@ -499,9 +484,8 @@ static int cam_sync_handle_merge(struct cam_private_ioctl_arg *k_ioctl)
 	if (!k_ioctl->ioctl_ptr)
 		return -EINVAL;
 
-	if (copy_from_user(&sync_merge,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+	if (copy_from_user(&sync_merge, u64_to_user_ptr(k_ioctl->ioctl_ptr),
+			   k_ioctl->size))
 		return -EFAULT;
 
 	if (sync_merge.num_objs >= CAM_SYNC_MAX_OBJS)
@@ -513,27 +497,22 @@ static int cam_sync_handle_merge(struct cam_private_ioctl_arg *k_ioctl)
 	if (!sync_objs)
 		return -ENOMEM;
 
-	if (copy_from_user(sync_objs,
-		u64_to_user_ptr(sync_merge.sync_objs),
-		sizeof(uint32_t) * sync_merge.num_objs)) {
+	if (copy_from_user(sync_objs, u64_to_user_ptr(sync_merge.sync_objs),
+			   sizeof(uint32_t) * sync_merge.num_objs)) {
 		kfree(sync_objs);
 		return -EFAULT;
 	}
 
 	num_objs = sync_merge.num_objs;
 
-	result = cam_sync_merge(sync_objs,
-		num_objs,
-		&sync_merge.merged);
+	result = cam_sync_merge(sync_objs, num_objs, &sync_merge.merged);
 
 	if (!result)
-		if (copy_to_user(
-			u64_to_user_ptr(k_ioctl->ioctl_ptr),
-			&sync_merge,
-			k_ioctl->size)) {
+		if (copy_to_user(u64_to_user_ptr(k_ioctl->ioctl_ptr),
+				 &sync_merge, k_ioctl->size)) {
 			kfree(sync_objs);
 			return -EFAULT;
-	}
+		}
 
 	kfree(sync_objs);
 
@@ -550,13 +529,12 @@ static int cam_sync_handle_wait(struct cam_private_ioctl_arg *k_ioctl)
 	if (!k_ioctl->ioctl_ptr)
 		return -EINVAL;
 
-	if (copy_from_user(&sync_wait,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+	if (copy_from_user(&sync_wait, u64_to_user_ptr(k_ioctl->ioctl_ptr),
+			   k_ioctl->size))
 		return -EFAULT;
 
-	k_ioctl->result = cam_sync_wait(sync_wait.sync_obj,
-		sync_wait.timeout_ms);
+	k_ioctl->result =
+		cam_sync_wait(sync_wait.sync_obj, sync_wait.timeout_ms);
 
 	return 0;
 }
@@ -571,16 +549,15 @@ static int cam_sync_handle_destroy(struct cam_private_ioctl_arg *k_ioctl)
 	if (!k_ioctl->ioctl_ptr)
 		return -EINVAL;
 
-	if (copy_from_user(&sync_create,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+	if (copy_from_user(&sync_create, u64_to_user_ptr(k_ioctl->ioctl_ptr),
+			   k_ioctl->size))
 		return -EFAULT;
 
 	return cam_sync_destroy(sync_create.sync_obj);
 }
 
-static int cam_sync_handle_register_user_payload(
-	struct cam_private_ioctl_arg *k_ioctl)
+static int
+cam_sync_handle_register_user_payload(struct cam_private_ioctl_arg *k_ioctl)
 {
 	struct cam_sync_userpayload_info userpayload_info;
 	struct sync_user_payload *user_payload_kernel;
@@ -596,8 +573,7 @@ static int cam_sync_handle_register_user_payload(
 		return -EINVAL;
 
 	if (copy_from_user(&userpayload_info,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+			   u64_to_user_ptr(k_ioctl->ioctl_ptr), k_ioctl->size))
 		return -EFAULT;
 
 	sync_obj = userpayload_info.sync_obj;
@@ -608,12 +584,11 @@ static int cam_sync_handle_register_user_payload(
 	if (!user_payload_kernel)
 		return -ENOMEM;
 
-	memcpy(user_payload_kernel->payload_data,
-		userpayload_info.payload,
-		CAM_SYNC_PAYLOAD_WORDS * sizeof(__u64));
+	memcpy(user_payload_kernel->payload_data, userpayload_info.payload,
+	       CAM_SYNC_PAYLOAD_WORDS * sizeof(__u64));
 
 	spin_lock_bh(&sync_dev->row_spinlocks[sync_obj]);
-	row =  sync_dev->sync_table + sync_obj;
+	row = sync_dev->sync_table + sync_obj;
 
 	if (row->state == CAM_SYNC_STATE_INVALID) {
 		CAM_ERR(CAM_SYNC,
@@ -625,11 +600,9 @@ static int cam_sync_handle_register_user_payload(
 	}
 
 	if (row->state == CAM_SYNC_STATE_SIGNALED_SUCCESS ||
-		row->state == CAM_SYNC_STATE_SIGNALED_ERROR) {
-
-		cam_sync_util_send_v4l2_event(CAM_SYNC_V4L_EVENT_ID_CB_TRIG,
-			sync_obj,
-			row->state,
+	    row->state == CAM_SYNC_STATE_SIGNALED_ERROR) {
+		cam_sync_util_send_v4l2_event(
+			CAM_SYNC_V4L_EVENT_ID_CB_TRIG, sync_obj, row->state,
 			user_payload_kernel->payload_data,
 			CAM_SYNC_USER_PAYLOAD_SIZE * sizeof(__u64));
 
@@ -638,15 +611,12 @@ static int cam_sync_handle_register_user_payload(
 		return 0;
 	}
 
-	list_for_each_entry_safe(user_payload_iter,
-		temp_upayload_kernel,
-		&row->user_payload_list,
-		list) {
+	list_for_each_entry_safe (user_payload_iter, temp_upayload_kernel,
+				  &row->user_payload_list, list) {
 		if (user_payload_iter->payload_data[0] ==
-				user_payload_kernel->payload_data[0] &&
-			user_payload_iter->payload_data[1] ==
-				user_payload_kernel->payload_data[1]) {
-
+			    user_payload_kernel->payload_data[0] &&
+		    user_payload_iter->payload_data[1] ==
+			    user_payload_kernel->payload_data[1]) {
 			spin_unlock_bh(&sync_dev->row_spinlocks[sync_obj]);
 			kfree(user_payload_kernel);
 			return -EALREADY;
@@ -658,8 +628,8 @@ static int cam_sync_handle_register_user_payload(
 	return 0;
 }
 
-static int cam_sync_handle_deregister_user_payload(
-	struct cam_private_ioctl_arg *k_ioctl)
+static int
+cam_sync_handle_deregister_user_payload(struct cam_private_ioctl_arg *k_ioctl)
 {
 	struct cam_sync_userpayload_info userpayload_info;
 	struct sync_user_payload *user_payload_kernel, *temp;
@@ -677,8 +647,7 @@ static int cam_sync_handle_deregister_user_payload(
 	}
 
 	if (copy_from_user(&userpayload_info,
-		u64_to_user_ptr(k_ioctl->ioctl_ptr),
-		k_ioctl->size))
+			   u64_to_user_ptr(k_ioctl->ioctl_ptr), k_ioctl->size))
 		return -EFAULT;
 
 	sync_obj = userpayload_info.sync_obj;
@@ -686,7 +655,7 @@ static int cam_sync_handle_deregister_user_payload(
 		return -EINVAL;
 
 	spin_lock_bh(&sync_dev->row_spinlocks[sync_obj]);
-	row =  sync_dev->sync_table + sync_obj;
+	row = sync_dev->sync_table + sync_obj;
 
 	if (row->state == CAM_SYNC_STATE_INVALID) {
 		CAM_ERR(CAM_SYNC,
@@ -696,12 +665,12 @@ static int cam_sync_handle_deregister_user_payload(
 		return -EINVAL;
 	}
 
-	list_for_each_entry_safe(user_payload_kernel, temp,
-				&row->user_payload_list, list) {
+	list_for_each_entry_safe (user_payload_kernel, temp,
+				  &row->user_payload_list, list) {
 		if (user_payload_kernel->payload_data[0] ==
-				userpayload_info.payload[0] &&
-				user_payload_kernel->payload_data[1] ==
-				userpayload_info.payload[1]) {
+			    userpayload_info.payload[0] &&
+		    user_payload_kernel->payload_data[1] ==
+			    userpayload_info.payload[1]) {
 			list_del_init(&user_payload_kernel->list);
 			kfree(user_payload_kernel);
 		}
@@ -711,8 +680,8 @@ static int cam_sync_handle_deregister_user_payload(
 	return 0;
 }
 
-static long cam_sync_dev_ioctl(struct file *filep, void *fh,
-		bool valid_prio, unsigned int cmd, void *arg)
+static long cam_sync_dev_ioctl(struct file *filep, void *fh, bool valid_prio,
+			       unsigned int cmd, void *arg)
 {
 	int32_t rc;
 	struct sync_device *sync_dev = video_drvdata(filep);
@@ -739,12 +708,10 @@ static long cam_sync_dev_ioctl(struct file *filep, void *fh,
 		rc = cam_sync_handle_destroy(&k_ioctl);
 		break;
 	case CAM_SYNC_REGISTER_PAYLOAD:
-		rc = cam_sync_handle_register_user_payload(
-			&k_ioctl);
+		rc = cam_sync_handle_register_user_payload(&k_ioctl);
 		break;
 	case CAM_SYNC_DEREGISTER_PAYLOAD:
-		rc = cam_sync_handle_deregister_user_payload(
-			&k_ioctl);
+		rc = cam_sync_handle_deregister_user_payload(&k_ioctl);
 		break;
 	case CAM_SYNC_SIGNAL:
 		rc = cam_sync_handle_signal(&k_ioctl);
@@ -754,8 +721,7 @@ static long cam_sync_dev_ioctl(struct file *filep, void *fh,
 		break;
 	case CAM_SYNC_WAIT:
 		rc = cam_sync_handle_wait(&k_ioctl);
-		((struct cam_private_ioctl_arg *)arg)->result =
-			k_ioctl.result;
+		((struct cam_private_ioctl_arg *)arg)->result = k_ioctl.result;
 		break;
 	default:
 		rc = -ENOIOCTLCMD;
@@ -765,7 +731,7 @@ static long cam_sync_dev_ioctl(struct file *filep, void *fh,
 }
 
 static unsigned int cam_sync_poll(struct file *f,
-	struct poll_table_struct *pll_table)
+				  struct poll_table_struct *pll_table)
 {
 	int rc = 0;
 	struct v4l2_fh *eventq = f->private_data;
@@ -826,8 +792,7 @@ static int cam_sync_close(struct file *filep)
 	sync_dev->open_cnt--;
 	if (!sync_dev->open_cnt) {
 		for (i = 1; i < CAM_SYNC_MAX_OBJS; i++) {
-			struct sync_table_row *row =
-			sync_dev->sync_table + i;
+			struct sync_table_row *row = sync_dev->sync_table + i;
 
 			/*
 			 * Signal all ACTIVE objects as ERR, but we don't
@@ -835,12 +800,12 @@ static int cam_sync_close(struct file *filep)
 			 * it.
 			 */
 			if (row->state == CAM_SYNC_STATE_ACTIVE) {
-				rc = cam_sync_signal(i,
-					CAM_SYNC_STATE_SIGNALED_ERROR);
+				rc = cam_sync_signal(
+					i, CAM_SYNC_STATE_SIGNALED_ERROR);
 				if (rc < 0)
 					CAM_ERR(CAM_SYNC,
-					  "Cleanup signal fail idx:%d\n",
-					  i);
+						"Cleanup signal fail idx:%d\n",
+						i);
 			}
 		}
 
@@ -855,15 +820,14 @@ static int cam_sync_close(struct file *filep)
 		 * destroy the sync objects
 		 */
 		for (i = 1; i < CAM_SYNC_MAX_OBJS; i++) {
-			struct sync_table_row *row =
-			sync_dev->sync_table + i;
+			struct sync_table_row *row = sync_dev->sync_table + i;
 
 			if (row->state != CAM_SYNC_STATE_INVALID) {
 				rc = cam_sync_destroy(i);
 				if (rc < 0)
 					CAM_ERR(CAM_SYNC,
-					  "Cleanup destroy fail:idx:%d\n",
-					  i);
+						"Cleanup destroy fail:idx:%d\n",
+						i);
 			}
 		}
 	}
@@ -877,7 +841,7 @@ static int cam_sync_close(struct file *filep)
 }
 
 static void cam_sync_event_queue_notify_error(const struct v4l2_event *old,
-	struct v4l2_event *new)
+					      struct v4l2_event *new)
 {
 	struct cam_sync_ev_header *ev_header;
 
@@ -891,14 +855,14 @@ static struct v4l2_subscribed_event_ops cam_sync_v4l2_ops = {
 };
 
 int cam_sync_subscribe_event(struct v4l2_fh *fh,
-		const struct v4l2_event_subscription *sub)
+			     const struct v4l2_event_subscription *sub)
 {
 	return v4l2_event_subscribe(fh, sub, CAM_SYNC_MAX_V4L2_EVENTS,
-		&cam_sync_v4l2_ops);
+				    &cam_sync_v4l2_ops);
 }
 
 int cam_sync_unsubscribe_event(struct v4l2_fh *fh,
-		const struct v4l2_event_subscription *sub)
+			       const struct v4l2_event_subscription *sub)
 {
 	return v4l2_event_unsubscribe(fh, sub);
 }
@@ -911,10 +875,10 @@ static const struct v4l2_ioctl_ops g_cam_sync_ioctl_ops = {
 
 static struct v4l2_file_operations cam_sync_v4l2_fops = {
 	.owner = THIS_MODULE,
-	.open  = cam_sync_open,
+	.open = cam_sync_open,
 	.release = cam_sync_close,
 	.poll = cam_sync_poll,
-	.unlocked_ioctl   = video_ioctl2,
+	.unlocked_ioctl = video_ioctl2,
 #ifdef CONFIG_COMPAT
 	.compat_ioctl32 = video_ioctl2,
 #endif
@@ -922,18 +886,18 @@ static struct v4l2_file_operations cam_sync_v4l2_fops = {
 
 #if defined(CONFIG_MEDIA_CONTROLLER)
 static int cam_sync_media_controller_init(struct sync_device *sync_dev,
-	struct platform_device *pdev)
+					  struct platform_device *pdev)
 {
 	int rc;
 
-	sync_dev->v4l2_dev.mdev = kzalloc(sizeof(struct media_device),
-		GFP_KERNEL);
+	sync_dev->v4l2_dev.mdev =
+		kzalloc(sizeof(struct media_device), GFP_KERNEL);
 	if (!sync_dev->v4l2_dev.mdev)
 		return -ENOMEM;
 
 	media_device_init(sync_dev->v4l2_dev.mdev);
 	strlcpy(sync_dev->v4l2_dev.mdev->model, CAM_SYNC_DEVICE_NAME,
-			sizeof(sync_dev->v4l2_dev.mdev->model));
+		sizeof(sync_dev->v4l2_dev.mdev->model));
 	sync_dev->v4l2_dev.mdev->dev = &(pdev->dev);
 
 	rc = media_device_register(sync_dev->v4l2_dev.mdev);
@@ -964,12 +928,11 @@ static void cam_sync_media_controller_cleanup(struct sync_device *sync_dev)
 static void cam_sync_init_entity(struct sync_device *sync_dev)
 {
 	sync_dev->vdev->entity.function = CAM_SYNC_DEVICE_TYPE;
-	sync_dev->vdev->entity.name =
-				video_device_node_name(sync_dev->vdev);
+	sync_dev->vdev->entity.name = video_device_node_name(sync_dev->vdev);
 }
 #else
 static int cam_sync_media_controller_init(struct sync_device *sync_dev,
-	struct platform_device *pdev)
+					  struct platform_device *pdev)
 {
 	return 0;
 }
@@ -992,9 +955,9 @@ static int cam_sync_create_debugfs(void)
 		return -ENOMEM;
 	}
 
-	if (!debugfs_create_bool("trigger_cb_without_switch",
-		0644, sync_dev->dentry,
-		&trigger_cb_without_switch)) {
+	if (!debugfs_create_bool("trigger_cb_without_switch", 0644,
+				 sync_dev->dentry,
+				 &trigger_cb_without_switch)) {
 		CAM_ERR(CAM_SYNC,
 			"failed to create trigger_cb_without_switch entry");
 		return -ENOMEM;
@@ -1054,14 +1017,13 @@ static int cam_sync_probe(struct platform_device *pdev)
 		goto register_fail;
 
 	strlcpy(sync_dev->vdev->name, CAM_SYNC_NAME,
-				sizeof(sync_dev->vdev->name));
-	sync_dev->vdev->release  = video_device_release;
-	sync_dev->vdev->fops     = &cam_sync_v4l2_fops;
+		sizeof(sync_dev->vdev->name));
+	sync_dev->vdev->release = video_device_release;
+	sync_dev->vdev->fops = &cam_sync_v4l2_fops;
 	sync_dev->vdev->ioctl_ops = &g_cam_sync_ioctl_ops;
-	sync_dev->vdev->minor     = -1;
-	sync_dev->vdev->vfl_type  = VFL_TYPE_GRABBER;
-	rc = video_register_device(sync_dev->vdev,
-		VFL_TYPE_GRABBER, -1);
+	sync_dev->vdev->minor = -1;
+	sync_dev->vdev->vfl_type = VFL_TYPE_GRABBER;
+	rc = video_register_device(sync_dev->vdev, VFL_TYPE_GRABBER, -1);
 	if (rc < 0)
 		goto v4l2_fail;
 
@@ -1078,7 +1040,7 @@ static int cam_sync_probe(struct platform_device *pdev)
 	set_bit(0, sync_dev->bitmap);
 
 	sync_dev->work_queue = alloc_workqueue(CAM_SYNC_WORKQUEUE_NAME,
-		WQ_HIGHPRI | WQ_UNBOUND, 1);
+					       WQ_HIGHPRI | WQ_UNBOUND, 1);
 
 	if (!sync_dev->work_queue) {
 		CAM_ERR(CAM_SYNC,

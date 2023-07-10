@@ -18,7 +18,7 @@
 #include "cam_cpas_hw_intf.h"
 #include "cam_cpas_soc.h"
 
-#define CAM_CPAS_DEV_NAME    "cam-cpas"
+#define CAM_CPAS_DEV_NAME "cam-cpas"
 #define CAM_CPAS_INTF_INITIALIZED() (g_cpas_intf && g_cpas_intf->probe_done)
 
 /**
@@ -45,8 +45,7 @@ struct cam_cpas_intf {
 
 static struct cam_cpas_intf *g_cpas_intf;
 
-const char *cam_cpas_axi_util_path_type_to_string(
-	uint32_t path_data_type)
+const char *cam_cpas_axi_util_path_type_to_string(uint32_t path_data_type)
 {
 	switch (path_data_type) {
 	/* IFE Paths */
@@ -92,8 +91,7 @@ const char *cam_cpas_axi_util_path_type_to_string(
 }
 EXPORT_SYMBOL(cam_cpas_axi_util_path_type_to_string);
 
-const char *cam_cpas_axi_util_trans_type_to_string(
-	uint32_t transac_type)
+const char *cam_cpas_axi_util_trans_type_to_string(uint32_t transac_type)
 {
 	switch (transac_type) {
 	case CAM_AXI_TRANSACTION_READ:
@@ -117,7 +115,7 @@ int cam_cpas_is_feature_supported(uint32_t flag)
 		return -ENODEV;
 	}
 
-	cpas_hw = (struct cam_hw_info *) g_cpas_intf->hw_intf->hw_priv;
+	cpas_hw = (struct cam_hw_info *)g_cpas_intf->hw_intf->hw_priv;
 	soc_private =
 		(struct cam_cpas_private_soc *)cpas_hw->soc_info.soc_private;
 	feature_mask = soc_private->feature_mask;
@@ -145,7 +143,7 @@ int cam_cpas_get_cpas_hw_version(uint32_t *hw_version)
 		return -EINVAL;
 	}
 
-	cpas_hw = (struct cam_hw_info  *) g_cpas_intf->hw_intf->hw_priv;
+	cpas_hw = (struct cam_hw_info *)g_cpas_intf->hw_intf->hw_priv;
 
 	*hw_version = cpas_hw->soc_info.hw_version;
 
@@ -158,9 +156,9 @@ int cam_cpas_get_cpas_hw_version(uint32_t *hw_version)
 }
 
 int cam_cpas_get_hw_info(uint32_t *camera_family,
-	struct cam_hw_version *camera_version,
-	struct cam_hw_version *cpas_version,
-	uint32_t *cam_caps)
+			 struct cam_hw_version *camera_version,
+			 struct cam_hw_version *cpas_version,
+			 uint32_t *cam_caps)
 {
 	if (!CAM_CPAS_INTF_INITIALIZED()) {
 		CAM_ERR(CAM_CPAS, "cpas intf not initialized");
@@ -182,9 +180,8 @@ int cam_cpas_get_hw_info(uint32_t *camera_family,
 }
 EXPORT_SYMBOL(cam_cpas_get_hw_info);
 
-int cam_cpas_reg_write(uint32_t client_handle,
-	enum cam_cpas_reg_base reg_base, uint32_t offset, bool mb,
-	uint32_t value)
+int cam_cpas_reg_write(uint32_t client_handle, enum cam_cpas_reg_base reg_base,
+		       uint32_t offset, bool mb, uint32_t value)
 {
 	int rc;
 
@@ -217,9 +214,8 @@ int cam_cpas_reg_write(uint32_t client_handle,
 }
 EXPORT_SYMBOL(cam_cpas_reg_write);
 
-int cam_cpas_reg_read(uint32_t client_handle,
-	enum cam_cpas_reg_base reg_base, uint32_t offset, bool mb,
-	uint32_t *value)
+int cam_cpas_reg_read(uint32_t client_handle, enum cam_cpas_reg_base reg_base,
+		      uint32_t offset, bool mb, uint32_t *value)
 {
 	int rc;
 
@@ -243,8 +239,8 @@ int cam_cpas_reg_read(uint32_t client_handle,
 		cmd_reg_read.value = 0;
 
 		rc = g_cpas_intf->hw_intf->hw_ops.process_cmd(
-			g_cpas_intf->hw_intf->hw_priv,
-			CAM_CPAS_HW_CMD_REG_READ, &cmd_reg_read,
+			g_cpas_intf->hw_intf->hw_priv, CAM_CPAS_HW_CMD_REG_READ,
+			&cmd_reg_read,
 			sizeof(struct cam_cpas_hw_cmd_reg_read_write));
 		if (rc) {
 			CAM_ERR(CAM_CPAS, "Failed in process_cmd, rc=%d", rc);
@@ -262,7 +258,7 @@ int cam_cpas_reg_read(uint32_t client_handle,
 EXPORT_SYMBOL(cam_cpas_reg_read);
 
 int cam_cpas_update_axi_vote(uint32_t client_handle,
-	struct cam_axi_vote *axi_vote)
+			     struct cam_axi_vote *axi_vote)
 {
 	int rc;
 
@@ -283,9 +279,8 @@ int cam_cpas_update_axi_vote(uint32_t client_handle,
 		cmd_axi_vote.axi_vote = axi_vote;
 
 		rc = g_cpas_intf->hw_intf->hw_ops.process_cmd(
-			g_cpas_intf->hw_intf->hw_priv,
-			CAM_CPAS_HW_CMD_AXI_VOTE, &cmd_axi_vote,
-			sizeof(struct cam_cpas_hw_cmd_axi_vote));
+			g_cpas_intf->hw_intf->hw_priv, CAM_CPAS_HW_CMD_AXI_VOTE,
+			&cmd_axi_vote, sizeof(struct cam_cpas_hw_cmd_axi_vote));
 		if (rc)
 			CAM_ERR(CAM_CPAS, "Failed in process_cmd, rc=%d", rc);
 	} else {
@@ -298,7 +293,7 @@ int cam_cpas_update_axi_vote(uint32_t client_handle,
 EXPORT_SYMBOL(cam_cpas_update_axi_vote);
 
 int cam_cpas_update_ahb_vote(uint32_t client_handle,
-	struct cam_ahb_vote *ahb_vote)
+			     struct cam_ahb_vote *ahb_vote)
 {
 	int rc;
 
@@ -314,9 +309,8 @@ int cam_cpas_update_ahb_vote(uint32_t client_handle,
 		cmd_ahb_vote.ahb_vote = ahb_vote;
 
 		rc = g_cpas_intf->hw_intf->hw_ops.process_cmd(
-			g_cpas_intf->hw_intf->hw_priv,
-			CAM_CPAS_HW_CMD_AHB_VOTE, &cmd_ahb_vote,
-			sizeof(struct cam_cpas_hw_cmd_ahb_vote));
+			g_cpas_intf->hw_intf->hw_priv, CAM_CPAS_HW_CMD_AHB_VOTE,
+			&cmd_ahb_vote, sizeof(struct cam_cpas_hw_cmd_ahb_vote));
 		if (rc)
 			CAM_ERR(CAM_CPAS, "Failed in process_cmd, rc=%d", rc);
 	} else {
@@ -356,8 +350,8 @@ int cam_cpas_stop(uint32_t client_handle)
 }
 EXPORT_SYMBOL(cam_cpas_stop);
 
-int cam_cpas_start(uint32_t client_handle,
-	struct cam_ahb_vote *ahb_vote, struct cam_axi_vote *axi_vote)
+int cam_cpas_start(uint32_t client_handle, struct cam_ahb_vote *ahb_vote,
+		   struct cam_axi_vote *axi_vote)
 {
 	int rc;
 
@@ -404,8 +398,8 @@ int cam_cpas_unregister_client(uint32_t client_handle)
 	if (g_cpas_intf->hw_intf->hw_ops.process_cmd) {
 		rc = g_cpas_intf->hw_intf->hw_ops.process_cmd(
 			g_cpas_intf->hw_intf->hw_priv,
-			CAM_CPAS_HW_CMD_UNREGISTER_CLIENT,
-			&client_handle, sizeof(uint32_t));
+			CAM_CPAS_HW_CMD_UNREGISTER_CLIENT, &client_handle,
+			sizeof(uint32_t));
 		if (rc)
 			CAM_ERR(CAM_CPAS, "Failed in process_cmd, rc=%d", rc);
 	} else {
@@ -417,8 +411,7 @@ int cam_cpas_unregister_client(uint32_t client_handle)
 }
 EXPORT_SYMBOL(cam_cpas_unregister_client);
 
-int cam_cpas_register_client(
-	struct cam_cpas_register_params *register_params)
+int cam_cpas_register_client(struct cam_cpas_register_params *register_params)
 {
 	int rc;
 
@@ -444,7 +437,7 @@ int cam_cpas_register_client(
 EXPORT_SYMBOL(cam_cpas_register_client);
 
 int cam_cpas_subdev_cmd(struct cam_cpas_intf *cpas_intf,
-	struct cam_control *cmd)
+			struct cam_control *cmd)
 {
 	int rc = 0;
 
@@ -458,7 +451,7 @@ int cam_cpas_subdev_cmd(struct cam_cpas_intf *cpas_intf,
 		struct cam_cpas_query_cap query;
 
 		rc = copy_from_user(&query, u64_to_user_ptr(cmd->handle),
-			sizeof(query));
+				    sizeof(query));
 		if (rc) {
 			CAM_ERR(CAM_CPAS, "Failed in copy from user, rc=%d",
 				rc);
@@ -466,13 +459,13 @@ int cam_cpas_subdev_cmd(struct cam_cpas_intf *cpas_intf,
 		}
 
 		rc = cam_cpas_get_hw_info(&query.camera_family,
-			&query.camera_version, &query.cpas_version,
-			&query.reserved);
+					  &query.camera_version,
+					  &query.cpas_version, &query.reserved);
 		if (rc)
 			break;
 
 		rc = copy_to_user(u64_to_user_ptr(cmd->handle), &query,
-			sizeof(query));
+				  sizeof(query));
 		if (rc)
 			CAM_ERR(CAM_CPAS, "Failed in copy to user, rc=%d", rc);
 
@@ -490,7 +483,7 @@ int cam_cpas_subdev_cmd(struct cam_cpas_intf *cpas_intf,
 }
 
 static int cam_cpas_subdev_open(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				struct v4l2_subdev_fh *fh)
 {
 	struct cam_cpas_intf *cpas_intf = v4l2_get_subdevdata(sd);
 
@@ -508,7 +501,7 @@ static int cam_cpas_subdev_open(struct v4l2_subdev *sd,
 }
 
 static int cam_cpas_subdev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				 struct v4l2_subdev_fh *fh)
 {
 	struct cam_cpas_intf *cpas_intf = v4l2_get_subdevdata(sd);
 
@@ -525,8 +518,8 @@ static int cam_cpas_subdev_close(struct v4l2_subdev *sd,
 	return 0;
 }
 
-static long cam_cpas_subdev_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, void *arg)
+static long cam_cpas_subdev_ioctl(struct v4l2_subdev *sd, unsigned int cmd,
+				  void *arg)
 {
 	int32_t rc;
 	struct cam_cpas_intf *cpas_intf = v4l2_get_subdevdata(sd);
@@ -538,7 +531,7 @@ static long cam_cpas_subdev_ioctl(struct v4l2_subdev *sd,
 
 	switch (cmd) {
 	case VIDIOC_CAM_CONTROL:
-		rc = cam_cpas_subdev_cmd(cpas_intf, (struct cam_control *) arg);
+		rc = cam_cpas_subdev_cmd(cpas_intf, (struct cam_control *)arg);
 		break;
 	default:
 		CAM_ERR(CAM_CPAS, "Invalid command %d for CPAS!", cmd);
@@ -551,7 +544,7 @@ static long cam_cpas_subdev_ioctl(struct v4l2_subdev *sd,
 
 #ifdef CONFIG_COMPAT
 static long cam_cpas_subdev_compat_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, unsigned long arg)
+					 unsigned int cmd, unsigned long arg)
 {
 	struct cam_control cmd_data;
 	int32_t rc;
@@ -562,8 +555,7 @@ static long cam_cpas_subdev_compat_ioctl(struct v4l2_subdev *sd,
 		return -ENODEV;
 	}
 
-	if (copy_from_user(&cmd_data, (void __user *)arg,
-		sizeof(cmd_data))) {
+	if (copy_from_user(&cmd_data, (void __user *)arg, sizeof(cmd_data))) {
 		CAM_ERR(CAM_CPAS, "Failed to copy from user_ptr=%pK size=%zu",
 			(void __user *)arg, sizeof(cmd_data));
 		return -EFAULT;
@@ -581,7 +573,7 @@ static long cam_cpas_subdev_compat_ioctl(struct v4l2_subdev *sd,
 
 	if (!rc) {
 		if (copy_to_user((void __user *)arg, &cmd_data,
-			sizeof(cmd_data))) {
+				 sizeof(cmd_data))) {
 			CAM_ERR(CAM_CPAS,
 				"Failed to copy to user_ptr=%pK size=%zu",
 				(void __user *)arg, sizeof(cmd_data));
@@ -666,8 +658,9 @@ static int cam_cpas_dev_probe(struct platform_device *pdev)
 	hw_intf = g_cpas_intf->hw_intf;
 	hw_caps = &g_cpas_intf->hw_caps;
 	if (hw_intf->hw_ops.get_hw_caps) {
-		rc = hw_intf->hw_ops.get_hw_caps(hw_intf->hw_priv,
-			hw_caps, sizeof(struct cam_cpas_hw_caps));
+		rc = hw_intf->hw_ops.get_hw_caps(
+			hw_intf->hw_priv, hw_caps,
+			sizeof(struct cam_cpas_hw_caps));
 		if (rc) {
 			CAM_ERR(CAM_CPAS, "Failed in get_hw_caps, rc=%d", rc);
 			goto error_hw_remove;
@@ -721,7 +714,7 @@ static int cam_cpas_dev_remove(struct platform_device *dev)
 }
 
 static const struct of_device_id cam_cpas_dt_match[] = {
-	{.compatible = "qcom,cam-cpas"},
+	{ .compatible = "qcom,cam-cpas" },
 	{}
 };
 

@@ -70,19 +70,18 @@ uint32_t cam_io_r_mb(void __iomem *addr)
 	return data;
 }
 
-int cam_io_memcpy(void __iomem *dest_addr,
-	void __iomem *src_addr, uint32_t len)
+int cam_io_memcpy(void __iomem *dest_addr, void __iomem *src_addr, uint32_t len)
 {
 	int i;
-	uint32_t *d = (uint32_t *) dest_addr;
-	uint32_t *s = (uint32_t *) src_addr;
+	uint32_t *d = (uint32_t *)dest_addr;
+	uint32_t *s = (uint32_t *)src_addr;
 
 	if (!dest_addr || !src_addr)
 		return -EINVAL;
 
 	CAM_DBG(CAM_UTIL, "%pK %pK %d", dest_addr, src_addr, len);
 
-	for (i = 0; i < len/4; i++) {
+	for (i = 0; i < len / 4; i++) {
 		CAM_DBG(CAM_UTIL, "0x%pK %08x", d, *s);
 		writel_relaxed(*s++, d++);
 	}
@@ -90,12 +89,12 @@ int cam_io_memcpy(void __iomem *dest_addr,
 	return 0;
 }
 
-int  cam_io_memcpy_mb(void __iomem *dest_addr,
-	void __iomem *src_addr, uint32_t len)
+int cam_io_memcpy_mb(void __iomem *dest_addr, void __iomem *src_addr,
+		     uint32_t len)
 {
 	int i;
-	uint32_t *d = (uint32_t *) dest_addr;
-	uint32_t *s = (uint32_t *) src_addr;
+	uint32_t *d = (uint32_t *)dest_addr;
+	uint32_t *s = (uint32_t *)src_addr;
 
 	if (!dest_addr || !src_addr)
 		return -EINVAL;
@@ -118,7 +117,7 @@ int  cam_io_memcpy_mb(void __iomem *dest_addr,
 }
 
 int cam_io_poll_value(void __iomem *addr, uint32_t wait_data, uint32_t retry,
-	unsigned long min_usecs, unsigned long max_usecs)
+		      unsigned long min_usecs, unsigned long max_usecs)
 {
 	uint32_t tmp, cnt = 0;
 	int rc = 0;
@@ -142,8 +141,8 @@ int cam_io_poll_value(void __iomem *addr, uint32_t wait_data, uint32_t retry,
 }
 
 int cam_io_poll_value_wmask(void __iomem *addr, uint32_t wait_data,
-	uint32_t bmask, uint32_t retry, unsigned long min_usecs,
-	unsigned long max_usecs)
+			    uint32_t bmask, uint32_t retry,
+			    unsigned long min_usecs, unsigned long max_usecs)
 {
 	uint32_t tmp, cnt = 0;
 	int rc = 0;
@@ -167,7 +166,7 @@ int cam_io_poll_value_wmask(void __iomem *addr, uint32_t wait_data,
 }
 
 int cam_io_w_same_offset_block(const uint32_t *data, void __iomem *addr,
-	uint32_t len)
+			       uint32_t len)
 {
 	int i;
 
@@ -175,8 +174,8 @@ int cam_io_w_same_offset_block(const uint32_t *data, void __iomem *addr,
 		return -EINVAL;
 
 	for (i = 0; i < len; i++) {
-		CAM_DBG(CAM_UTIL, "i= %d len =%d val=%x addr =%pK",
-			i, len, data[i], addr);
+		CAM_DBG(CAM_UTIL, "i= %d len =%d val=%x addr =%pK", i, len,
+			data[i], addr);
 		writel_relaxed(data[i], addr);
 	}
 
@@ -184,7 +183,7 @@ int cam_io_w_same_offset_block(const uint32_t *data, void __iomem *addr,
 }
 
 int cam_io_w_mb_same_offset_block(const uint32_t *data, void __iomem *addr,
-	uint32_t len)
+				  uint32_t len)
 {
 	int i;
 
@@ -192,8 +191,8 @@ int cam_io_w_mb_same_offset_block(const uint32_t *data, void __iomem *addr,
 		return -EINVAL;
 
 	for (i = 0; i < len; i++) {
-		CAM_DBG(CAM_UTIL, "i= %d len =%d val=%x addr =%pK",
-			i, len, data[i], addr);
+		CAM_DBG(CAM_UTIL, "i= %d len =%d val=%x addr =%pK", i, len,
+			data[i], addr);
 		/* Ensure previous writes are done */
 		wmb();
 		writel_relaxed(data[i], addr);
@@ -202,10 +201,10 @@ int cam_io_w_mb_same_offset_block(const uint32_t *data, void __iomem *addr,
 	return 0;
 }
 
-#define __OFFSET(__i)   (data[__i][0])
-#define __VAL(__i)      (data[__i][1])
-int cam_io_w_offset_val_block(const uint32_t data[][2],
-	void __iomem *addr_base, uint32_t len)
+#define __OFFSET(__i) (data[__i][0])
+#define __VAL(__i) (data[__i][1])
+int cam_io_w_offset_val_block(const uint32_t data[][2], void __iomem *addr_base,
+			      uint32_t len)
 {
 	int i;
 
@@ -222,7 +221,7 @@ int cam_io_w_offset_val_block(const uint32_t data[][2],
 }
 
 int cam_io_w_mb_offset_val_block(const uint32_t data[][2],
-	void __iomem *addr_base, uint32_t len)
+				 void __iomem *addr_base, uint32_t len)
 {
 	int i;
 
@@ -240,18 +239,18 @@ int cam_io_w_mb_offset_val_block(const uint32_t data[][2],
 	return 0;
 }
 
-#define BYTES_PER_REGISTER           4
-#define NUM_REGISTER_PER_LINE        4
-#define REG_OFFSET(__start, __i)    (__start + (__i * BYTES_PER_REGISTER))
+#define BYTES_PER_REGISTER 4
+#define NUM_REGISTER_PER_LINE 4
+#define REG_OFFSET(__start, __i) (__start + (__i * BYTES_PER_REGISTER))
 int cam_io_dump(void __iomem *base_addr, uint32_t start_offset, int size)
 {
-	char          line_str[128];
-	char         *p_str;
-	int           i;
-	uint32_t      data;
+	char line_str[128];
+	char *p_str;
+	int i;
+	uint32_t data;
 
-	CAM_DBG(CAM_UTIL, "addr=%pK offset=0x%x size=%d",
-		base_addr, start_offset, size);
+	CAM_DBG(CAM_UTIL, "addr=%pK offset=0x%x size=%d", base_addr,
+		start_offset, size);
 
 	if (!base_addr || (size <= 0))
 		return -EINVAL;
@@ -260,8 +259,8 @@ int cam_io_dump(void __iomem *base_addr, uint32_t start_offset, int size)
 	p_str = line_str;
 	for (i = 0; i < size; i++) {
 		if (i % NUM_REGISTER_PER_LINE == 0) {
-			snprintf(p_str, 12, "0x%08x: ",
-				REG_OFFSET(start_offset, i));
+			snprintf(p_str, 12,
+				 "0x%08x: ", REG_OFFSET(start_offset, i));
 			p_str += 11;
 		}
 		data = readl_relaxed(base_addr + REG_OFFSET(start_offset, i));

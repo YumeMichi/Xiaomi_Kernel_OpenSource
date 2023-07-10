@@ -22,9 +22,10 @@
 
 static struct cam_custom_dev g_custom_dev;
 
-static void cam_custom_dev_iommu_fault_handler(
-	struct iommu_domain *domain, struct device *dev, unsigned long iova,
-	int flags, void *token, uint32_t buf_info)
+static void cam_custom_dev_iommu_fault_handler(struct iommu_domain *domain,
+					       struct device *dev,
+					       unsigned long iova, int flags,
+					       void *token, uint32_t buf_info)
 {
 	int i = 0;
 	struct cam_node *node = NULL;
@@ -37,19 +38,16 @@ static void cam_custom_dev_iommu_fault_handler(
 	node = (struct cam_node *)token;
 
 	for (i = 0; i < node->ctx_size; i++)
-		cam_context_dump_pf_info(&(node->ctx_list[i]), iova,
-			buf_info);
+		cam_context_dump_pf_info(&(node->ctx_list[i]), iova, buf_info);
 }
 
 static const struct of_device_id cam_custom_dt_match[] = {
-	{
-		.compatible = "qcom,cam-custom"
-	},
+	{ .compatible = "qcom,cam-custom" },
 	{}
 };
 
 static int cam_custom_subdev_open(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				  struct v4l2_subdev_fh *fh)
 {
 	mutex_lock(&g_custom_dev.custom_dev_mutex);
 	g_custom_dev.open_cnt++;
@@ -59,7 +57,7 @@ static int cam_custom_subdev_open(struct v4l2_subdev *sd,
 }
 
 static int cam_custom_subdev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				   struct v4l2_subdev_fh *fh)
 {
 	int rc = 0;
 	struct cam_node *node = v4l2_get_subdevdata(sd);
@@ -100,8 +98,8 @@ static int cam_custom_dev_remove(struct platform_device *pdev)
 	for (i = 0; i < CAM_CUSTOM_HW_MAX_INSTANCES; i++) {
 		rc = cam_custom_dev_context_deinit(&g_custom_dev.ctx_custom[i]);
 		if (rc)
-			CAM_ERR(CAM_CUSTOM,
-				"Custom context %d deinit failed", i);
+			CAM_ERR(CAM_CUSTOM, "Custom context %d deinit failed",
+				i);
 	}
 
 	rc = cam_subdev_remove(&g_custom_dev.sd);
@@ -116,23 +114,23 @@ static int cam_custom_dev_probe(struct platform_device *pdev)
 {
 	int rc = -EINVAL;
 	int i;
-	struct cam_hw_mgr_intf         hw_mgr_intf;
-	struct cam_node               *node;
+	struct cam_hw_mgr_intf hw_mgr_intf;
+	struct cam_node *node;
 	int iommu_hdl = -1;
 
 	g_custom_dev.sd.internal_ops = &cam_custom_subdev_internal_ops;
 
 	rc = cam_subdev_probe(&g_custom_dev.sd, pdev, CAM_CUSTOM_DEV_NAME,
-		CAM_CUSTOM_DEVICE_TYPE);
+			      CAM_CUSTOM_DEVICE_TYPE);
 	if (rc) {
 		CAM_ERR(CAM_CUSTOM, "Custom device cam_subdev_probe failed!");
 		goto err;
 	}
-	node = (struct cam_node *) g_custom_dev.sd.token;
+	node = (struct cam_node *)g_custom_dev.sd.token;
 
 	memset(&hw_mgr_intf, 0, sizeof(hw_mgr_intf));
-	rc = cam_custom_hw_mgr_init(pdev->dev.of_node,
-		&hw_mgr_intf, &iommu_hdl);
+	rc = cam_custom_hw_mgr_init(pdev->dev.of_node, &hw_mgr_intf,
+				    &iommu_hdl);
 	if (rc != 0) {
 		CAM_ERR(CAM_CUSTOM, "Can not initialized Custom HW manager!");
 		goto unregister;
@@ -140,10 +138,9 @@ static int cam_custom_dev_probe(struct platform_device *pdev)
 
 	for (i = 0; i < CAM_CUSTOM_HW_MAX_INSTANCES; i++) {
 		rc = cam_custom_dev_context_init(&g_custom_dev.ctx_custom[i],
-			&g_custom_dev.ctx[i],
-			&node->crm_node_intf,
-			&node->hw_mgr_intf,
-			i);
+						 &g_custom_dev.ctx[i],
+						 &node->crm_node_intf,
+						 &node->hw_mgr_intf, i);
 		if (rc) {
 			CAM_ERR(CAM_CUSTOM, "Custom context init failed!");
 			goto unregister;
@@ -151,14 +148,14 @@ static int cam_custom_dev_probe(struct platform_device *pdev)
 	}
 
 	rc = cam_node_init(node, &hw_mgr_intf, g_custom_dev.ctx,
-		CAM_CUSTOM_HW_MAX_INSTANCES, CAM_CUSTOM_DEV_NAME);
+			   CAM_CUSTOM_HW_MAX_INSTANCES, CAM_CUSTOM_DEV_NAME);
 	if (rc) {
 		CAM_ERR(CAM_CUSTOM, "Custom HW node init failed!");
 		goto unregister;
 	}
 
-	cam_smmu_set_client_page_fault_handler(iommu_hdl,
-		cam_custom_dev_iommu_fault_handler, node);
+	cam_smmu_set_client_page_fault_handler(
+		iommu_hdl, cam_custom_dev_iommu_fault_handler, node);
 
 	mutex_init(&g_custom_dev.custom_dev_mutex);
 
@@ -170,7 +167,6 @@ unregister:
 err:
 	return rc;
 }
-
 
 static struct platform_driver custom_driver = {
 	.probe = cam_custom_dev_probe,

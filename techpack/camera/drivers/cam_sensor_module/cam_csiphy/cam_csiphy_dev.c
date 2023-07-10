@@ -9,8 +9,8 @@
 #include "cam_csiphy_core.h"
 #include <media/cam_sensor.h>
 
-static long cam_csiphy_subdev_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, void *arg)
+static long cam_csiphy_subdev_ioctl(struct v4l2_subdev *sd, unsigned int cmd,
+				    void *arg)
 {
 	struct csiphy_device *csiphy_dev = v4l2_get_subdevdata(sd);
 	int rc = 0;
@@ -32,10 +32,9 @@ static long cam_csiphy_subdev_ioctl(struct v4l2_subdev *sd,
 }
 
 static int cam_csiphy_subdev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				   struct v4l2_subdev_fh *fh)
 {
-	struct csiphy_device *csiphy_dev =
-		v4l2_get_subdevdata(sd);
+	struct csiphy_device *csiphy_dev = v4l2_get_subdevdata(sd);
 
 	if (!csiphy_dev) {
 		CAM_ERR(CAM_CSIPHY, "csiphy_dev ptr is NULL");
@@ -51,13 +50,12 @@ static int cam_csiphy_subdev_close(struct v4l2_subdev *sd,
 
 #ifdef CONFIG_COMPAT
 static long cam_csiphy_subdev_compat_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, unsigned long arg)
+					   unsigned int cmd, unsigned long arg)
 {
 	int32_t rc = 0;
 	struct cam_control cmd_data;
 
-	if (copy_from_user(&cmd_data, (void __user *)arg,
-		sizeof(cmd_data))) {
+	if (copy_from_user(&cmd_data, (void __user *)arg, sizeof(cmd_data))) {
 		CAM_ERR(CAM_CSIPHY, "Failed to copy from user_ptr=%pK size=%zu",
 			(void __user *)arg, sizeof(cmd_data));
 		return -EFAULT;
@@ -77,7 +75,7 @@ static long cam_csiphy_subdev_compat_ioctl(struct v4l2_subdev *sd,
 
 	if (!rc) {
 		if (copy_to_user((void __user *)arg, &cmd_data,
-			sizeof(cmd_data))) {
+				 sizeof(cmd_data))) {
 			CAM_ERR(CAM_CSIPHY,
 				"Failed to copy to user_ptr=%pK size=%zu",
 				(void __user *)arg, sizeof(cmd_data));
@@ -108,15 +106,15 @@ static int32_t cam_csiphy_platform_probe(struct platform_device *pdev)
 {
 	struct cam_cpas_register_params cpas_parms;
 	struct csiphy_device *new_csiphy_dev;
-	int32_t              rc = 0;
+	int32_t rc = 0;
 
-	new_csiphy_dev = devm_kzalloc(&pdev->dev,
-		sizeof(struct csiphy_device), GFP_KERNEL);
+	new_csiphy_dev = devm_kzalloc(&pdev->dev, sizeof(struct csiphy_device),
+				      GFP_KERNEL);
 	if (!new_csiphy_dev)
 		return -ENOMEM;
 
-	new_csiphy_dev->ctrl_reg = kzalloc(sizeof(struct csiphy_ctrl_t),
-		GFP_KERNEL);
+	new_csiphy_dev->ctrl_reg =
+		kzalloc(sizeof(struct csiphy_ctrl_t), GFP_KERNEL);
 	if (!new_csiphy_dev->ctrl_reg) {
 		devm_kfree(&pdev->dev, new_csiphy_dev);
 		return -ENOMEM;
@@ -136,20 +134,15 @@ static int32_t cam_csiphy_platform_probe(struct platform_device *pdev)
 		goto csiphy_no_resource;
 	}
 
-	new_csiphy_dev->v4l2_dev_str.internal_ops =
-		&csiphy_subdev_intern_ops;
-	new_csiphy_dev->v4l2_dev_str.ops =
-		&csiphy_subdev_ops;
+	new_csiphy_dev->v4l2_dev_str.internal_ops = &csiphy_subdev_intern_ops;
+	new_csiphy_dev->v4l2_dev_str.ops = &csiphy_subdev_ops;
 	strlcpy(new_csiphy_dev->device_name, CAMX_CSIPHY_DEV_NAME,
 		sizeof(new_csiphy_dev->device_name));
-	new_csiphy_dev->v4l2_dev_str.name =
-		new_csiphy_dev->device_name;
+	new_csiphy_dev->v4l2_dev_str.name = new_csiphy_dev->device_name;
 	new_csiphy_dev->v4l2_dev_str.sd_flags =
 		(V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS);
-	new_csiphy_dev->v4l2_dev_str.ent_function =
-		CAM_CSIPHY_DEVICE_TYPE;
-	new_csiphy_dev->v4l2_dev_str.token =
-		new_csiphy_dev;
+	new_csiphy_dev->v4l2_dev_str.ent_function = CAM_CSIPHY_DEVICE_TYPE;
+	new_csiphy_dev->v4l2_dev_str.token = new_csiphy_dev;
 
 	rc = cam_register_subdev(&(new_csiphy_dev->v4l2_dev_str));
 	if (rc < 0) {
@@ -161,12 +154,9 @@ static int32_t cam_csiphy_platform_probe(struct platform_device *pdev)
 
 	new_csiphy_dev->bridge_intf.device_hdl[0] = -1;
 	new_csiphy_dev->bridge_intf.device_hdl[1] = -1;
-	new_csiphy_dev->bridge_intf.ops.get_dev_info =
-		NULL;
-	new_csiphy_dev->bridge_intf.ops.link_setup =
-		NULL;
-	new_csiphy_dev->bridge_intf.ops.apply_req =
-		NULL;
+	new_csiphy_dev->bridge_intf.ops.get_dev_info = NULL;
+	new_csiphy_dev->bridge_intf.ops.link_setup = NULL;
+	new_csiphy_dev->bridge_intf.ops.apply_req = NULL;
 
 	new_csiphy_dev->acquire_count = 0;
 	new_csiphy_dev->start_dev_count = 0;
@@ -195,13 +185,10 @@ csiphy_no_resource:
 	return rc;
 }
 
-
 static int32_t cam_csiphy_device_remove(struct platform_device *pdev)
 {
-	struct v4l2_subdev *subdev =
-		platform_get_drvdata(pdev);
-	struct csiphy_device *csiphy_dev =
-		v4l2_get_subdevdata(subdev);
+	struct v4l2_subdev *subdev = platform_get_drvdata(pdev);
+	struct csiphy_device *csiphy_dev = v4l2_get_subdevdata(subdev);
 
 	CAM_INFO(CAM_CSIPHY, "device remove invoked");
 	cam_cpas_unregister_client(csiphy_dev->cpas_handle);
@@ -220,7 +207,7 @@ static int32_t cam_csiphy_device_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id cam_csiphy_dt_match[] = {
-	{.compatible = "qcom,csiphy"},
+	{ .compatible = "qcom,csiphy" },
 	{}
 };
 

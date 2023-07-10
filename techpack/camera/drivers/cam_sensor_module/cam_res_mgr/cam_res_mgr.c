@@ -25,10 +25,10 @@ static void cam_res_mgr_free_res(void)
 		return;
 
 	mutex_lock(&cam_res->gpio_res_lock);
-	list_for_each_entry_safe(gpio_res, gpio_temp,
-		&cam_res->gpio_res_list, list) {
-		list_for_each_entry_safe(dev_res, dev_temp,
-			&gpio_res->dev_list, list) {
+	list_for_each_entry_safe (gpio_res, gpio_temp, &cam_res->gpio_res_list,
+				  list) {
+		list_for_each_entry_safe (dev_res, dev_temp,
+					  &gpio_res->dev_list, list) {
 			list_del_init(&dev_res->list);
 			kfree(dev_res);
 		}
@@ -38,8 +38,8 @@ static void cam_res_mgr_free_res(void)
 	mutex_unlock(&cam_res->gpio_res_lock);
 
 	mutex_lock(&cam_res->flash_res_lock);
-	list_for_each_entry_safe(flash_res, flash_temp,
-		&cam_res->flash_res_list, list) {
+	list_for_each_entry_safe (flash_res, flash_temp,
+				  &cam_res->flash_res_list, list) {
 		list_del_init(&flash_res->list);
 		kfree(flash_res);
 	}
@@ -65,7 +65,7 @@ void cam_res_mgr_led_trigger_register(const char *name, struct led_trigger **tp)
 	}
 
 	mutex_lock(&cam_res->flash_res_lock);
-	list_for_each_entry(flash_res, &cam_res->flash_res_list, list) {
+	list_for_each_entry (flash_res, &cam_res->flash_res_list, list) {
 		if (!strcmp(flash_res->name, name)) {
 			found = true;
 			break;
@@ -112,7 +112,7 @@ void cam_res_mgr_led_trigger_unregister(struct led_trigger *tp)
 	}
 
 	mutex_lock(&cam_res->flash_res_lock);
-	list_for_each_entry(flash_res, &cam_res->flash_res_list, list) {
+	list_for_each_entry (flash_res, &cam_res->flash_res_list, list) {
 		if (flash_res->trigger == tp) {
 			found = true;
 			break;
@@ -129,7 +129,7 @@ void cam_res_mgr_led_trigger_unregister(struct led_trigger *tp)
 EXPORT_SYMBOL(cam_res_mgr_led_trigger_unregister);
 
 void cam_res_mgr_led_trigger_event(struct led_trigger *trig,
-	enum led_brightness brightness)
+				   enum led_brightness brightness)
 {
 	bool found = false;
 	struct cam_flash_res *flash_res;
@@ -144,7 +144,7 @@ void cam_res_mgr_led_trigger_event(struct led_trigger *trig,
 	}
 
 	mutex_lock(&cam_res->flash_res_lock);
-	list_for_each_entry(flash_res, &cam_res->flash_res_list, list) {
+	list_for_each_entry (flash_res, &cam_res->flash_res_list, list) {
 		if (flash_res->trigger == trig) {
 			found = true;
 			break;
@@ -180,8 +180,7 @@ int cam_res_mgr_shared_pinctrl_init(void)
 
 	pinctrl_info = &cam_res->dt.pinctrl_info;
 
-	pinctrl_info->pinctrl =
-		devm_pinctrl_get(cam_res->dev);
+	pinctrl_info->pinctrl = devm_pinctrl_get(cam_res->dev);
 	if (IS_ERR_OR_NULL(pinctrl_info->pinctrl)) {
 		CAM_ERR(CAM_RES, "Pinctrl not available");
 		cam_res->shared_gpio_enabled = false;
@@ -189,9 +188,8 @@ int cam_res_mgr_shared_pinctrl_init(void)
 		return -EINVAL;
 	}
 
-	pinctrl_info->gpio_state_active =
-		pinctrl_lookup_state(pinctrl_info->pinctrl,
-			CAM_RES_MGR_DEFAULT);
+	pinctrl_info->gpio_state_active = pinctrl_lookup_state(
+		pinctrl_info->pinctrl, CAM_RES_MGR_DEFAULT);
 	if (IS_ERR_OR_NULL(pinctrl_info->gpio_state_active)) {
 		CAM_ERR(CAM_RES,
 			"Failed to get the active state pinctrl handle");
@@ -201,8 +199,7 @@ int cam_res_mgr_shared_pinctrl_init(void)
 	}
 
 	pinctrl_info->gpio_state_suspend =
-		pinctrl_lookup_state(pinctrl_info->pinctrl,
-			CAM_RES_MGR_SLEEP);
+		pinctrl_lookup_state(pinctrl_info->pinctrl, CAM_RES_MGR_SLEEP);
 	if (IS_ERR_OR_NULL(pinctrl_info->gpio_state_suspend)) {
 		CAM_ERR(CAM_RES,
 			"Failed to get the active state pinctrl handle");
@@ -228,12 +225,9 @@ static bool cam_res_mgr_shared_pinctrl_check_hold(void)
 	struct cam_res_mgr_dt *dt = &cam_res->dt;
 
 	for (; index < dt->num_shared_gpio; index++) {
-		list_for_each_entry(gpio_res,
-			&cam_res->gpio_res_list, list) {
-
-			if (gpio_res->gpio ==
-				dt->shared_gpio[index]) {
-				list_for_each(list, &gpio_res->dev_list)
+		list_for_each_entry (gpio_res, &cam_res->gpio_res_list, list) {
+			if (gpio_res->gpio == dt->shared_gpio[index]) {
+				list_for_each (list, &gpio_res->dev_list)
 					dev_num++;
 
 				if (dev_num >= 2) {
@@ -302,12 +296,11 @@ int cam_res_mgr_shared_pinctrl_select_state(bool active)
 
 	if (active && (cam_res->pstatus != PINCTRL_STATUS_ACTIVE)) {
 		rc = pinctrl_select_state(pinctrl_info->pinctrl,
-			pinctrl_info->gpio_state_active);
+					  pinctrl_info->gpio_state_active);
 		cam_res->pstatus = PINCTRL_STATUS_ACTIVE;
-	} else if (!active &&
-		!cam_res_mgr_shared_pinctrl_check_hold()) {
+	} else if (!active && !cam_res_mgr_shared_pinctrl_check_hold()) {
 		rc = pinctrl_select_state(pinctrl_info->pinctrl,
-			pinctrl_info->gpio_state_suspend);
+					  pinctrl_info->gpio_state_suspend);
 		cam_res->pstatus = PINCTRL_STATUS_SUSPEND;
 	}
 
@@ -342,9 +335,9 @@ int cam_res_mgr_shared_pinctrl_post_init(void)
 	 * don't have shared gpio.
 	 */
 	if (list_empty(&cam_res->gpio_res_list) &&
-		cam_res->shared_clk_ref_count < 1) {
+	    cam_res->shared_clk_ref_count < 1) {
 		ret = pinctrl_select_state(pinctrl_info->pinctrl,
-			pinctrl_info->gpio_state_suspend);
+					   pinctrl_info->gpio_state_suspend);
 		devm_pinctrl_put(pinctrl_info->pinctrl);
 		cam_res->pstatus = PINCTRL_STATUS_PUT;
 	}
@@ -355,7 +348,7 @@ int cam_res_mgr_shared_pinctrl_post_init(void)
 EXPORT_SYMBOL(cam_res_mgr_shared_pinctrl_post_init);
 
 static int cam_res_mgr_add_device(struct device *dev,
-	struct cam_gpio_res *gpio_res)
+				  struct cam_gpio_res *gpio_res)
 {
 	struct cam_dev_res *dev_res = NULL;
 
@@ -387,8 +380,8 @@ static bool cam_res_mgr_gpio_is_shared(uint gpio)
 	return found;
 }
 
-int cam_res_mgr_gpio_request(struct device *dev, uint gpio,
-		unsigned long flags, const char *label)
+int cam_res_mgr_gpio_request(struct device *dev, uint gpio, unsigned long flags,
+			     const char *label)
 {
 	int rc = 0;
 	bool found = false;
@@ -397,7 +390,7 @@ int cam_res_mgr_gpio_request(struct device *dev, uint gpio,
 	mutex_lock(&cam_res->gpio_res_lock);
 
 	if (cam_res && cam_res->shared_gpio_enabled) {
-		list_for_each_entry(gpio_res, &cam_res->gpio_res_list, list) {
+		list_for_each_entry (gpio_res, &cam_res->gpio_res_list, list) {
 			if (gpio == gpio_res->gpio) {
 				found = true;
 				break;
@@ -415,8 +408,8 @@ int cam_res_mgr_gpio_request(struct device *dev, uint gpio,
 	if (!found) {
 		rc = gpio_request_one(gpio, flags, label);
 		if (rc) {
-			CAM_ERR(CAM_RES, "gpio %d:%s request fails",
-				gpio, label);
+			CAM_ERR(CAM_RES, "gpio %d:%s request fails", gpio,
+				label);
 			return rc;
 		}
 	}
@@ -426,10 +419,8 @@ int cam_res_mgr_gpio_request(struct device *dev, uint gpio,
 	 * from gpio_res_list, then insert a cam_gpio_res
 	 * to gpio_res_list.
 	 */
-	if (!found && cam_res
-		&& cam_res->shared_gpio_enabled &&
-		cam_res_mgr_gpio_is_shared(gpio)) {
-
+	if (!found && cam_res && cam_res->shared_gpio_enabled &&
+	    cam_res_mgr_gpio_is_shared(gpio)) {
 		gpio_res = kzalloc(sizeof(struct cam_gpio_res), GFP_KERNEL);
 		if (!gpio_res) {
 			CAM_ERR(CAM_RES, "NO MEM for cam_gpio_res");
@@ -452,12 +443,11 @@ int cam_res_mgr_gpio_request(struct device *dev, uint gpio,
 		list_add_tail(&gpio_res->list, &cam_res->gpio_res_list);
 	}
 
-	if (found && cam_res
-		&& cam_res->shared_gpio_enabled) {
+	if (found && cam_res && cam_res->shared_gpio_enabled) {
 		struct cam_dev_res *dev_res = NULL;
 
 		found = 0;
-		list_for_each_entry(dev_res, &gpio_res->dev_list, list) {
+		list_for_each_entry (dev_res, &gpio_res->dev_list, list) {
 			if (dev_res->dev == dev) {
 				found = 1;
 				break;
@@ -477,12 +467,12 @@ static void cam_res_mgr_gpio_free(struct device *dev, uint gpio)
 {
 	bool found = false;
 	bool need_free = true;
-	int dev_num =  0;
+	int dev_num = 0;
 	struct cam_gpio_res *gpio_res = NULL;
 
 	if (cam_res && cam_res->shared_gpio_enabled) {
 		mutex_lock(&cam_res->gpio_res_lock);
-		list_for_each_entry(gpio_res, &cam_res->gpio_res_list, list) {
+		list_for_each_entry (gpio_res, &cam_res->gpio_res_list, list) {
 			if (gpio == gpio_res->gpio) {
 				found = true;
 				break;
@@ -491,14 +481,13 @@ static void cam_res_mgr_gpio_free(struct device *dev, uint gpio)
 		mutex_unlock(&cam_res->gpio_res_lock);
 	}
 
-	if (found && cam_res
-		&& cam_res->shared_gpio_enabled) {
+	if (found && cam_res && cam_res->shared_gpio_enabled) {
 		struct list_head *list;
 		struct cam_dev_res *dev_res = NULL;
 
 		mutex_lock(&cam_res->gpio_res_lock);
 		/* Count the dev number in the dev_list */
-		list_for_each(list, &gpio_res->dev_list)
+		list_for_each (list, &gpio_res->dev_list)
 			dev_num++;
 
 		/*
@@ -508,15 +497,15 @@ static void cam_res_mgr_gpio_free(struct device *dev, uint gpio)
 		 */
 		if (dev_num == 1) {
 			dev_res = list_first_entry(&gpio_res->dev_list,
-				struct cam_dev_res, list);
+						   struct cam_dev_res, list);
 			list_del_init(&dev_res->list);
 			kfree(dev_res);
 
 			list_del_init(&gpio_res->list);
 			kfree(gpio_res);
 		} else {
-			list_for_each_entry(dev_res,
-				&gpio_res->dev_list, list) {
+			list_for_each_entry (dev_res, &gpio_res->dev_list,
+					     list) {
 				if (dev_res->dev == dev) {
 					list_del_init(&dev_res->list);
 					kfree(dev_res);
@@ -532,8 +521,8 @@ static void cam_res_mgr_gpio_free(struct device *dev, uint gpio)
 		gpio_free(gpio);
 }
 
-void cam_res_mgr_gpio_free_arry(struct device *dev,
-		const struct gpio *array, size_t num)
+void cam_res_mgr_gpio_free_arry(struct device *dev, const struct gpio *array,
+				size_t num)
 {
 	while (num--)
 		cam_res_mgr_gpio_free(dev, (array[num]).gpio);
@@ -548,7 +537,7 @@ int cam_res_mgr_gpio_set_value(unsigned int gpio, int value)
 
 	if (cam_res && cam_res->shared_gpio_enabled) {
 		mutex_lock(&cam_res->gpio_res_lock);
-		list_for_each_entry(gpio_res, &cam_res->gpio_res_list, list) {
+		list_for_each_entry (gpio_res, &cam_res->gpio_res_list, list) {
 			if (gpio == gpio_res->gpio) {
 				found = true;
 				break;
@@ -568,15 +557,14 @@ int cam_res_mgr_gpio_set_value(unsigned int gpio, int value)
 			gpio_res->power_on_count++;
 			if (gpio_res->power_on_count < 2) {
 				gpio_set_value_cansleep(gpio, value);
-				CAM_DBG(CAM_RES,
-					"Shared GPIO(%d) : HIGH", gpio);
+				CAM_DBG(CAM_RES, "Shared GPIO(%d) : HIGH",
+					gpio);
 			}
 		} else {
 			gpio_res->power_on_count--;
 			if (gpio_res->power_on_count < 1) {
 				gpio_set_value_cansleep(gpio, value);
-				CAM_DBG(CAM_RES,
-					"Shared GPIO(%d) : LOW", gpio);
+				CAM_DBG(CAM_RES, "Shared GPIO(%d) : LOW", gpio);
 			}
 		}
 	}
@@ -607,11 +595,11 @@ static int cam_res_mgr_parse_dt(struct device *dev)
 
 	of_node = dev->of_node;
 
-	dt->num_shared_gpio = of_property_count_u32_elems(of_node,
-		"shared-gpios");
+	dt->num_shared_gpio =
+		of_property_count_u32_elems(of_node, "shared-gpios");
 
 	if (dt->num_shared_gpio > MAX_SHARED_GPIO_SIZE ||
-		dt->num_shared_gpio <= 0) {
+	    dt->num_shared_gpio <= 0) {
 		/*
 		 * Not really an error, it means dtsi not configure
 		 * the shared gpio.
@@ -622,7 +610,7 @@ static int cam_res_mgr_parse_dt(struct device *dev)
 	}
 
 	rc = of_property_read_u32_array(of_node, "shared-gpios",
-		dt->shared_gpio, dt->num_shared_gpio);
+					dt->shared_gpio, dt->num_shared_gpio);
 	if (rc) {
 		CAM_ERR(CAM_RES, "Get shared gpio array failed.");
 		return -EINVAL;
@@ -638,18 +626,16 @@ static int cam_res_mgr_parse_dt(struct device *dev)
 	 * Check the pinctrl state to make sure the gpio
 	 * shared enabled.
 	 */
-	dt->pinctrl_info.gpio_state_active =
-		pinctrl_lookup_state(dt->pinctrl_info.pinctrl,
-			CAM_RES_MGR_DEFAULT);
+	dt->pinctrl_info.gpio_state_active = pinctrl_lookup_state(
+		dt->pinctrl_info.pinctrl, CAM_RES_MGR_DEFAULT);
 	if (IS_ERR_OR_NULL(dt->pinctrl_info.gpio_state_active)) {
 		CAM_ERR(CAM_RES,
 			"Failed to get the active state pinctrl handle");
 		return -EINVAL;
 	}
 
-	dt->pinctrl_info.gpio_state_suspend =
-		pinctrl_lookup_state(dt->pinctrl_info.pinctrl,
-			CAM_RES_MGR_SLEEP);
+	dt->pinctrl_info.gpio_state_suspend = pinctrl_lookup_state(
+		dt->pinctrl_info.pinctrl, CAM_RES_MGR_SLEEP);
 	if (IS_ERR_OR_NULL(dt->pinctrl_info.gpio_state_suspend)) {
 		CAM_ERR(CAM_RES,
 			"Failed to get the active state pinctrl handle");
@@ -704,7 +690,7 @@ static int cam_res_mgr_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id cam_res_mgr_dt_match[] = {
-	{.compatible = "qcom,cam-res-mgr"},
+	{ .compatible = "qcom,cam-res-mgr" },
 	{}
 };
 MODULE_DEVICE_TABLE(of, cam_res_mgr_dt_match);

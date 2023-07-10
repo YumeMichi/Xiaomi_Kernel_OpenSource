@@ -12,20 +12,20 @@
 #include "cam_debug_util.h"
 
 static struct cam_hw_intf *cam_ife_csid_hw_list[CAM_IFE_CSID_HW_NUM_MAX] = {
-	0, 0, 0, 0};
+	0, 0, 0, 0
+};
 
 static char csid_dev_name[8];
 
 int cam_ife_csid_probe(struct platform_device *pdev)
 {
-
-	struct cam_hw_intf             *csid_hw_intf;
-	struct cam_hw_info             *csid_hw_info;
-	struct cam_ife_csid_hw         *csid_dev = NULL;
-	const struct of_device_id      *match_dev = NULL;
-	struct cam_ife_csid_hw_info    *csid_hw_data = NULL;
-	uint32_t                        csid_dev_idx;
-	int                             rc = 0;
+	struct cam_hw_intf *csid_hw_intf;
+	struct cam_hw_info *csid_hw_info;
+	struct cam_ife_csid_hw *csid_dev = NULL;
+	const struct of_device_id *match_dev = NULL;
+	struct cam_ife_csid_hw_info *csid_hw_data = NULL;
+	uint32_t csid_dev_idx;
+	int rc = 0;
 
 	CAM_DBG(CAM_ISP, "probe called");
 
@@ -50,8 +50,8 @@ int cam_ife_csid_probe(struct platform_device *pdev)
 	/* get ife csid hw index */
 	of_property_read_u32(pdev->dev.of_node, "cell-index", &csid_dev_idx);
 	/* get ife csid hw information */
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev) {
 		CAM_ERR(CAM_ISP, "No matching table for the IFE CSID HW!");
 		rc = -EINVAL;
@@ -59,8 +59,7 @@ int cam_ife_csid_probe(struct platform_device *pdev)
 	}
 
 	memset(csid_dev_name, 0, sizeof(csid_dev_name));
-	snprintf(csid_dev_name, sizeof(csid_dev_name),
-		"csid%1u", csid_dev_idx);
+	snprintf(csid_dev_name, sizeof(csid_dev_name), "csid%1u", csid_dev_idx);
 
 	csid_hw_intf->hw_idx = csid_dev_idx;
 	csid_hw_intf->hw_type = CAM_ISP_HW_TYPE_IFE_CSID;
@@ -72,7 +71,7 @@ int cam_ife_csid_probe(struct platform_device *pdev)
 	csid_hw_info->soc_info.dev_name = csid_dev_name;
 	csid_hw_info->soc_info.index = csid_dev_idx;
 
-	csid_hw_data = (struct cam_ife_csid_hw_info  *)match_dev->data;
+	csid_hw_data = (struct cam_ife_csid_hw_info *)match_dev->data;
 	/* need to setup the pdev before call the ife hw probe init */
 	csid_dev->csid_info = csid_hw_data;
 
@@ -81,9 +80,7 @@ int cam_ife_csid_probe(struct platform_device *pdev)
 		goto free_dev;
 
 	platform_set_drvdata(pdev, csid_dev);
-	CAM_DBG(CAM_ISP, "CSID:%d probe successful",
-		csid_hw_intf->hw_idx);
-
+	CAM_DBG(CAM_ISP, "CSID:%d probe successful", csid_hw_intf->hw_idx);
 
 	if (csid_hw_intf->hw_idx < CAM_IFE_CSID_HW_NUM_MAX)
 		cam_ife_csid_hw_list[csid_hw_intf->hw_idx] = csid_hw_intf;
@@ -104,16 +101,15 @@ err:
 
 int cam_ife_csid_remove(struct platform_device *pdev)
 {
-	struct cam_ife_csid_hw         *csid_dev = NULL;
-	struct cam_hw_intf             *csid_hw_intf;
-	struct cam_hw_info             *csid_hw_info;
+	struct cam_ife_csid_hw *csid_dev = NULL;
+	struct cam_hw_intf *csid_hw_intf;
+	struct cam_hw_info *csid_hw_info;
 
 	csid_dev = (struct cam_ife_csid_hw *)platform_get_drvdata(pdev);
 	csid_hw_intf = csid_dev->hw_intf;
 	csid_hw_info = csid_dev->hw_info;
 
-	CAM_DBG(CAM_ISP, "CSID:%d remove",
-		csid_dev->hw_intf->hw_idx);
+	CAM_DBG(CAM_ISP, "CSID:%d remove", csid_dev->hw_intf->hw_idx);
 
 	cam_ife_csid_hw_deinit(csid_dev);
 
@@ -124,8 +120,7 @@ int cam_ife_csid_remove(struct platform_device *pdev)
 	return 0;
 }
 
-int cam_ife_csid_hw_init(struct cam_hw_intf **ife_csid_hw,
-	uint32_t hw_idx)
+int cam_ife_csid_hw_init(struct cam_hw_intf **ife_csid_hw, uint32_t hw_idx)
 {
 	int rc = 0;
 

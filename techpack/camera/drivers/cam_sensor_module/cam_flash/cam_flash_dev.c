@@ -9,8 +9,8 @@
 #include "cam_flash_core.h"
 #include "cam_common_util.h"
 
-static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
-		void *arg, struct cam_flash_private_soc *soc_private)
+static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl, void *arg,
+				    struct cam_flash_private_soc *soc_private)
 {
 	int rc = 0;
 	int i = 0;
@@ -23,8 +23,7 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 	}
 
 	if (cmd->handle_type != CAM_HANDLE_USER_POINTER) {
-		CAM_ERR(CAM_FLASH, "Invalid handle type: %d",
-			cmd->handle_type);
+		CAM_ERR(CAM_FLASH, "Invalid handle type: %d", cmd->handle_type);
 		return -EINVAL;
 	}
 
@@ -51,8 +50,8 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		}
 
 		rc = copy_from_user(&flash_acq_dev,
-			u64_to_user_ptr(cmd->handle),
-			sizeof(flash_acq_dev));
+				    u64_to_user_ptr(cmd->handle),
+				    sizeof(flash_acq_dev));
 		if (rc) {
 			CAM_ERR(CAM_FLASH, "Failed Copying from User");
 			goto release_mutex;
@@ -66,14 +65,11 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 
 		flash_acq_dev.device_handle =
 			cam_create_device_hdl(&bridge_params);
-		fctrl->bridge_intf.device_hdl =
-			flash_acq_dev.device_handle;
-		fctrl->bridge_intf.session_hdl =
-			flash_acq_dev.session_handle;
+		fctrl->bridge_intf.device_hdl = flash_acq_dev.device_handle;
+		fctrl->bridge_intf.session_hdl = flash_acq_dev.session_handle;
 
-		rc = copy_to_user(u64_to_user_ptr(cmd->handle),
-			&flash_acq_dev,
-			sizeof(struct cam_sensor_acquire_dev));
+		rc = copy_to_user(u64_to_user_ptr(cmd->handle), &flash_acq_dev,
+				  sizeof(struct cam_sensor_acquire_dev));
 		if (rc) {
 			CAM_ERR(CAM_FLASH, "Failed Copy to User with rc = %d",
 				rc);
@@ -86,14 +82,14 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 	case CAM_RELEASE_DEV: {
 		CAM_DBG(CAM_FLASH, "CAM_RELEASE_DEV");
 		if ((fctrl->flash_state == CAM_FLASH_STATE_INIT) ||
-			(fctrl->flash_state == CAM_FLASH_STATE_START)) {
+		    (fctrl->flash_state == CAM_FLASH_STATE_START)) {
 			CAM_WARN(CAM_FLASH,
-				"Wrong state for Release dev: Prev state:%d",
-				fctrl->flash_state);
+				 "Wrong state for Release dev: Prev state:%d",
+				 fctrl->flash_state);
 		}
 
 		if (fctrl->bridge_intf.device_hdl == -1 &&
-			fctrl->flash_state == CAM_FLASH_STATE_ACQUIRE) {
+		    fctrl->flash_state == CAM_FLASH_STATE_ACQUIRE) {
 			CAM_ERR(CAM_FLASH,
 				"Invalid Handle: Link Hdl: %d device hdl: %d",
 				fctrl->bridge_intf.device_hdl,
@@ -112,12 +108,12 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		}
 
 		if ((fctrl->flash_state == CAM_FLASH_STATE_CONFIG) ||
-			(fctrl->flash_state == CAM_FLASH_STATE_START))
+		    (fctrl->flash_state == CAM_FLASH_STATE_START))
 			fctrl->func_tbl.flush_req(fctrl, FLUSH_ALL, 0);
 
 		if (cam_flash_release_dev(fctrl))
 			CAM_WARN(CAM_FLASH,
-				"Failed in destroying the device Handle");
+				 "Failed in destroying the device Handle");
 
 		if (fctrl->func_tbl.power_ops(fctrl, false))
 			CAM_WARN(CAM_FLASH, "Power Down Failed");
@@ -126,7 +122,7 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		break;
 	}
 	case CAM_QUERY_CAP: {
-		struct cam_flash_query_cap_info flash_cap = {0};
+		struct cam_flash_query_cap_info flash_cap = { 0 };
 
 		CAM_DBG(CAM_FLASH, "CAM_QUERY_CAP");
 		flash_cap.slot_info = fctrl->soc_info.index;
@@ -141,8 +137,8 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 			flash_cap.max_current_torch[i] =
 				soc_private->torch_max_current[i];
 
-		if (copy_to_user(u64_to_user_ptr(cmd->handle),
-			&flash_cap, sizeof(struct cam_flash_query_cap_info))) {
+		if (copy_to_user(u64_to_user_ptr(cmd->handle), &flash_cap,
+				 sizeof(struct cam_flash_query_cap_info))) {
 			CAM_ERR(CAM_FLASH, "Failed Copy to User");
 			rc = -EFAULT;
 			goto release_mutex;
@@ -152,10 +148,10 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 	case CAM_START_DEV: {
 		CAM_DBG(CAM_FLASH, "CAM_START_DEV");
 		if ((fctrl->flash_state == CAM_FLASH_STATE_INIT) ||
-			(fctrl->flash_state == CAM_FLASH_STATE_START)) {
+		    (fctrl->flash_state == CAM_FLASH_STATE_START)) {
 			CAM_WARN(CAM_FLASH,
-				"Cannot apply Start Dev: Prev state: %d",
-				fctrl->flash_state);
+				 "Cannot apply Start Dev: Prev state: %d",
+				 fctrl->flash_state);
 			rc = -EINVAL;
 			goto release_mutex;
 		}
@@ -167,8 +163,8 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		CAM_DBG(CAM_FLASH, "CAM_STOP_DEV ENTER");
 		if (fctrl->flash_state != CAM_FLASH_STATE_START) {
 			CAM_WARN(CAM_FLASH,
-				"Cannot apply Stop dev: Prev state is: %d",
-				fctrl->flash_state);
+				 "Cannot apply Stop dev: Prev state is: %d",
+				 fctrl->flash_state);
 			rc = -EINVAL;
 			goto release_mutex;
 		}
@@ -202,17 +198,16 @@ static int32_t cam_flash_init_default_params(struct cam_flash_ctrl *fctrl)
 {
 	/* Validate input parameters */
 	if (!fctrl) {
-		CAM_ERR(CAM_FLASH, "failed: invalid params fctrl %pK",
-			fctrl);
+		CAM_ERR(CAM_FLASH, "failed: invalid params fctrl %pK", fctrl);
 		return -EINVAL;
 	}
 
-	CAM_DBG(CAM_FLASH,
-		"master_type: %d", fctrl->io_master_info.master_type);
+	CAM_DBG(CAM_FLASH, "master_type: %d",
+		fctrl->io_master_info.master_type);
 	/* Initialize cci_client */
 	if (fctrl->io_master_info.master_type == CCI_MASTER) {
-		fctrl->io_master_info.cci_client = kzalloc(sizeof(
-			struct cam_sensor_cci_client), GFP_KERNEL);
+		fctrl->io_master_info.cci_client = kzalloc(
+			sizeof(struct cam_sensor_cci_client), GFP_KERNEL);
 		if (!(fctrl->io_master_info.cci_client))
 			return -ENOMEM;
 	} else if (fctrl->io_master_info.master_type == I2C_MASTER) {
@@ -228,12 +223,12 @@ static int32_t cam_flash_init_default_params(struct cam_flash_ctrl *fctrl)
 }
 
 static const struct of_device_id cam_flash_dt_match[] = {
-	{.compatible = "qcom,camera-flash", .data = NULL},
+	{ .compatible = "qcom,camera-flash", .data = NULL },
 	{}
 };
 
-static long cam_flash_subdev_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, void *arg)
+static long cam_flash_subdev_ioctl(struct v4l2_subdev *sd, unsigned int cmd,
+				   void *arg)
 {
 	int rc = 0;
 	struct cam_flash_ctrl *fctrl = NULL;
@@ -246,8 +241,7 @@ static long cam_flash_subdev_ioctl(struct v4l2_subdev *sd,
 
 	switch (cmd) {
 	case VIDIOC_CAM_CONTROL: {
-		rc = cam_flash_driver_cmd(fctrl, arg,
-			soc_private);
+		rc = cam_flash_driver_cmd(fctrl, arg, soc_private);
 		break;
 	}
 	default:
@@ -261,16 +255,14 @@ static long cam_flash_subdev_ioctl(struct v4l2_subdev *sd,
 }
 
 #ifdef CONFIG_COMPAT
-static long cam_flash_subdev_do_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, unsigned long arg)
+static long cam_flash_subdev_do_ioctl(struct v4l2_subdev *sd, unsigned int cmd,
+				      unsigned long arg)
 {
 	struct cam_control cmd_data;
 	int32_t rc = 0;
 
-	if (copy_from_user(&cmd_data, (void __user *)arg,
-		sizeof(cmd_data))) {
-		CAM_ERR(CAM_FLASH,
-			"Failed to copy from user_ptr=%pK size=%zu",
+	if (copy_from_user(&cmd_data, (void __user *)arg, sizeof(cmd_data))) {
+		CAM_ERR(CAM_FLASH, "Failed to copy from user_ptr=%pK size=%zu",
 			(void __user *)arg, sizeof(cmd_data));
 		return -EFAULT;
 	}
@@ -283,14 +275,13 @@ static long cam_flash_subdev_do_ioctl(struct v4l2_subdev *sd,
 		break;
 	}
 	default:
-		CAM_ERR(CAM_FLASH, "Invalid compat ioctl cmd_type:%d",
-			cmd);
+		CAM_ERR(CAM_FLASH, "Invalid compat ioctl cmd_type:%d", cmd);
 		rc = -EINVAL;
 	}
 
 	if (!rc) {
 		if (copy_to_user((void __user *)arg, &cmd_data,
-			sizeof(cmd_data))) {
+				 sizeof(cmd_data))) {
 			CAM_ERR(CAM_FLASH,
 				"Failed to copy to user_ptr=%pK size=%zu",
 				(void __user *)arg, sizeof(cmd_data));
@@ -343,10 +334,9 @@ static int32_t cam_flash_i2c_driver_remove(struct i2c_client *client)
 }
 
 static int cam_flash_subdev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				  struct v4l2_subdev_fh *fh)
 {
-	struct cam_flash_ctrl *fctrl =
-		v4l2_get_subdevdata(sd);
+	struct cam_flash_ctrl *fctrl = v4l2_get_subdevdata(sd);
 
 	if (!fctrl) {
 		CAM_ERR(CAM_FLASH, "Flash ctrl ptr is NULL");
@@ -379,10 +369,8 @@ static int cam_flash_init_subdev(struct cam_flash_ctrl *fctrl)
 {
 	int rc = 0;
 
-	strlcpy(fctrl->device_name, CAM_FLASH_NAME,
-		sizeof(fctrl->device_name));
-	fctrl->v4l2_dev_str.internal_ops =
-		&cam_flash_internal_ops;
+	strlcpy(fctrl->device_name, CAM_FLASH_NAME, sizeof(fctrl->device_name));
+	fctrl->v4l2_dev_str.internal_ops = &cam_flash_internal_ops;
 	fctrl->v4l2_dev_str.ops = &cam_flash_subdev_ops;
 	fctrl->v4l2_dev_str.name = CAMX_FLASH_DEV_NAME;
 	fctrl->v4l2_dev_str.sd_flags =
@@ -430,7 +418,7 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 	if (of_find_property(pdev->dev.of_node, "cci-master", NULL)) {
 		/* Get CCI master */
 		rc = of_property_read_u32(pdev->dev.of_node, "cci-master",
-			&fctrl->cci_i2c_master);
+					  &fctrl->cci_i2c_master);
 		CAM_DBG(CAM_FLASH, "cci-master %d, rc %d",
 			fctrl->cci_i2c_master, rc);
 		if (rc < 0) {
@@ -450,16 +438,16 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 
 		of_parent = of_get_parent(pdev->dev.of_node);
 		if (of_property_read_u32(of_parent, "cell-index",
-				&fctrl->cci_num) < 0)
-		/* Set default master 0 */
+					 &fctrl->cci_num) < 0)
+			/* Set default master 0 */
 			fctrl->cci_num = CCI_DEVICE_0;
 
 		fctrl->io_master_info.cci_client->cci_device = fctrl->cci_num;
 		CAM_DBG(CAM_FLASH, "cci-index %d", fctrl->cci_num, rc);
 
-		fctrl->i2c_data.per_frame =
-			kzalloc(sizeof(struct i2c_settings_array) *
-			MAX_PER_FRAME_ARRAY, GFP_KERNEL);
+		fctrl->i2c_data.per_frame = kzalloc(
+			sizeof(struct i2c_settings_array) * MAX_PER_FRAME_ARRAY,
+			GFP_KERNEL);
 		if (fctrl->i2c_data.per_frame == NULL) {
 			CAM_ERR(CAM_FLASH, "No Memory");
 			rc = -ENOMEM;
@@ -521,20 +509,20 @@ free_resource:
 }
 
 static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
-	const struct i2c_device_id *id)
+					  const struct i2c_device_id *id)
 {
 	int32_t rc = 0, i = 0;
 	struct cam_flash_ctrl *fctrl;
 
 	if (client == NULL || id == NULL) {
-		CAM_ERR(CAM_FLASH, "Invalid Args client: %pK id: %pK",
-			client, id);
+		CAM_ERR(CAM_FLASH, "Invalid Args client: %pK id: %pK", client,
+			id);
 		return -EINVAL;
 	}
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		CAM_ERR(CAM_FLASH, "%s :: i2c_check_functionality failed",
-			 client->name);
+			client->name);
 		return -EFAULT;
 	}
 
@@ -561,8 +549,8 @@ static int32_t cam_flash_i2c_driver_probe(struct i2c_client *client,
 		goto free_ctrl;
 
 	fctrl->i2c_data.per_frame =
-		kzalloc(sizeof(struct i2c_settings_array) *
-		MAX_PER_FRAME_ARRAY, GFP_KERNEL);
+		kzalloc(sizeof(struct i2c_settings_array) * MAX_PER_FRAME_ARRAY,
+			GFP_KERNEL);
 	if (fctrl->i2c_data.per_frame == NULL) {
 		rc = -ENOMEM;
 		goto unreg_subdev;
@@ -612,10 +600,9 @@ static struct platform_driver cam_flash_platform_driver = {
 	},
 };
 
-static const struct i2c_device_id i2c_id[] = {
-	{FLASH_DRIVER_I2C, (kernel_ulong_t)NULL},
-	{ }
-};
+static const struct i2c_device_id i2c_id[] = { { FLASH_DRIVER_I2C,
+						 (kernel_ulong_t)NULL },
+					       {} };
 
 static struct i2c_driver cam_flash_i2c_driver = {
 	.id_table = i2c_id,

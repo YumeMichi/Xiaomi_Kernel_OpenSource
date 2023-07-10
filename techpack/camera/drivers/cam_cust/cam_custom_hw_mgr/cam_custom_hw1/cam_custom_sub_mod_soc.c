@@ -9,22 +9,23 @@
 #include "cam_debug_util.h"
 
 int cam_custom_hw_sub_mod_init_soc_resources(struct cam_hw_soc_info *soc_info,
-	irq_handler_t irq_handler, void *irq_data)
+					     irq_handler_t irq_handler,
+					     void *irq_data)
 {
-	int                               rc = 0;
+	int rc = 0;
 	struct cam_custom_hw_soc_private *soc_private = NULL;
-	struct cam_cpas_register_params   cpas_register_param;
+	struct cam_cpas_register_params cpas_register_param;
 
 	rc = cam_soc_util_get_dt_properties(soc_info);
 	if (rc < 0) {
-		CAM_ERR(CAM_CUSTOM,
-			"Error! Get DT properties failed rc=%d", rc);
+		CAM_ERR(CAM_CUSTOM, "Error! Get DT properties failed rc=%d",
+			rc);
 		/* For Test Purposes */
 		return 0;
 	}
 
-	soc_private = kzalloc(sizeof(struct cam_custom_hw_soc_private),
-		GFP_KERNEL);
+	soc_private =
+		kzalloc(sizeof(struct cam_custom_hw_soc_private), GFP_KERNEL);
 	if (!soc_private) {
 		CAM_DBG(CAM_CUSTOM, "Error! soc_private Alloc Failed");
 		return -ENOMEM;
@@ -32,7 +33,7 @@ int cam_custom_hw_sub_mod_init_soc_resources(struct cam_hw_soc_info *soc_info,
 	soc_info->soc_private = soc_private;
 
 	rc = cam_soc_util_request_platform_resource(soc_info, irq_handler,
-		irq_data);
+						    irq_data);
 	if (rc < 0) {
 		CAM_ERR(CAM_CUSTOM,
 			"Error! Request platform resources failed rc=%d", rc);
@@ -52,8 +53,7 @@ int cam_custom_hw_sub_mod_init_soc_resources(struct cam_hw_soc_info *soc_info,
 	if (rc < 0)
 		goto release_soc;
 
-	soc_private->cpas_handle =
-		cpas_register_param.client_handle;
+	soc_private->cpas_handle = cpas_register_param.client_handle;
 
 	return rc;
 
@@ -64,7 +64,7 @@ release_soc:
 
 int cam_custom_hw_sub_mod_deinit_soc_resources(struct cam_hw_soc_info *soc_info)
 {
-	int                               rc = 0;
+	int rc = 0;
 	struct cam_custom_hw_soc_private *soc_private = NULL;
 
 	if (!soc_info) {
@@ -93,10 +93,10 @@ int cam_custom_hw_sub_mod_deinit_soc_resources(struct cam_hw_soc_info *soc_info)
 
 int cam_custom_hw_sub_mod_enable_soc_resources(struct cam_hw_soc_info *soc_info)
 {
-	int                               rc = 0;
+	int rc = 0;
 	struct cam_custom_hw_soc_private *soc_private = soc_info->soc_private;
-	struct cam_ahb_vote               ahb_vote;
-	struct cam_axi_vote axi_vote =    {0};
+	struct cam_ahb_vote ahb_vote;
+	struct cam_axi_vote axi_vote = { 0 };
 
 	ahb_vote.type = CAM_VOTE_ABSOLUTE;
 	ahb_vote.vote.level = CAM_LOWSVS_VOTE;
@@ -120,7 +120,7 @@ int cam_custom_hw_sub_mod_enable_soc_resources(struct cam_hw_soc_info *soc_info)
 	}
 
 	rc = cam_soc_util_enable_platform_resource(soc_info, true,
-		CAM_TURBO_VOTE, true);
+						   CAM_TURBO_VOTE, true);
 	if (rc) {
 		CAM_ERR(CAM_CUSTOM, "Error! enable platform failed rc=%d", rc);
 		goto stop_cpas;
@@ -134,11 +134,10 @@ end:
 	return rc;
 }
 
-int cam_custom_hw_sub_mod_disable_soc_resources(
-	struct cam_hw_soc_info *soc_info)
+int cam_custom_hw_sub_mod_disable_soc_resources(struct cam_hw_soc_info *soc_info)
 {
 	int rc = 0;
-	struct cam_custom_hw_soc_private       *soc_private;
+	struct cam_custom_hw_soc_private *soc_private;
 
 	if (!soc_info) {
 		CAM_ERR(CAM_CUSTOM, "Error! Invalid params");

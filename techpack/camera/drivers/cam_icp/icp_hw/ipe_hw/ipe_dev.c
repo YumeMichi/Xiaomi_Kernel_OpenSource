@@ -37,8 +37,8 @@ EXPORT_SYMBOL(cam_ipe_hw_info);
 static char ipe_dev_name[8];
 
 int cam_ipe_register_cpas(struct cam_hw_soc_info *soc_info,
-	struct cam_ipe_device_core_info *core_info,
-	uint32_t hw_idx)
+			  struct cam_ipe_device_core_info *core_info,
+			  uint32_t hw_idx)
 {
 	struct cam_cpas_register_params cpas_register_params;
 	int rc;
@@ -61,21 +61,20 @@ int cam_ipe_register_cpas(struct cam_hw_soc_info *soc_info,
 
 int cam_ipe_probe(struct platform_device *pdev)
 {
-	struct cam_hw_info            *ipe_dev = NULL;
-	struct cam_hw_intf            *ipe_dev_intf = NULL;
-	const struct of_device_id         *match_dev = NULL;
-	struct cam_ipe_device_core_info   *core_info = NULL;
-	struct cam_ipe_device_hw_info     *hw_info = NULL;
-	int                                rc = 0;
+	struct cam_hw_info *ipe_dev = NULL;
+	struct cam_hw_intf *ipe_dev_intf = NULL;
+	const struct of_device_id *match_dev = NULL;
+	struct cam_ipe_device_core_info *core_info = NULL;
+	struct cam_ipe_device_hw_info *hw_info = NULL;
+	int rc = 0;
 	struct cam_cpas_query_cap query;
 	uint32_t cam_caps;
 	uint32_t hw_idx;
 
-	of_property_read_u32(pdev->dev.of_node,
-		"cell-index", &hw_idx);
+	of_property_read_u32(pdev->dev.of_node, "cell-index", &hw_idx);
 
-	cam_cpas_get_hw_info(&query.camera_family,
-		&query.camera_version, &query.cpas_version, &cam_caps);
+	cam_cpas_get_hw_info(&query.camera_family, &query.camera_version,
+			     &query.cpas_version, &cam_caps);
 	if ((!(cam_caps & CPAS_IPE1_BIT)) && (hw_idx)) {
 		CAM_ERR(CAM_ICP, "IPE1 hw idx = %d\n", hw_idx);
 		return -EINVAL;
@@ -93,8 +92,8 @@ int cam_ipe_probe(struct platform_device *pdev)
 	}
 
 	memset(ipe_dev_name, 0, sizeof(ipe_dev_name));
-	snprintf(ipe_dev_name, sizeof(ipe_dev_name),
-		"ipe%1u", ipe_dev_intf->hw_idx);
+	snprintf(ipe_dev_name, sizeof(ipe_dev_name), "ipe%1u",
+		 ipe_dev_intf->hw_idx);
 
 	ipe_dev->soc_info.pdev = pdev;
 	ipe_dev->soc_info.dev = &pdev->dev;
@@ -105,14 +104,13 @@ int cam_ipe_probe(struct platform_device *pdev)
 	ipe_dev_intf->hw_ops.process_cmd = cam_ipe_process_cmd;
 	ipe_dev_intf->hw_type = CAM_ICP_DEV_IPE;
 
-	CAM_DBG(CAM_ICP, "type %d index %d",
-		ipe_dev_intf->hw_type,
+	CAM_DBG(CAM_ICP, "type %d index %d", ipe_dev_intf->hw_type,
 		ipe_dev_intf->hw_idx);
 
 	platform_set_drvdata(pdev, ipe_dev_intf);
 
-	ipe_dev->core_info = kzalloc(sizeof(struct cam_ipe_device_core_info),
-		GFP_KERNEL);
+	ipe_dev->core_info =
+		kzalloc(sizeof(struct cam_ipe_device_core_info), GFP_KERNEL);
 	if (!ipe_dev->core_info) {
 		kfree(ipe_dev);
 		kfree(ipe_dev_intf);
@@ -120,8 +118,8 @@ int cam_ipe_probe(struct platform_device *pdev)
 	}
 	core_info = (struct cam_ipe_device_core_info *)ipe_dev->core_info;
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev) {
 		CAM_DBG(CAM_ICP, "No ipe hardware info");
 		kfree(ipe_dev->core_info);
@@ -134,7 +132,7 @@ int cam_ipe_probe(struct platform_device *pdev)
 	core_info->ipe_hw_info = hw_info;
 
 	rc = cam_ipe_init_soc_resources(&ipe_dev->soc_info, cam_ipe_irq,
-		ipe_dev);
+					ipe_dev);
 	if (rc < 0) {
 		CAM_ERR(CAM_ICP, "failed to init_soc");
 		kfree(ipe_dev->core_info);
@@ -145,8 +143,8 @@ int cam_ipe_probe(struct platform_device *pdev)
 
 	CAM_DBG(CAM_ICP, "cam_ipe_init_soc_resources : %pK",
 		(void *)&ipe_dev->soc_info);
-	rc = cam_ipe_register_cpas(&ipe_dev->soc_info,
-		core_info, ipe_dev_intf->hw_idx);
+	rc = cam_ipe_register_cpas(&ipe_dev->soc_info, core_info,
+				   ipe_dev_intf->hw_idx);
 	if (rc < 0) {
 		kfree(ipe_dev->core_info);
 		kfree(ipe_dev);
@@ -158,8 +156,7 @@ int cam_ipe_probe(struct platform_device *pdev)
 	spin_lock_init(&ipe_dev->hw_lock);
 	init_completion(&ipe_dev->hw_complete);
 
-	CAM_DBG(CAM_ICP, "IPE%d probe successful",
-		ipe_dev_intf->hw_idx);
+	CAM_DBG(CAM_ICP, "IPE%d probe successful", ipe_dev_intf->hw_idx);
 
 	return rc;
 }

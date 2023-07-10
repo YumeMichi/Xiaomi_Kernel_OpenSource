@@ -21,22 +21,24 @@
 
 static const char custom_dev_name[] = "custom hw";
 
-static int __cam_custom_ctx_handle_irq_in_activated(
-	void *context, uint32_t evt_id, void *evt_data);
+static int __cam_custom_ctx_handle_irq_in_activated(void *context,
+						    uint32_t evt_id,
+						    void *evt_data);
 
-static int __cam_custom_ctx_enqueue_request_in_order(
-	struct cam_context *ctx, struct cam_ctx_request *req)
+static int
+__cam_custom_ctx_enqueue_request_in_order(struct cam_context *ctx,
+					  struct cam_ctx_request *req)
 {
-	struct cam_ctx_request           *req_current;
-	struct cam_ctx_request           *req_prev;
-	struct list_head                  temp_list;
+	struct cam_ctx_request *req_current;
+	struct cam_ctx_request *req_prev;
+	struct list_head temp_list;
 
 	INIT_LIST_HEAD(&temp_list);
 	spin_lock_bh(&ctx->lock);
 	if (list_empty(&ctx->pending_req_list)) {
 		list_add_tail(&req->list, &ctx->pending_req_list);
 	} else {
-		list_for_each_entry_safe_reverse(
+		list_for_each_entry_safe_reverse (
 			req_current, req_prev, &ctx->pending_req_list, list) {
 			if (req->request_id < req_current->request_id) {
 				list_del_init(&req_current->list);
@@ -44,19 +46,19 @@ static int __cam_custom_ctx_enqueue_request_in_order(
 				continue;
 			} else if (req->request_id == req_current->request_id) {
 				CAM_WARN(CAM_CUSTOM,
-					"Received duplicated request %lld",
-					req->request_id);
+					 "Received duplicated request %lld",
+					 req->request_id);
 			}
 			break;
 		}
 		list_add_tail(&req->list, &ctx->pending_req_list);
 
 		if (!list_empty(&temp_list)) {
-			list_for_each_entry_safe(
-				req_current, req_prev, &temp_list, list) {
+			list_for_each_entry_safe (req_current, req_prev,
+						  &temp_list, list) {
 				list_del_init(&req_current->list);
 				list_add_tail(&req_current->list,
-					&ctx->pending_req_list);
+					      &ctx->pending_req_list);
 			}
 		}
 	}
@@ -64,15 +66,16 @@ static int __cam_custom_ctx_enqueue_request_in_order(
 	return 0;
 }
 
-static int __cam_custom_ctx_flush_req(struct cam_context *ctx,
-	struct list_head *req_list, struct cam_req_mgr_flush_request *flush_req)
+static int
+__cam_custom_ctx_flush_req(struct cam_context *ctx, struct list_head *req_list,
+			   struct cam_req_mgr_flush_request *flush_req)
 {
 	int i, rc;
 	uint32_t cancel_req_id_found = 0;
-	struct cam_ctx_request           *req;
-	struct cam_ctx_request           *req_temp;
-	struct cam_custom_dev_ctx_req    *req_custom;
-	struct list_head                  flush_list;
+	struct cam_ctx_request *req;
+	struct cam_ctx_request *req_temp;
+	struct cam_custom_dev_ctx_req *req_custom;
+	struct list_head flush_list;
 
 	INIT_LIST_HEAD(&flush_list);
 	if (list_empty(req_list)) {
@@ -87,7 +90,7 @@ static int __cam_custom_ctx_flush_req(struct cam_context *ctx,
 
 	CAM_DBG(CAM_CUSTOM, "Flush [%u] in progress for req_id %llu",
 		flush_req->type, flush_req->req_id);
-	list_for_each_entry_safe(req, req_temp, req_list, list) {
+	list_for_each_entry_safe (req, req_temp, req_list, list) {
 		if (flush_req->type == CAM_REQ_MGR_FLUSH_TYPE_CANCEL_REQ) {
 			if (req->request_id != flush_req->req_id) {
 				continue;
@@ -102,19 +105,20 @@ static int __cam_custom_ctx_flush_req(struct cam_context *ctx,
 		list_add_tail(&req->list, &flush_list);
 	}
 
-	list_for_each_entry_safe(req, req_temp, &flush_list, list) {
-		req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+	list_for_each_entry_safe (req, req_temp, &flush_list, list) {
+		req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 		for (i = 0; i < req_custom->num_fence_map_out; i++) {
 			if (req_custom->fence_map_out[i].sync_id != -1) {
 				CAM_DBG(CAM_CUSTOM,
 					"Flush req 0x%llx, fence %d",
-					 req->request_id,
+					req->request_id,
 					req_custom->fence_map_out[i].sync_id);
 				rc = cam_sync_signal(
 					req_custom->fence_map_out[i].sync_id,
 					CAM_SYNC_STATE_SIGNALED_ERROR);
 				if (rc)
-					CAM_ERR_RATE_LIMIT(CAM_CUSTOM,
+					CAM_ERR_RATE_LIMIT(
+						CAM_CUSTOM,
 						"signal fence failed\n");
 				req_custom->fence_map_out[i].sync_id = -1;
 			}
@@ -123,7 +127,7 @@ static int __cam_custom_ctx_flush_req(struct cam_context *ctx,
 	}
 
 	if (flush_req->type == CAM_REQ_MGR_FLUSH_TYPE_CANCEL_REQ &&
-		!cancel_req_id_found)
+	    !cancel_req_id_found)
 		CAM_DBG(CAM_CUSTOM,
 			"Flush request id:%lld is not found in the list",
 			flush_req->req_id);
@@ -132,14 +136,13 @@ static int __cam_custom_ctx_flush_req(struct cam_context *ctx,
 }
 
 static int __cam_custom_ctx_flush_req_in_top_state(
-	struct cam_context *ctx,
-	struct cam_req_mgr_flush_request *flush_req)
+	struct cam_context *ctx, struct cam_req_mgr_flush_request *flush_req)
 {
 	int rc = 0;
 
 	if (flush_req->type == CAM_REQ_MGR_FLUSH_TYPE_ALL) {
 		CAM_INFO(CAM_CUSTOM, "Last request id to flush is %lld",
-			flush_req->req_id);
+			 flush_req->req_id);
 		ctx->last_flush_req = flush_req->req_id;
 	}
 
@@ -150,9 +153,9 @@ static int __cam_custom_ctx_flush_req_in_top_state(
 	return rc;
 }
 
-static int __cam_custom_ctx_flush_req_in_ready(
-	struct cam_context *ctx,
-	struct cam_req_mgr_flush_request *flush_req)
+static int
+__cam_custom_ctx_flush_req_in_ready(struct cam_context *ctx,
+				    struct cam_req_mgr_flush_request *flush_req)
 {
 	int rc = 0;
 
@@ -166,12 +169,13 @@ static int __cam_custom_ctx_flush_req_in_ready(
 	spin_unlock_bh(&ctx->lock);
 
 	CAM_DBG(CAM_CUSTOM, "Flush request in ready state. next state %d",
-		 ctx->state);
+		ctx->state);
 	return rc;
 }
 
-static int __cam_custom_ctx_unlink_in_ready(struct cam_context *ctx,
-	struct cam_req_mgr_core_dev_link_setup *unlink)
+static int
+__cam_custom_ctx_unlink_in_ready(struct cam_context *ctx,
+				 struct cam_req_mgr_core_dev_link_setup *unlink)
 {
 	ctx->link_hdl = -1;
 	ctx->ctx_crm_intf = NULL;
@@ -180,16 +184,16 @@ static int __cam_custom_ctx_unlink_in_ready(struct cam_context *ctx,
 	return 0;
 }
 
-static int __cam_custom_stop_dev_core(
-	struct cam_context *ctx, struct cam_start_stop_dev_cmd *stop_cmd)
+static int __cam_custom_stop_dev_core(struct cam_context *ctx,
+				      struct cam_start_stop_dev_cmd *stop_cmd)
 {
 	int rc = 0;
 	uint32_t i;
-	struct cam_custom_context          *ctx_custom =
-		(struct cam_custom_context *) ctx->ctx_priv;
-	struct cam_ctx_request          *req;
-	struct cam_custom_dev_ctx_req       *req_custom;
-	struct cam_hw_stop_args          stop;
+	struct cam_custom_context *ctx_custom =
+		(struct cam_custom_context *)ctx->ctx_priv;
+	struct cam_ctx_request *req;
+	struct cam_custom_dev_ctx_req *req_custom;
+	struct cam_hw_stop_args stop;
 
 	if (ctx_custom->hw_ctx) {
 		stop.ctxt_to_hw_map = ctx_custom->hw_ctx;
@@ -197,17 +201,17 @@ static int __cam_custom_stop_dev_core(
 		stop.args = NULL;
 		if (ctx->hw_mgr_intf->hw_stop)
 			ctx->hw_mgr_intf->hw_stop(ctx->hw_mgr_intf->hw_mgr_priv,
-			&stop);
+						  &stop);
 	}
 
 	while (!list_empty(&ctx->pending_req_list)) {
 		req = list_first_entry(&ctx->pending_req_list,
-				struct cam_ctx_request, list);
+				       struct cam_ctx_request, list);
 		list_del_init(&req->list);
-		req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+		req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 		CAM_DBG(CAM_CUSTOM,
 			"signal fence in pending list. fence num %d",
-			 req_custom->num_fence_map_out);
+			req_custom->num_fence_map_out);
 		for (i = 0; i < req_custom->num_fence_map_out; i++)
 			if (req_custom->fence_map_out[i].sync_id != -1) {
 				cam_sync_signal(
@@ -219,11 +223,11 @@ static int __cam_custom_stop_dev_core(
 
 	while (!list_empty(&ctx->wait_req_list)) {
 		req = list_first_entry(&ctx->wait_req_list,
-				struct cam_ctx_request, list);
+				       struct cam_ctx_request, list);
 		list_del_init(&req->list);
-		req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+		req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 		CAM_DBG(CAM_CUSTOM, "signal fence in wait list. fence num %d",
-			 req_custom->num_fence_map_out);
+			req_custom->num_fence_map_out);
 		for (i = 0; i < req_custom->num_fence_map_out; i++)
 			if (req_custom->fence_map_out[i].sync_id != -1) {
 				cam_sync_signal(
@@ -235,11 +239,11 @@ static int __cam_custom_stop_dev_core(
 
 	while (!list_empty(&ctx->active_req_list)) {
 		req = list_first_entry(&ctx->active_req_list,
-				struct cam_ctx_request, list);
+				       struct cam_ctx_request, list);
 		list_del_init(&req->list);
-		req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+		req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 		CAM_DBG(CAM_CUSTOM, "signal fence in active list. fence num %d",
-			 req_custom->num_fence_map_out);
+			req_custom->num_fence_map_out);
 		for (i = 0; i < req_custom->num_fence_map_out; i++)
 			if (req_custom->fence_map_out[i].sync_id != -1) {
 				cam_sync_signal(
@@ -262,8 +266,9 @@ static int __cam_custom_stop_dev_core(
 	return rc;
 }
 
-static int __cam_custom_stop_dev_in_activated(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+static int
+__cam_custom_stop_dev_in_activated(struct cam_context *ctx,
+				   struct cam_start_stop_dev_cmd *cmd)
 {
 	struct cam_custom_context *ctx_custom =
 		(struct cam_custom_context *)ctx->ctx_priv;
@@ -276,11 +281,11 @@ static int __cam_custom_stop_dev_in_activated(struct cam_context *ctx,
 }
 
 static int __cam_custom_release_dev_in_acquired(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+						struct cam_release_dev_cmd *cmd)
 {
 	int rc;
 	struct cam_custom_context *ctx_custom =
-		(struct cam_custom_context *) ctx->ctx_priv;
+		(struct cam_custom_context *)ctx->ctx_priv;
 	struct cam_req_mgr_flush_request flush_req;
 
 	rc = cam_context_release_dev_to_hw(ctx, cmd);
@@ -304,7 +309,7 @@ static int __cam_custom_release_dev_in_acquired(struct cam_context *ctx,
 	CAM_DBG(CAM_CUSTOM, "try to flush pending list");
 	spin_lock_bh(&ctx->lock);
 	rc = __cam_custom_ctx_flush_req(ctx, &ctx->pending_req_list,
-		&flush_req);
+					&flush_req);
 	spin_unlock_bh(&ctx->lock);
 	ctx->state = CAM_CTX_AVAILABLE;
 
@@ -318,10 +323,10 @@ static int __cam_custom_ctx_apply_req_in_activated_state(
 	struct cam_context *ctx, struct cam_req_mgr_apply_request *apply)
 {
 	int rc = 0;
-	struct cam_ctx_request          *req;
-	struct cam_custom_dev_ctx_req   *req_custom;
-	struct cam_custom_context       *custom_ctx = NULL;
-	struct cam_hw_config_args        cfg;
+	struct cam_ctx_request *req;
+	struct cam_custom_dev_ctx_req *req_custom;
+	struct cam_custom_context *custom_ctx = NULL;
+	struct cam_hw_config_args cfg;
 
 	if (list_empty(&ctx->pending_req_list)) {
 		CAM_ERR(CAM_CUSTOM, "No available request for Apply id %lld",
@@ -330,36 +335,37 @@ static int __cam_custom_ctx_apply_req_in_activated_state(
 		goto end;
 	}
 
-	custom_ctx = (struct cam_custom_context *) ctx->ctx_priv;
+	custom_ctx = (struct cam_custom_context *)ctx->ctx_priv;
 	spin_lock_bh(&ctx->lock);
 	req = list_first_entry(&ctx->pending_req_list, struct cam_ctx_request,
-		list);
+			       list);
 	spin_unlock_bh(&ctx->lock);
 
 	/*
 	 * Check whether the request id is matching the tip
 	 */
 	if (req->request_id != apply->request_id) {
-		CAM_ERR_RATE_LIMIT(CAM_CUSTOM,
+		CAM_ERR_RATE_LIMIT(
+			CAM_CUSTOM,
 			"Invalid Request Id asking %llu existing %llu",
 			apply->request_id, req->request_id);
 		rc = -EFAULT;
 		goto end;
 	}
 
-	req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+	req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 
 	cfg.ctxt_to_hw_map = custom_ctx->hw_ctx;
 	cfg.request_id = req->request_id;
 	cfg.hw_update_entries = req_custom->cfg;
 	cfg.num_hw_update_entries = req_custom->num_cfg;
-	cfg.priv  = &req_custom->hw_update_data;
+	cfg.priv = &req_custom->hw_update_data;
 	cfg.init_packet = 0;
 
 	rc = ctx->hw_mgr_intf->hw_config(ctx->hw_mgr_intf->hw_mgr_priv, &cfg);
 	if (rc) {
 		CAM_ERR_RATE_LIMIT(CAM_CUSTOM,
-			"Can not apply the configuration");
+				   "Can not apply the configuration");
 	} else {
 		spin_lock_bh(&ctx->lock);
 		list_del_init(&req->list);
@@ -373,7 +379,7 @@ static int __cam_custom_ctx_apply_req_in_activated_state(
 			 * for test purposes only-this should be
 			 * triggered based on irq
 			 */
-			 __cam_custom_ctx_handle_irq_in_activated(ctx, 0, NULL);
+			__cam_custom_ctx_handle_irq_in_activated(ctx, 0, NULL);
 		}
 	}
 
@@ -381,13 +387,14 @@ end:
 	return rc;
 }
 
-static int __cam_custom_ctx_acquire_dev_in_available(struct cam_context *ctx,
-	struct cam_acquire_dev_cmd *cmd)
+static int
+__cam_custom_ctx_acquire_dev_in_available(struct cam_context *ctx,
+					  struct cam_acquire_dev_cmd *cmd)
 {
 	int rc;
 	struct cam_custom_context *custom_ctx;
 
-	custom_ctx = (struct cam_custom_context *) ctx->ctx_priv;
+	custom_ctx = (struct cam_custom_context *)ctx->ctx_priv;
 
 	if (cmd->num_resources > CAM_CUSTOM_DEV_CTX_RES_MAX) {
 		CAM_ERR(CAM_CUSTOM, "Too much resources in the acquire");
@@ -395,7 +402,7 @@ static int __cam_custom_ctx_acquire_dev_in_available(struct cam_context *ctx,
 		return rc;
 	}
 
-	if (cmd->handle_type != 1)	{
+	if (cmd->handle_type != 1) {
 		CAM_ERR(CAM_CUSTOM, "Only user pointer is supported");
 		rc = -EINVAL;
 		return rc;
@@ -411,13 +418,13 @@ static int __cam_custom_ctx_acquire_dev_in_available(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_custom_ctx_enqueue_init_request(
-	struct cam_context *ctx, struct cam_ctx_request *req)
+static int __cam_custom_ctx_enqueue_init_request(struct cam_context *ctx,
+						 struct cam_ctx_request *req)
 {
 	int rc = 0;
-	struct cam_ctx_request           *req_old;
-	struct cam_custom_dev_ctx_req    *req_custom_old;
-	struct cam_custom_dev_ctx_req    *req_custom_new;
+	struct cam_ctx_request *req_old;
+	struct cam_custom_dev_ctx_req *req_custom_old;
+	struct cam_custom_dev_ctx_req *req_custom_new;
 
 	spin_lock_bh(&ctx->lock);
 	if (list_empty(&ctx->pending_req_list)) {
@@ -426,42 +433,42 @@ static int __cam_custom_ctx_enqueue_init_request(
 	}
 
 	req_old = list_first_entry(&ctx->pending_req_list,
-		struct cam_ctx_request, list);
-	req_custom_old = (struct cam_custom_dev_ctx_req *) req_old->req_priv;
-	req_custom_new = (struct cam_custom_dev_ctx_req *) req->req_priv;
+				   struct cam_ctx_request, list);
+	req_custom_old = (struct cam_custom_dev_ctx_req *)req_old->req_priv;
+	req_custom_new = (struct cam_custom_dev_ctx_req *)req->req_priv;
 	if (req_custom_old->hw_update_data.packet_opcode_type ==
-		CAM_CUSTOM_PACKET_INIT_DEV) {
+	    CAM_CUSTOM_PACKET_INIT_DEV) {
 		if ((req_custom_old->num_cfg + req_custom_new->num_cfg) >=
-			CAM_CUSTOM_CTX_CFG_MAX) {
+		    CAM_CUSTOM_CTX_CFG_MAX) {
 			CAM_WARN(CAM_CUSTOM, "Can not merge INIT pkt");
 			rc = -ENOMEM;
 		}
 
 		if (req_custom_old->num_fence_map_out != 0 ||
-			req_custom_old->num_fence_map_in != 0) {
+		    req_custom_old->num_fence_map_in != 0) {
 			CAM_WARN(CAM_CUSTOM, "Invalid INIT pkt sequence");
 			rc = -EINVAL;
 		}
 
 		if (!rc) {
 			memcpy(req_custom_old->fence_map_out,
-				req_custom_new->fence_map_out,
-				sizeof(req_custom_new->fence_map_out[0])*
-				req_custom_new->num_fence_map_out);
+			       req_custom_new->fence_map_out,
+			       sizeof(req_custom_new->fence_map_out[0]) *
+				       req_custom_new->num_fence_map_out);
 			req_custom_old->num_fence_map_out =
 				req_custom_new->num_fence_map_out;
 
 			memcpy(req_custom_old->fence_map_in,
-				req_custom_new->fence_map_in,
-				sizeof(req_custom_new->fence_map_in[0])*
-				req_custom_new->num_fence_map_in);
+			       req_custom_new->fence_map_in,
+			       sizeof(req_custom_new->fence_map_in[0]) *
+				       req_custom_new->num_fence_map_in);
 			req_custom_old->num_fence_map_in =
 				req_custom_new->num_fence_map_in;
 
 			memcpy(&req_custom_old->cfg[req_custom_old->num_cfg],
-				req_custom_new->cfg,
-				sizeof(req_custom_new->cfg[0])*
-				req_custom_new->num_cfg);
+			       req_custom_new->cfg,
+			       sizeof(req_custom_new->cfg[0]) *
+				       req_custom_new->num_cfg);
 			req_custom_old->num_cfg += req_custom_new->num_cfg;
 
 			req_old->request_id = req->request_id;
@@ -470,8 +477,8 @@ static int __cam_custom_ctx_enqueue_init_request(
 		}
 	} else {
 		CAM_WARN(CAM_CUSTOM,
-			"Received Update pkt before INIT pkt. req_id= %lld",
-			req->request_id);
+			 "Received Update pkt before INIT pkt. req_id= %lld",
+			 req->request_id);
 		rc = -EINVAL;
 	}
 end:
@@ -480,24 +487,24 @@ end:
 }
 
 static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
-	struct cam_config_dev_cmd *cmd)
+				       struct cam_config_dev_cmd *cmd)
 {
 	int rc = 0, i;
-	struct cam_ctx_request           *req = NULL;
-	struct cam_custom_dev_ctx_req    *req_custom;
-	uintptr_t                         packet_addr;
-	struct cam_packet                *packet;
-	size_t                            len = 0;
+	struct cam_ctx_request *req = NULL;
+	struct cam_custom_dev_ctx_req *req_custom;
+	uintptr_t packet_addr;
+	struct cam_packet *packet;
+	size_t len = 0;
 	struct cam_hw_prepare_update_args cfg;
-	struct cam_req_mgr_add_request    add_req;
-	struct cam_custom_context        *ctx_custom =
-		(struct cam_custom_context *) ctx->ctx_priv;
+	struct cam_req_mgr_add_request add_req;
+	struct cam_custom_context *ctx_custom =
+		(struct cam_custom_context *)ctx->ctx_priv;
 
 	/* get free request */
 	spin_lock_bh(&ctx->lock);
 	if (!list_empty(&ctx->free_req_list)) {
 		req = list_first_entry(&ctx->free_req_list,
-				struct cam_ctx_request, list);
+				       struct cam_ctx_request, list);
 		list_del_init(&req->list);
 	}
 	spin_unlock_bh(&ctx->lock);
@@ -507,12 +514,12 @@ static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
 		return -ENOMEM;
 	}
 
-	req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+	req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 
 	/* for config dev, only memory handle is supported */
 	/* map packet from the memhandle */
-	rc = cam_mem_get_cpu_buf((int32_t) cmd->packet_handle,
-		&packet_addr, &len);
+	rc = cam_mem_get_cpu_buf((int32_t)cmd->packet_handle, &packet_addr,
+				 &len);
 	if (rc != 0) {
 		CAM_ERR(CAM_CUSTOM, "Can not get packet address");
 		rc = -EINVAL;
@@ -522,16 +529,16 @@ static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
 	packet = (struct cam_packet *)(packet_addr + (uint32_t)cmd->offset);
 	CAM_DBG(CAM_CUSTOM, "pack_handle %llx", cmd->packet_handle);
 	CAM_DBG(CAM_CUSTOM, "packet address is 0x%zx", packet_addr);
-	CAM_DBG(CAM_CUSTOM, "packet with length %zu, offset 0x%llx",
-		len, cmd->offset);
+	CAM_DBG(CAM_CUSTOM, "packet with length %zu, offset 0x%llx", len,
+		cmd->offset);
 	CAM_DBG(CAM_CUSTOM, "Packet request id %lld",
 		packet->header.request_id);
 	CAM_DBG(CAM_CUSTOM, "Packet size 0x%x", packet->header.size);
 	CAM_DBG(CAM_CUSTOM, "packet op %d", packet->header.op_code);
 
 	if ((((packet->header.op_code) & 0xF) ==
-		CAM_CUSTOM_PACKET_UPDATE_DEV)
-		&& (packet->header.request_id <= ctx->last_flush_req)) {
+	     CAM_CUSTOM_PACKET_UPDATE_DEV) &&
+	    (packet->header.request_id <= ctx->last_flush_req)) {
 		CAM_DBG(CAM_CUSTOM,
 			"request %lld has been flushed, reject packet",
 			packet->header.request_id);
@@ -545,11 +552,11 @@ static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
 	cfg.ctxt_to_hw_map = ctx_custom->hw_ctx;
 	cfg.out_map_entries = req_custom->fence_map_out;
 	cfg.in_map_entries = req_custom->fence_map_in;
-	cfg.priv  = &req_custom->hw_update_data;
+	cfg.priv = &req_custom->hw_update_data;
 	cfg.pf_data = &(req->pf_data);
 
-	rc = ctx->hw_mgr_intf->hw_prepare_update(
-		ctx->hw_mgr_intf->hw_mgr_priv, &cfg);
+	rc = ctx->hw_mgr_intf->hw_prepare_update(ctx->hw_mgr_intf->hw_mgr_priv,
+						 &cfg);
 	if (rc != 0) {
 		CAM_ERR(CAM_CUSTOM, "Prepare config packet failed in HW layer");
 		rc = -EFAULT;
@@ -583,7 +590,7 @@ static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
 		req_custom->hw_update_data.packet_opcode_type);
 
 	if (req_custom->hw_update_data.packet_opcode_type ==
-		CAM_CUSTOM_PACKET_INIT_DEV) {
+	    CAM_CUSTOM_PACKET_INIT_DEV) {
 		if (ctx->state < CAM_CTX_ACTIVATED) {
 			rc = __cam_custom_ctx_enqueue_init_request(ctx, req);
 			if (rc)
@@ -596,8 +603,8 @@ static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
 	} else {
 		if (ctx->state >= CAM_CTX_READY && ctx->ctx_crm_intf->add_req) {
 			add_req.link_hdl = ctx->link_hdl;
-			add_req.dev_hdl  = ctx->dev_hdl;
-			add_req.req_id   = req->request_id;
+			add_req.dev_hdl = ctx->dev_hdl;
+			add_req.req_id = req->request_id;
 			add_req.skip_before_applying = 0;
 			rc = ctx->ctx_crm_intf->add_req(&add_req);
 			if (rc) {
@@ -605,8 +612,8 @@ static int __cam_custom_ctx_config_dev(struct cam_context *ctx,
 					"Add req failed: req id=%llu",
 					req->request_id);
 			} else {
-				__cam_custom_ctx_enqueue_request_in_order(
-					ctx, req);
+				__cam_custom_ctx_enqueue_request_in_order(ctx,
+									  req);
 			}
 		} else {
 			rc = -EINVAL;
@@ -635,11 +642,11 @@ free_req:
 	spin_unlock_bh(&ctx->lock);
 
 	return rc;
-
 }
 
-static int __cam_custom_ctx_config_dev_in_acquired(struct cam_context *ctx,
-	struct cam_config_dev_cmd *cmd)
+static int
+__cam_custom_ctx_config_dev_in_acquired(struct cam_context *ctx,
+					struct cam_config_dev_cmd *cmd)
 {
 	int rc = 0;
 
@@ -651,11 +658,12 @@ static int __cam_custom_ctx_config_dev_in_acquired(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_custom_ctx_link_in_acquired(struct cam_context *ctx,
-	struct cam_req_mgr_core_dev_link_setup *link)
+static int
+__cam_custom_ctx_link_in_acquired(struct cam_context *ctx,
+				  struct cam_req_mgr_core_dev_link_setup *link)
 {
 	struct cam_custom_context *ctx_custom =
-		(struct cam_custom_context *) ctx->ctx_priv;
+		(struct cam_custom_context *)ctx->ctx_priv;
 
 	ctx->link_hdl = link->link_hdl;
 	ctx->ctx_crm_intf = link->crm_cb;
@@ -670,8 +678,8 @@ static int __cam_custom_ctx_link_in_acquired(struct cam_context *ctx,
 	return 0;
 }
 
-static int __cam_custom_ctx_unlink_in_acquired(struct cam_context *ctx,
-	struct cam_req_mgr_core_dev_link_setup *unlink)
+static int __cam_custom_ctx_unlink_in_acquired(
+	struct cam_context *ctx, struct cam_req_mgr_core_dev_link_setup *unlink)
 {
 	ctx->link_hdl = -1;
 	ctx->ctx_crm_intf = NULL;
@@ -679,8 +687,8 @@ static int __cam_custom_ctx_unlink_in_acquired(struct cam_context *ctx,
 	return 0;
 }
 
-static int __cam_custom_ctx_get_dev_info_in_acquired(struct cam_context *ctx,
-	struct cam_req_mgr_device_info *dev_info)
+static int __cam_custom_ctx_get_dev_info_in_acquired(
+	struct cam_context *ctx, struct cam_req_mgr_device_info *dev_info)
 {
 	dev_info->dev_hdl = ctx->dev_hdl;
 	strlcpy(dev_info->name, CAM_CUSTOM_DEV_NAME, sizeof(dev_info->name));
@@ -691,18 +699,19 @@ static int __cam_custom_ctx_get_dev_info_in_acquired(struct cam_context *ctx,
 	return 0;
 }
 
-static int __cam_custom_ctx_start_dev_in_ready(struct cam_context *ctx,
-	struct cam_start_stop_dev_cmd *cmd)
+static int
+__cam_custom_ctx_start_dev_in_ready(struct cam_context *ctx,
+				    struct cam_start_stop_dev_cmd *cmd)
 {
 	int rc = 0;
-	struct cam_hw_config_args        hw_config;
-	struct cam_ctx_request          *req;
-	struct cam_custom_dev_ctx_req   *req_custom;
-	struct cam_custom_context       *ctx_custom =
-		(struct cam_custom_context *) ctx->ctx_priv;
+	struct cam_hw_config_args hw_config;
+	struct cam_ctx_request *req;
+	struct cam_custom_dev_ctx_req *req_custom;
+	struct cam_custom_context *ctx_custom =
+		(struct cam_custom_context *)ctx->ctx_priv;
 
 	if (cmd->session_handle != ctx->session_hdl ||
-		cmd->dev_handle != ctx->dev_hdl) {
+	    cmd->dev_handle != ctx->dev_hdl) {
 		rc = -EPERM;
 		goto end;
 	}
@@ -714,9 +723,9 @@ static int __cam_custom_ctx_start_dev_in_ready(struct cam_context *ctx,
 		goto end;
 	} else {
 		req = list_first_entry(&ctx->pending_req_list,
-			struct cam_ctx_request, list);
+				       struct cam_ctx_request, list);
 	}
-	req_custom = (struct cam_custom_dev_ctx_req *) req->req_priv;
+	req_custom = (struct cam_custom_dev_ctx_req *)req->req_priv;
 
 	if (!ctx_custom->hw_ctx) {
 		CAM_ERR(CAM_CUSTOM, "Wrong hw context pointer.");
@@ -728,12 +737,12 @@ static int __cam_custom_ctx_start_dev_in_ready(struct cam_context *ctx,
 	hw_config.request_id = req->request_id;
 	hw_config.hw_update_entries = req_custom->cfg;
 	hw_config.num_hw_update_entries = req_custom->num_cfg;
-	hw_config.priv  = &req_custom->hw_update_data;
+	hw_config.priv = &req_custom->hw_update_data;
 	hw_config.init_packet = 1;
 
 	ctx->state = CAM_CTX_ACTIVATED;
 	rc = ctx->hw_mgr_intf->hw_start(ctx->hw_mgr_intf->hw_mgr_priv,
-		&hw_config);
+					&hw_config);
 	if (rc) {
 		/* HW failure. User need to clean up the resource */
 		CAM_ERR(CAM_CUSTOM, "Start HW failed");
@@ -741,8 +750,7 @@ static int __cam_custom_ctx_start_dev_in_ready(struct cam_context *ctx,
 		goto end;
 	}
 
-	CAM_DBG(CAM_CUSTOM, "start device success ctx %u",
-		ctx->ctx_id);
+	CAM_DBG(CAM_CUSTOM, "start device success ctx %u", ctx->ctx_id);
 
 	spin_lock_bh(&ctx->lock);
 	list_del_init(&req->list);
@@ -756,8 +764,9 @@ end:
 	return rc;
 }
 
-static int __cam_custom_ctx_release_dev_in_activated(struct cam_context *ctx,
-	struct cam_release_dev_cmd *cmd)
+static int
+__cam_custom_ctx_release_dev_in_activated(struct cam_context *ctx,
+					  struct cam_release_dev_cmd *cmd)
 {
 	int rc = 0;
 
@@ -772,13 +781,13 @@ static int __cam_custom_ctx_release_dev_in_activated(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_custom_ctx_unlink_in_activated(struct cam_context *ctx,
-	struct cam_req_mgr_core_dev_link_setup *unlink)
+static int __cam_custom_ctx_unlink_in_activated(
+	struct cam_context *ctx, struct cam_req_mgr_core_dev_link_setup *unlink)
 {
 	int rc = 0;
 
 	CAM_WARN(CAM_CUSTOM,
-		"Received unlink in activated state. It's unexpected");
+		 "Received unlink in activated state. It's unexpected");
 
 	rc = __cam_custom_stop_dev_in_activated(ctx, NULL);
 	if (rc)
@@ -791,8 +800,9 @@ static int __cam_custom_ctx_unlink_in_activated(struct cam_context *ctx,
 	return rc;
 }
 
-static int __cam_custom_ctx_process_evt(struct cam_context *ctx,
-	struct cam_req_mgr_link_evt_data *link_evt_data)
+static int
+__cam_custom_ctx_process_evt(struct cam_context *ctx,
+			     struct cam_req_mgr_link_evt_data *link_evt_data)
 {
 	switch (link_evt_data->evt_type) {
 	case CAM_REQ_MGR_LINK_EVT_ERR:
@@ -807,11 +817,11 @@ static int __cam_custom_ctx_process_evt(struct cam_context *ctx,
 }
 
 static int __cam_custom_ctx_handle_irq_in_activated(void *context,
-	uint32_t evt_id, void *evt_data)
+						    uint32_t evt_id,
+						    void *evt_data)
 {
 	int rc;
-	struct cam_context *ctx =
-		(struct cam_context *)context;
+	struct cam_context *ctx = (struct cam_context *)context;
 
 	CAM_DBG(CAM_CUSTOM, "Enter %d", ctx->ctx_id);
 
@@ -897,10 +907,10 @@ static struct cam_ctx_ops
 };
 
 int cam_custom_dev_context_init(struct cam_custom_context *ctx,
-	struct cam_context *ctx_base,
-	struct cam_req_mgr_kmd_ops *crm_node_intf,
-	struct cam_hw_mgr_intf *hw_intf,
-	uint32_t ctx_id)
+				struct cam_context *ctx_base,
+				struct cam_req_mgr_kmd_ops *crm_node_intf,
+				struct cam_hw_mgr_intf *hw_intf,
+				uint32_t ctx_id)
 {
 	int rc = -1, i = 0;
 
@@ -924,7 +934,8 @@ int cam_custom_dev_context_init(struct cam_custom_context *ctx,
 
 	/* camera context setup */
 	rc = cam_context_init(ctx_base, custom_dev_name, CAM_CUSTOM, ctx_id,
-		crm_node_intf, hw_intf, ctx->req_base, CAM_CTX_REQ_MAX);
+			      crm_node_intf, hw_intf, ctx->req_base,
+			      CAM_CTX_REQ_MAX);
 	if (rc) {
 		CAM_ERR(CAM_CUSTOM, "Camera Context Base init failed");
 		return rc;

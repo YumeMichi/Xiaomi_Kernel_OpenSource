@@ -23,25 +23,25 @@
 #include "cam_cpas_api.h"
 #include "cam_debug_util.h"
 
-#define CAM_JPEG_HW_IRQ_IS_FRAME_DONE(jpeg_irq_status, hi) \
+#define CAM_JPEG_HW_IRQ_IS_FRAME_DONE(jpeg_irq_status, hi)                     \
 	((jpeg_irq_status) & (hi)->int_status.framedone)
-#define CAM_JPEG_HW_IRQ_IS_RESET_ACK(jpeg_irq_status, hi) \
+#define CAM_JPEG_HW_IRQ_IS_RESET_ACK(jpeg_irq_status, hi)                      \
 	((jpeg_irq_status) & (hi)->int_status.resetdone)
-#define CAM_JPEG_HW_IRQ_IS_ERR(jpeg_irq_status, hi) \
+#define CAM_JPEG_HW_IRQ_IS_ERR(jpeg_irq_status, hi)                            \
 	((jpeg_irq_status) & (hi)->int_status.iserror)
-#define CAM_JPEG_HW_IRQ_IS_STOP_DONE(jpeg_irq_status, hi) \
+#define CAM_JPEG_HW_IRQ_IS_STOP_DONE(jpeg_irq_status, hi)                      \
 	((jpeg_irq_status) & (hi)->int_status.stopdone)
 
 #define CAM_JPEG_ENC_RESET_TIMEOUT msecs_to_jiffies(500)
 
-int cam_jpeg_enc_init_hw(void *device_priv,
-	void *init_hw_args, uint32_t arg_size)
+int cam_jpeg_enc_init_hw(void *device_priv, void *init_hw_args,
+			 uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_enc_dev = device_priv;
 	struct cam_hw_soc_info *soc_info = NULL;
 	struct cam_jpeg_enc_device_core_info *core_info = NULL;
 	struct cam_ahb_vote ahb_vote;
-	struct cam_axi_vote axi_vote = {0};
+	struct cam_axi_vote axi_vote = { 0 };
 	int rc;
 
 	if (!device_priv) {
@@ -50,12 +50,12 @@ int cam_jpeg_enc_init_hw(void *device_priv,
 	}
 
 	soc_info = &jpeg_enc_dev->soc_info;
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 
 	if (!soc_info || !core_info) {
-		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK",
-			soc_info, core_info);
+		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK", soc_info,
+			core_info);
 		return -EINVAL;
 	}
 
@@ -79,9 +79,7 @@ int cam_jpeg_enc_init_hw(void *device_priv,
 	axi_vote.axi_path[1].mnoc_ab_bw = JPEG_VOTE;
 	axi_vote.axi_path[1].mnoc_ib_bw = JPEG_VOTE;
 
-
-	rc = cam_cpas_start(core_info->cpas_handle,
-		&ahb_vote, &axi_vote);
+	rc = cam_cpas_start(core_info->cpas_handle, &ahb_vote, &axi_vote);
 	if (rc) {
 		CAM_ERR(CAM_JPEG, "cpass start failed: %d", rc);
 		goto cpas_failed;
@@ -106,8 +104,8 @@ cpas_failed:
 	return rc;
 }
 
-int cam_jpeg_enc_deinit_hw(void *device_priv,
-	void *init_hw_args, uint32_t arg_size)
+int cam_jpeg_enc_deinit_hw(void *device_priv, void *init_hw_args,
+			   uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_enc_dev = device_priv;
 	struct cam_hw_soc_info *soc_info = NULL;
@@ -120,11 +118,11 @@ int cam_jpeg_enc_deinit_hw(void *device_priv,
 	}
 
 	soc_info = &jpeg_enc_dev->soc_info;
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 	if (!soc_info || !core_info) {
-		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK",
-			soc_info, core_info);
+		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK", soc_info,
+			core_info);
 		return -EINVAL;
 	}
 
@@ -169,17 +167,17 @@ irqreturn_t cam_jpeg_enc_irq(int irq_num, void *data)
 		return IRQ_HANDLED;
 	}
 	soc_info = &jpeg_enc_dev->soc_info;
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 	hw_info = core_info->jpeg_enc_hw_info;
 	mem_base = soc_info->reg_map[0].mem_base;
 
-	irq_status = cam_io_r_mb(mem_base +
-		core_info->jpeg_enc_hw_info->reg_offset.int_status);
+	irq_status = cam_io_r_mb(
+		mem_base + core_info->jpeg_enc_hw_info->reg_offset.int_status);
 
 	cam_io_w_mb(irq_status,
-		soc_info->reg_map[0].mem_base +
-		core_info->jpeg_enc_hw_info->reg_offset.int_clr);
+		    soc_info->reg_map[0].mem_base +
+			    core_info->jpeg_enc_hw_info->reg_offset.int_clr);
 
 	CAM_DBG(CAM_JPEG, "irq_num %d  irq_status = %x , core_state %d",
 		irq_num, irq_status, core_info->core_state);
@@ -187,11 +185,12 @@ irqreturn_t cam_jpeg_enc_irq(int irq_num, void *data)
 	if (CAM_JPEG_HW_IRQ_IS_FRAME_DONE(irq_status, hw_info)) {
 		spin_lock(&jpeg_enc_dev->hw_lock);
 		if (core_info->core_state == CAM_JPEG_ENC_CORE_READY) {
-			encoded_size = cam_io_r_mb(mem_base +
-			core_info->jpeg_enc_hw_info->reg_offset.encode_size);
+			encoded_size = cam_io_r_mb(
+				mem_base + core_info->jpeg_enc_hw_info
+						   ->reg_offset.encode_size);
 			if (core_info->irq_cb.jpeg_hw_mgr_cb) {
-				core_info->irq_cb.jpeg_hw_mgr_cb(irq_status,
-					encoded_size,
+				core_info->irq_cb.jpeg_hw_mgr_cb(
+					irq_status, encoded_size,
 					core_info->irq_cb.data);
 			} else {
 				CAM_ERR(CAM_JPEG, "unexpected done, no cb");
@@ -218,9 +217,8 @@ irqreturn_t cam_jpeg_enc_irq(int irq_num, void *data)
 			core_info->core_state = CAM_JPEG_ENC_CORE_NOT_READY;
 			complete(&jpeg_enc_dev->hw_complete);
 			if (core_info->irq_cb.jpeg_hw_mgr_cb) {
-				core_info->irq_cb.jpeg_hw_mgr_cb(irq_status,
-					-1,
-					core_info->irq_cb.data);
+				core_info->irq_cb.jpeg_hw_mgr_cb(
+					irq_status, -1, core_info->irq_cb.data);
 			}
 		} else {
 			CAM_ERR(CAM_JPEG, "unexpected abort irq");
@@ -231,14 +229,14 @@ irqreturn_t cam_jpeg_enc_irq(int irq_num, void *data)
 	if (CAM_JPEG_HW_IRQ_IS_ERR(irq_status, hw_info)) {
 		spin_lock(&jpeg_enc_dev->hw_lock);
 		core_info->core_state = CAM_JPEG_ENC_CORE_NOT_READY;
-		CAM_ERR_RATE_LIMIT(CAM_JPEG,
+		CAM_ERR_RATE_LIMIT(
+			CAM_JPEG,
 			"error irq_num %d  irq_status = %x , core_state %d",
 			irq_num, irq_status, core_info->core_state);
 
 		if (core_info->irq_cb.jpeg_hw_mgr_cb) {
-			core_info->irq_cb.jpeg_hw_mgr_cb(irq_status,
-				-1,
-				core_info->irq_cb.data);
+			core_info->irq_cb.jpeg_hw_mgr_cb(
+				irq_status, -1, core_info->irq_cb.data);
 		}
 		spin_unlock(&jpeg_enc_dev->hw_lock);
 	}
@@ -246,8 +244,7 @@ irqreturn_t cam_jpeg_enc_irq(int irq_num, void *data)
 	return IRQ_HANDLED;
 }
 
-int cam_jpeg_enc_reset_hw(void *data,
-	void *start_args, uint32_t arg_size)
+int cam_jpeg_enc_reset_hw(void *data, void *start_args, uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_enc_dev = data;
 	struct cam_jpeg_enc_device_core_info *core_info = NULL;
@@ -262,8 +259,8 @@ int cam_jpeg_enc_reset_hw(void *data,
 	}
 	/* maskdisable.clrirq.maskenable.resetcmd */
 	soc_info = &jpeg_enc_dev->soc_info;
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 	hw_info = core_info->jpeg_enc_hw_info;
 	mem_base = soc_info->reg_map[0].mem_base;
 
@@ -281,16 +278,16 @@ int cam_jpeg_enc_reset_hw(void *data,
 	spin_unlock(&jpeg_enc_dev->hw_lock);
 
 	cam_io_w_mb(hw_info->reg_val.int_mask_disable_all,
-		mem_base + hw_info->reg_offset.int_mask);
+		    mem_base + hw_info->reg_offset.int_mask);
 	cam_io_w_mb(hw_info->reg_val.int_clr_clearall,
-		mem_base + hw_info->reg_offset.int_clr);
+		    mem_base + hw_info->reg_offset.int_clr);
 	cam_io_w_mb(hw_info->reg_val.int_mask_enable_all,
-		mem_base + hw_info->reg_offset.int_mask);
+		    mem_base + hw_info->reg_offset.int_mask);
 	cam_io_w_mb(hw_info->reg_val.reset_cmd,
-		mem_base + hw_info->reg_offset.reset_cmd);
+		    mem_base + hw_info->reg_offset.reset_cmd);
 
 	rem_jiffies = wait_for_completion_timeout(&jpeg_enc_dev->hw_complete,
-		CAM_JPEG_ENC_RESET_TIMEOUT);
+						  CAM_JPEG_ENC_RESET_TIMEOUT);
 	if (!rem_jiffies) {
 		CAM_ERR(CAM_JPEG, "error Reset Timeout");
 		core_info->core_state = CAM_JPEG_ENC_CORE_NOT_READY;
@@ -300,8 +297,7 @@ int cam_jpeg_enc_reset_hw(void *data,
 	return 0;
 }
 
-int cam_jpeg_enc_start_hw(void *data,
-	void *start_args, uint32_t arg_size)
+int cam_jpeg_enc_start_hw(void *data, void *start_args, uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_enc_dev = data;
 	struct cam_jpeg_enc_device_core_info *core_info = NULL;
@@ -315,8 +311,8 @@ int cam_jpeg_enc_start_hw(void *data,
 	}
 
 	soc_info = &jpeg_enc_dev->soc_info;
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 	hw_info = core_info->jpeg_enc_hw_info;
 	mem_base = soc_info->reg_map[0].mem_base;
 
@@ -326,13 +322,12 @@ int cam_jpeg_enc_start_hw(void *data,
 	}
 
 	cam_io_w_mb(hw_info->reg_val.hw_cmd_start,
-		mem_base + hw_info->reg_offset.hw_cmd);
+		    mem_base + hw_info->reg_offset.hw_cmd);
 
 	return 0;
 }
 
-int cam_jpeg_enc_stop_hw(void *data,
-	void *stop_args, uint32_t arg_size)
+int cam_jpeg_enc_stop_hw(void *data, void *stop_args, uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_enc_dev = data;
 	struct cam_jpeg_enc_device_core_info *core_info = NULL;
@@ -346,8 +341,8 @@ int cam_jpeg_enc_stop_hw(void *data,
 		return -EINVAL;
 	}
 	soc_info = &jpeg_enc_dev->soc_info;
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 	hw_info = core_info->jpeg_enc_hw_info;
 	mem_base = soc_info->reg_map[0].mem_base;
 
@@ -365,10 +360,10 @@ int cam_jpeg_enc_stop_hw(void *data,
 	spin_unlock(&jpeg_enc_dev->hw_lock);
 
 	cam_io_w_mb(hw_info->reg_val.hw_cmd_stop,
-		mem_base + hw_info->reg_offset.hw_cmd);
+		    mem_base + hw_info->reg_offset.hw_cmd);
 
 	rem_jiffies = wait_for_completion_timeout(&jpeg_enc_dev->hw_complete,
-		CAM_JPEG_ENC_RESET_TIMEOUT);
+						  CAM_JPEG_ENC_RESET_TIMEOUT);
 	if (!rem_jiffies) {
 		CAM_ERR(CAM_JPEG, "error Reset Timeout");
 		core_info->core_state = CAM_JPEG_ENC_CORE_NOT_READY;
@@ -379,7 +374,7 @@ int cam_jpeg_enc_stop_hw(void *data,
 }
 
 int cam_jpeg_enc_process_cmd(void *device_priv, uint32_t cmd_type,
-	void *cmd_args, uint32_t arg_size)
+			     void *cmd_args, uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_enc_dev = device_priv;
 	struct cam_jpeg_enc_device_core_info *core_info = NULL;
@@ -395,12 +390,11 @@ int cam_jpeg_enc_process_cmd(void *device_priv, uint32_t cmd_type,
 		return -EINVAL;
 	}
 
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 
 	switch (cmd_type) {
-	case CAM_JPEG_CMD_SET_IRQ_CB:
-	{
+	case CAM_JPEG_CMD_SET_IRQ_CB: {
 		struct cam_jpeg_set_irq_cb *irq_cb = cmd_args;
 
 		if (!cmd_args) {

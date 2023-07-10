@@ -44,7 +44,7 @@ struct cam_a5_device_hw_info cam_a5_hw_info = {
 EXPORT_SYMBOL(cam_a5_hw_info);
 
 static bool cam_a5_cpas_cb(uint32_t client_handle, void *userdata,
-	struct cam_cpas_irq_data *irq_data)
+			   struct cam_cpas_irq_data *irq_data)
 {
 	bool error_handled = false;
 
@@ -53,7 +53,8 @@ static bool cam_a5_cpas_cb(uint32_t client_handle, void *userdata,
 
 	switch (irq_data->irq_type) {
 	case CAM_CAMNOC_IRQ_IPE_BPS_UBWC_DECODE_ERROR:
-		CAM_ERR_RATE_LIMIT(CAM_ICP,
+		CAM_ERR_RATE_LIMIT(
+			CAM_ICP,
 			"IPE/BPS UBWC Decode error type=%d status=%x thr_err=%d, fcl_err=%d, len_md_err=%d, format_err=%d",
 			irq_data->irq_type,
 			irq_data->u.dec_err.decerr_status.value,
@@ -64,8 +65,8 @@ static bool cam_a5_cpas_cb(uint32_t client_handle, void *userdata,
 		error_handled = true;
 		break;
 	case CAM_CAMNOC_IRQ_IPE_BPS_UBWC_ENCODE_ERROR:
-		CAM_ERR_RATE_LIMIT(CAM_ICP,
-			"IPE/BPS UBWC Encode error type=%d status=%x",
+		CAM_ERR_RATE_LIMIT(
+			CAM_ICP, "IPE/BPS UBWC Encode error type=%d status=%x",
 			irq_data->irq_type,
 			irq_data->u.enc_err.encerr_status.value);
 		error_handled = true;
@@ -78,8 +79,8 @@ static bool cam_a5_cpas_cb(uint32_t client_handle, void *userdata,
 }
 
 int cam_a5_register_cpas(struct cam_hw_soc_info *soc_info,
-			struct cam_a5_device_core_info *core_info,
-			uint32_t hw_idx)
+			 struct cam_a5_device_core_info *core_info,
+			 uint32_t hw_idx)
 {
 	struct cam_cpas_register_params cpas_register_params;
 	int rc;
@@ -113,8 +114,8 @@ int cam_a5_probe(struct platform_device *pdev)
 	if (!a5_dev_intf)
 		return -ENOMEM;
 
-	of_property_read_u32(pdev->dev.of_node,
-		"cell-index", &a5_dev_intf->hw_idx);
+	of_property_read_u32(pdev->dev.of_node, "cell-index",
+			     &a5_dev_intf->hw_idx);
 
 	a5_dev = kzalloc(sizeof(struct cam_hw_info), GFP_KERNEL);
 	if (!a5_dev) {
@@ -131,22 +132,21 @@ int cam_a5_probe(struct platform_device *pdev)
 	a5_dev_intf->hw_ops.process_cmd = cam_a5_process_cmd;
 	a5_dev_intf->hw_type = CAM_ICP_DEV_A5;
 
-	CAM_DBG(CAM_ICP, "type %d index %d",
-		a5_dev_intf->hw_type,
+	CAM_DBG(CAM_ICP, "type %d index %d", a5_dev_intf->hw_type,
 		a5_dev_intf->hw_idx);
 
 	platform_set_drvdata(pdev, a5_dev_intf);
 
-	a5_dev->core_info = kzalloc(sizeof(struct cam_a5_device_core_info),
-					GFP_KERNEL);
+	a5_dev->core_info =
+		kzalloc(sizeof(struct cam_a5_device_core_info), GFP_KERNEL);
 	if (!a5_dev->core_info) {
 		rc = -ENOMEM;
 		goto core_info_alloc_failure;
 	}
 	core_info = (struct cam_a5_device_core_info *)a5_dev->core_info;
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev) {
 		CAM_ERR(CAM_ICP, "No a5 hardware info");
 		rc = -EINVAL;
@@ -157,17 +157,15 @@ int cam_a5_probe(struct platform_device *pdev)
 
 	a5_dev->soc_info.soc_private = &cam_a5_soc_info;
 
-	rc = cam_a5_init_soc_resources(&a5_dev->soc_info, cam_a5_irq,
-		a5_dev);
+	rc = cam_a5_init_soc_resources(&a5_dev->soc_info, cam_a5_irq, a5_dev);
 	if (rc < 0) {
 		CAM_ERR(CAM_ICP, "failed to init_soc");
 		goto init_soc_failure;
 	}
 
-	CAM_DBG(CAM_ICP, "soc info : %pK",
-				(void *)&a5_dev->soc_info);
-	rc = cam_a5_register_cpas(&a5_dev->soc_info,
-			core_info, a5_dev_intf->hw_idx);
+	CAM_DBG(CAM_ICP, "soc info : %pK", (void *)&a5_dev->soc_info);
+	rc = cam_a5_register_cpas(&a5_dev->soc_info, core_info,
+				  a5_dev_intf->hw_idx);
 	if (rc < 0) {
 		CAM_ERR(CAM_ICP, "a5 cpas registration failed");
 		goto cpas_reg_failed;
@@ -177,8 +175,7 @@ int cam_a5_probe(struct platform_device *pdev)
 	spin_lock_init(&a5_dev->hw_lock);
 	init_completion(&a5_dev->hw_complete);
 
-	CAM_DBG(CAM_ICP, "A5%d probe successful",
-		a5_dev_intf->hw_idx);
+	CAM_DBG(CAM_ICP, "A5%d probe successful", a5_dev_intf->hw_idx);
 	return 0;
 
 cpas_reg_failed:

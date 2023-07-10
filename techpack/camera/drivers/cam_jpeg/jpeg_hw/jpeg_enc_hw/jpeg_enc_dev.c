@@ -20,16 +20,16 @@
 #include "cam_debug_util.h"
 #include "cam_jpeg_enc_hw_info_ver_4_2_0.h"
 
-static int cam_jpeg_enc_register_cpas(struct cam_hw_soc_info *soc_info,
-	struct cam_jpeg_enc_device_core_info *core_info,
-	uint32_t hw_idx)
+static int
+cam_jpeg_enc_register_cpas(struct cam_hw_soc_info *soc_info,
+			   struct cam_jpeg_enc_device_core_info *core_info,
+			   uint32_t hw_idx)
 {
 	struct cam_cpas_register_params cpas_register_params;
 	int rc;
 
 	cpas_register_params.dev = soc_info->dev;
-	memcpy(cpas_register_params.identifier, "jpeg-enc",
-		sizeof("jpeg-enc"));
+	memcpy(cpas_register_params.identifier, "jpeg-enc", sizeof("jpeg-enc"));
 	cpas_register_params.cam_cpas_client_cb = NULL;
 	cpas_register_params.cell_index = hw_idx;
 	cpas_register_params.userdata = NULL;
@@ -44,8 +44,8 @@ static int cam_jpeg_enc_register_cpas(struct cam_hw_soc_info *soc_info,
 	return rc;
 }
 
-static int cam_jpeg_enc_unregister_cpas(
-	struct cam_jpeg_enc_device_core_info *core_info)
+static int
+cam_jpeg_enc_unregister_cpas(struct cam_jpeg_enc_device_core_info *core_info)
 {
 	int rc;
 
@@ -77,8 +77,8 @@ static int cam_jpeg_enc_remove(struct platform_device *pdev)
 		goto free_jpeg_hw_intf;
 	}
 
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 	if (!core_info) {
 		CAM_ERR(CAM_JPEG, "error core data NULL");
 		goto deinit_soc;
@@ -117,8 +117,8 @@ static int cam_jpeg_enc_probe(struct platform_device *pdev)
 	if (!jpeg_enc_dev_intf)
 		return -ENOMEM;
 
-	of_property_read_u32(pdev->dev.of_node,
-		"cell-index", &jpeg_enc_dev_intf->hw_idx);
+	of_property_read_u32(pdev->dev.of_node, "cell-index",
+			     &jpeg_enc_dev_intf->hw_idx);
 
 	jpeg_enc_dev = kzalloc(sizeof(struct cam_hw_info), GFP_KERNEL);
 	if (!jpeg_enc_dev) {
@@ -138,18 +138,17 @@ static int cam_jpeg_enc_probe(struct platform_device *pdev)
 	jpeg_enc_dev_intf->hw_type = CAM_JPEG_DEV_ENC;
 
 	platform_set_drvdata(pdev, jpeg_enc_dev_intf);
-	jpeg_enc_dev->core_info =
-		kzalloc(sizeof(struct cam_jpeg_enc_device_core_info),
-			GFP_KERNEL);
+	jpeg_enc_dev->core_info = kzalloc(
+		sizeof(struct cam_jpeg_enc_device_core_info), GFP_KERNEL);
 	if (!jpeg_enc_dev->core_info) {
 		rc = -ENOMEM;
 		goto error_alloc_core;
 	}
-	core_info = (struct cam_jpeg_enc_device_core_info *)
-		jpeg_enc_dev->core_info;
+	core_info =
+		(struct cam_jpeg_enc_device_core_info *)jpeg_enc_dev->core_info;
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev) {
 		CAM_ERR(CAM_JPEG, " No jpeg_enc hardware info");
 		rc = -EINVAL;
@@ -161,15 +160,14 @@ static int cam_jpeg_enc_probe(struct platform_device *pdev)
 	mutex_init(&core_info->core_mutex);
 
 	rc = cam_jpeg_enc_init_soc_resources(&jpeg_enc_dev->soc_info,
-		cam_jpeg_enc_irq,
-		jpeg_enc_dev);
+					     cam_jpeg_enc_irq, jpeg_enc_dev);
 	if (rc) {
 		CAM_ERR(CAM_JPEG, " failed to init_soc %d", rc);
 		goto error_init_soc;
 	}
 
-	rc = cam_jpeg_enc_register_cpas(&jpeg_enc_dev->soc_info,
-		core_info, jpeg_enc_dev_intf->hw_idx);
+	rc = cam_jpeg_enc_register_cpas(&jpeg_enc_dev->soc_info, core_info,
+					jpeg_enc_dev_intf->hw_idx);
 	if (rc) {
 		CAM_ERR(CAM_JPEG, " failed to reg cpas %d", rc);
 		goto error_reg_cpas;

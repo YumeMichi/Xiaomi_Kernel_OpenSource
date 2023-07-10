@@ -23,14 +23,14 @@
 #include "cam_cpas_api.h"
 #include "cam_debug_util.h"
 
-int cam_jpeg_dma_init_hw(void *device_priv,
-	void *init_hw_args, uint32_t arg_size)
+int cam_jpeg_dma_init_hw(void *device_priv, void *init_hw_args,
+			 uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_dma_dev = device_priv;
 	struct cam_hw_soc_info *soc_info = NULL;
 	struct cam_jpeg_dma_device_core_info *core_info = NULL;
 	struct cam_ahb_vote ahb_vote;
-	struct cam_axi_vote axi_vote = {0};
+	struct cam_axi_vote axi_vote = { 0 };
 	int rc;
 
 	if (!device_priv) {
@@ -39,12 +39,12 @@ int cam_jpeg_dma_init_hw(void *device_priv,
 	}
 
 	soc_info = &jpeg_dma_dev->soc_info;
-	core_info = (struct cam_jpeg_dma_device_core_info *)
-		jpeg_dma_dev->core_info;
+	core_info =
+		(struct cam_jpeg_dma_device_core_info *)jpeg_dma_dev->core_info;
 
 	if (!soc_info || !core_info) {
-		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK",
-			soc_info, core_info);
+		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK", soc_info,
+			core_info);
 		return -EINVAL;
 	}
 
@@ -68,9 +68,7 @@ int cam_jpeg_dma_init_hw(void *device_priv,
 	axi_vote.axi_path[1].mnoc_ab_bw = JPEG_VOTE;
 	axi_vote.axi_path[1].mnoc_ib_bw = JPEG_VOTE;
 
-
-	rc = cam_cpas_start(core_info->cpas_handle,
-		&ahb_vote, &axi_vote);
+	rc = cam_cpas_start(core_info->cpas_handle, &ahb_vote, &axi_vote);
 	if (rc) {
 		CAM_ERR(CAM_JPEG, "cpass start failed: %d", rc);
 		goto cpas_failed;
@@ -95,8 +93,8 @@ cpas_failed:
 	return rc;
 }
 
-int cam_jpeg_dma_deinit_hw(void *device_priv,
-	void *init_hw_args, uint32_t arg_size)
+int cam_jpeg_dma_deinit_hw(void *device_priv, void *init_hw_args,
+			   uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_dma_dev = device_priv;
 	struct cam_hw_soc_info *soc_info = NULL;
@@ -109,11 +107,11 @@ int cam_jpeg_dma_deinit_hw(void *device_priv,
 	}
 
 	soc_info = &jpeg_dma_dev->soc_info;
-	core_info = (struct cam_jpeg_dma_device_core_info *)
-		jpeg_dma_dev->core_info;
+	core_info =
+		(struct cam_jpeg_dma_device_core_info *)jpeg_dma_dev->core_info;
 	if (!soc_info || !core_info) {
-		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK",
-			soc_info, core_info);
+		CAM_ERR(CAM_JPEG, "soc_info = %pK core_info = %pK", soc_info,
+			core_info);
 		return -EINVAL;
 	}
 
@@ -144,7 +142,7 @@ int cam_jpeg_dma_deinit_hw(void *device_priv,
 }
 
 int cam_jpeg_dma_process_cmd(void *device_priv, uint32_t cmd_type,
-	void *cmd_args, uint32_t arg_size)
+			     void *cmd_args, uint32_t arg_size)
 {
 	struct cam_hw_info *jpeg_dma_dev = device_priv;
 	struct cam_jpeg_dma_device_core_info *core_info = NULL;
@@ -160,12 +158,11 @@ int cam_jpeg_dma_process_cmd(void *device_priv, uint32_t cmd_type,
 		return -EINVAL;
 	}
 
-	core_info = (struct cam_jpeg_dma_device_core_info *)
-		jpeg_dma_dev->core_info;
+	core_info =
+		(struct cam_jpeg_dma_device_core_info *)jpeg_dma_dev->core_info;
 
 	switch (cmd_type) {
-	case CAM_JPEG_CMD_SET_IRQ_CB:
-	{
+	case CAM_JPEG_CMD_SET_IRQ_CB: {
 		struct cam_jpeg_set_irq_cb *irq_cb = cmd_args;
 
 		if (!cmd_args) {

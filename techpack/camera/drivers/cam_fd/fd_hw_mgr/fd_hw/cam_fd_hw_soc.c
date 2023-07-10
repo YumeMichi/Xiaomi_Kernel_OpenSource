@@ -15,19 +15,19 @@
 #include "cam_fd_hw_soc.h"
 
 static bool cam_fd_hw_util_cpas_callback(uint32_t handle, void *userdata,
-	struct cam_cpas_irq_data *irq_data)
+					 struct cam_cpas_irq_data *irq_data)
 {
 	if (!irq_data)
 		return false;
 
-	CAM_DBG(CAM_FD, "CPAS hdl=%d, udata=%pK, irq_type=%d",
-		handle, userdata, irq_data->irq_type);
+	CAM_DBG(CAM_FD, "CPAS hdl=%d, udata=%pK, irq_type=%d", handle, userdata,
+		irq_data->irq_type);
 
 	return false;
 }
 
-static int cam_fd_hw_soc_util_setup_regbase_indices(
-	struct cam_hw_soc_info *soc_info)
+static int
+cam_fd_hw_soc_util_setup_regbase_indices(struct cam_hw_soc_info *soc_info)
 {
 	struct cam_fd_soc_private *soc_private =
 		(struct cam_fd_soc_private *)soc_info->soc_private;
@@ -38,14 +38,15 @@ static int cam_fd_hw_soc_util_setup_regbase_indices(
 		soc_private->regbase_index[i] = -1;
 
 	if ((soc_info->num_mem_block > CAM_SOC_MAX_BLOCK) ||
-		(soc_info->num_mem_block != CAM_FD_REG_MAX)) {
+	    (soc_info->num_mem_block != CAM_FD_REG_MAX)) {
 		CAM_ERR(CAM_FD, "Invalid num_mem_block=%d",
 			soc_info->num_mem_block);
 		return -EINVAL;
 	}
 
 	rc = cam_common_util_get_string_index(soc_info->mem_block_name,
-		soc_info->num_mem_block, "fd_core", &index);
+					      soc_info->num_mem_block,
+					      "fd_core", &index);
 	if ((rc == 0) && (index < CAM_FD_REG_MAX)) {
 		soc_private->regbase_index[CAM_FD_REG_CORE] = index;
 	} else {
@@ -55,7 +56,8 @@ static int cam_fd_hw_soc_util_setup_regbase_indices(
 	}
 
 	rc = cam_common_util_get_string_index(soc_info->mem_block_name,
-		soc_info->num_mem_block, "fd_wrapper", &index);
+					      soc_info->num_mem_block,
+					      "fd_wrapper", &index);
 	if ((rc == 0) && (index < CAM_FD_REG_MAX)) {
 		soc_private->regbase_index[CAM_FD_REG_WRAPPER] = index;
 	} else {
@@ -83,17 +85,16 @@ static int cam_fd_soc_set_clk_flags(struct cam_hw_soc_info *soc_info)
 	/* set memcore and mem periphery logic flags to 0 */
 	for (i = 0; i < soc_info->num_clk; i++) {
 		if ((strcmp(soc_info->clk_name[i], "fd_core_clk") == 0) ||
-			(strcmp(soc_info->clk_name[i], "fd_core_uar_clk") ==
-			0)) {
+		    (strcmp(soc_info->clk_name[i], "fd_core_uar_clk") == 0)) {
 			rc = cam_soc_util_set_clk_flags(soc_info, i,
-				CLKFLAG_NORETAIN_MEM);
+							CLKFLAG_NORETAIN_MEM);
 			if (rc)
 				CAM_ERR(CAM_FD,
-					"Failed in NORETAIN_MEM i=%d, rc=%d",
-					i, rc);
+					"Failed in NORETAIN_MEM i=%d, rc=%d", i,
+					rc);
 
 			cam_soc_util_set_clk_flags(soc_info, i,
-				CLKFLAG_NORETAIN_PERIPH);
+						   CLKFLAG_NORETAIN_PERIPH);
 			if (rc)
 				CAM_ERR(CAM_FD,
 					"Failed in NORETAIN_PERIPH i=%d, rc=%d",
@@ -105,7 +106,8 @@ static int cam_fd_soc_set_clk_flags(struct cam_hw_soc_info *soc_info)
 }
 
 void cam_fd_soc_register_write(struct cam_hw_soc_info *soc_info,
-	enum cam_fd_reg_base reg_base, uint32_t reg_offset, uint32_t reg_value)
+			       enum cam_fd_reg_base reg_base,
+			       uint32_t reg_offset, uint32_t reg_value)
 {
 	struct cam_fd_soc_private *soc_private =
 		(struct cam_fd_soc_private *)soc_info->soc_private;
@@ -115,19 +117,20 @@ void cam_fd_soc_register_write(struct cam_hw_soc_info *soc_info,
 		reg_base, reg_offset, reg_value);
 
 	cam_io_w_mb(reg_value,
-		soc_info->reg_map[reg_index].mem_base + reg_offset);
+		    soc_info->reg_map[reg_index].mem_base + reg_offset);
 }
 
 uint32_t cam_fd_soc_register_read(struct cam_hw_soc_info *soc_info,
-	enum cam_fd_reg_base reg_base, uint32_t reg_offset)
+				  enum cam_fd_reg_base reg_base,
+				  uint32_t reg_offset)
 {
 	struct cam_fd_soc_private *soc_private =
 		(struct cam_fd_soc_private *)soc_info->soc_private;
 	int32_t reg_index = soc_private->regbase_index[reg_base];
 	uint32_t reg_value;
 
-	reg_value = cam_io_r_mb(
-		soc_info->reg_map[reg_index].mem_base + reg_offset);
+	reg_value =
+		cam_io_r_mb(soc_info->reg_map[reg_index].mem_base + reg_offset);
 
 	CAM_DBG(CAM_FD, "FD_REG_READ: Base[%d] Offset[0x%8x] Value[0x%8x]",
 		reg_base, reg_offset, reg_value);
@@ -135,12 +138,11 @@ uint32_t cam_fd_soc_register_read(struct cam_hw_soc_info *soc_info,
 	return reg_value;
 }
 
-
 int cam_fd_soc_enable_resources(struct cam_hw_soc_info *soc_info)
 {
 	struct cam_fd_soc_private *soc_private = soc_info->soc_private;
 	struct cam_ahb_vote ahb_vote;
-	struct cam_axi_vote axi_vote = {0};
+	struct cam_axi_vote axi_vote = { 0 };
 	int rc;
 
 	ahb_vote.type = CAM_VOTE_ABSOLUTE;
@@ -157,7 +159,6 @@ int cam_fd_soc_enable_resources(struct cam_hw_soc_info *soc_info)
 	axi_vote.axi_path[1].mnoc_ab_bw = 7200000;
 	axi_vote.axi_path[1].mnoc_ib_bw = 7200000;
 
-
 	rc = cam_cpas_start(soc_private->cpas_handle, &ahb_vote, &axi_vote);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Error in CPAS START, rc=%d", rc);
@@ -165,7 +166,7 @@ int cam_fd_soc_enable_resources(struct cam_hw_soc_info *soc_info)
 	}
 
 	rc = cam_soc_util_enable_platform_resource(soc_info, true, CAM_SVS_VOTE,
-		true);
+						   true);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Error enable platform failed, rc=%d", rc);
 		goto stop_cpas;
@@ -179,7 +180,6 @@ stop_cpas:
 
 	return rc;
 }
-
 
 int cam_fd_soc_disable_resources(struct cam_hw_soc_info *soc_info)
 {
@@ -209,7 +209,7 @@ int cam_fd_soc_disable_resources(struct cam_hw_soc_info *soc_info)
 }
 
 int cam_fd_soc_init_resources(struct cam_hw_soc_info *soc_info,
-	irq_handler_t irq_handler, void *private_data)
+			      irq_handler_t irq_handler, void *private_data)
 {
 	struct cam_fd_soc_private *soc_private;
 	struct cam_cpas_register_params cpas_register_param;
@@ -222,7 +222,7 @@ int cam_fd_soc_init_resources(struct cam_hw_soc_info *soc_info,
 	}
 
 	rc = cam_soc_util_request_platform_resource(soc_info, irq_handler,
-		private_data);
+						    private_data);
 	if (rc) {
 		CAM_ERR(CAM_FD, "Failed in request_platform_resource rc=%d",
 			rc);

@@ -27,17 +27,17 @@
  * @open_cnt : Open count of LRME subdev
  */
 struct cam_lrme_dev {
-	struct cam_subdev        sd;
-	struct cam_context       ctx[CAM_CTX_MAX];
-	struct cam_lrme_context  lrme_ctx[CAM_CTX_MAX];
-	struct mutex             lock;
-	uint32_t                 open_cnt;
+	struct cam_subdev sd;
+	struct cam_context ctx[CAM_CTX_MAX];
+	struct cam_lrme_context lrme_ctx[CAM_CTX_MAX];
+	struct mutex lock;
+	uint32_t open_cnt;
 };
 
 static struct cam_lrme_dev *g_lrme_dev;
 
 static int cam_lrme_dev_buf_done_cb(void *ctxt_to_hw_map, uint32_t evt_id,
-	void *evt_data)
+				    void *evt_data)
 {
 	uint64_t index;
 	struct cam_context *ctx;
@@ -53,14 +53,13 @@ static int cam_lrme_dev_buf_done_cb(void *ctxt_to_hw_map, uint32_t evt_id,
 	return rc;
 }
 
-static int cam_lrme_dev_open(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+static int cam_lrme_dev_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	struct cam_lrme_dev *lrme_dev = g_lrme_dev;
 
 	if (!lrme_dev) {
-		CAM_ERR(CAM_LRME,
-			"LRME Dev not initialized, dev=%pK", lrme_dev);
+		CAM_ERR(CAM_LRME, "LRME Dev not initialized, dev=%pK",
+			lrme_dev);
 		return -ENODEV;
 	}
 
@@ -71,8 +70,7 @@ static int cam_lrme_dev_open(struct v4l2_subdev *sd,
 	return 0;
 }
 
-static int cam_lrme_dev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+static int cam_lrme_dev_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
 {
 	int rc = 0;
 	struct cam_lrme_dev *lrme_dev = g_lrme_dev;
@@ -127,7 +125,7 @@ static int cam_lrme_dev_probe(struct platform_device *pdev)
 	mutex_init(&g_lrme_dev->lock);
 
 	rc = cam_subdev_probe(&g_lrme_dev->sd, pdev, CAM_LRME_DEV_NAME,
-		CAM_LRME_DEVICE_TYPE);
+			      CAM_LRME_DEVICE_TYPE);
 	if (rc) {
 		CAM_ERR(CAM_LRME, "LRME cam_subdev_probe failed");
 		goto free_mem;
@@ -142,8 +140,8 @@ static int cam_lrme_dev_probe(struct platform_device *pdev)
 
 	for (i = 0; i < CAM_CTX_MAX; i++) {
 		rc = cam_lrme_context_init(&g_lrme_dev->lrme_ctx[i],
-				&g_lrme_dev->ctx[i],
-				&node->hw_mgr_intf, i);
+					   &g_lrme_dev->ctx[i],
+					   &node->hw_mgr_intf, i);
 		if (rc) {
 			CAM_ERR(CAM_LRME, "LRME context init failed");
 			goto deinit_ctx;
@@ -151,7 +149,7 @@ static int cam_lrme_dev_probe(struct platform_device *pdev)
 	}
 
 	rc = cam_node_init(node, &hw_mgr_intf, g_lrme_dev->ctx, CAM_CTX_MAX,
-		CAM_LRME_DEV_NAME);
+			   CAM_LRME_DEV_NAME);
 	if (rc) {
 		CAM_ERR(CAM_LRME, "LRME node init failed");
 		goto deinit_ctx;
@@ -202,9 +200,7 @@ static int cam_lrme_dev_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id cam_lrme_dt_match[] = {
-	{
-		.compatible = "qcom,cam-lrme"
-	},
+	{ .compatible = "qcom,cam-lrme" },
 	{}
 };
 

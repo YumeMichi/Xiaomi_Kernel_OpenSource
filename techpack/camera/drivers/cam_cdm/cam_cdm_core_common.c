@@ -21,8 +21,7 @@
 static void cam_cdm_get_client_refcount(struct cam_cdm_client *client)
 {
 	mutex_lock(&client->lock);
-	CAM_DBG(CAM_CDM, "CDM client get refcount=%d",
-		client->refcount);
+	CAM_DBG(CAM_CDM, "CDM client get refcount=%d", client->refcount);
 	client->refcount++;
 	mutex_unlock(&client->lock);
 }
@@ -30,8 +29,7 @@ static void cam_cdm_get_client_refcount(struct cam_cdm_client *client)
 static void cam_cdm_put_client_refcount(struct cam_cdm_client *client)
 {
 	mutex_lock(&client->lock);
-	CAM_DBG(CAM_CDM, "CDM client put refcount=%d",
-		client->refcount);
+	CAM_DBG(CAM_CDM, "CDM client put refcount=%d", client->refcount);
 	if (client->refcount > 0) {
 		client->refcount--;
 	} else {
@@ -41,27 +39,27 @@ static void cam_cdm_put_client_refcount(struct cam_cdm_client *client)
 	mutex_unlock(&client->lock);
 }
 
-bool cam_cdm_set_cam_hw_version(
-	uint32_t ver, struct cam_hw_version *cam_version)
+bool cam_cdm_set_cam_hw_version(uint32_t ver,
+				struct cam_hw_version *cam_version)
 {
 	switch (ver) {
 	case CAM_CDM170_VERSION:
 	case CAM_CDM175_VERSION:
 	case CAM_CDM480_VERSION:
-		cam_version->major    = (ver & 0xF0000000);
-		cam_version->minor    = (ver & 0xFFF0000);
-		cam_version->incr     = (ver & 0xFFFF);
+		cam_version->major = (ver & 0xF0000000);
+		cam_version->minor = (ver & 0xFFF0000);
+		cam_version->incr = (ver & 0xFFFF);
 		cam_version->reserved = 0;
 		return true;
 	default:
 		CAM_ERR(CAM_CDM, "CDM Version=%x not supported in util", ver);
-	break;
+		break;
 	}
 	return false;
 }
 
 bool cam_cdm_cpas_cb(uint32_t client_handle, void *userdata,
-	struct cam_cpas_irq_data *irq_data)
+		     struct cam_cpas_irq_data *irq_data)
 {
 	if (!irq_data)
 		return false;
@@ -71,8 +69,9 @@ bool cam_cdm_cpas_cb(uint32_t client_handle, void *userdata,
 	return false;
 }
 
-struct cam_cdm_utils_ops *cam_cdm_get_ops(
-	uint32_t ver, struct cam_hw_version *cam_version, bool by_cam_version)
+struct cam_cdm_utils_ops *cam_cdm_get_ops(uint32_t ver,
+					  struct cam_hw_version *cam_version,
+					  bool by_cam_version)
 {
 	if (by_cam_version == false) {
 		switch (ver) {
@@ -85,18 +84,13 @@ struct cam_cdm_utils_ops *cam_cdm_get_ops(
 				ver);
 		}
 	} else if (cam_version) {
-		if (((cam_version->major == 1) &&
-			(cam_version->minor == 0) &&
-			(cam_version->incr == 0)) ||
-			((cam_version->major == 1) &&
-			(cam_version->minor == 1) &&
-			(cam_version->incr == 0)) ||
-			((cam_version->major == 1) &&
-			(cam_version->minor == 2) &&
-			(cam_version->incr == 0))) {
-
-			CAM_DBG(CAM_CDM,
-				"cam_hw_version=%x:%x:%x supported",
+		if (((cam_version->major == 1) && (cam_version->minor == 0) &&
+		     (cam_version->incr == 0)) ||
+		    ((cam_version->major == 1) && (cam_version->minor == 1) &&
+		     (cam_version->incr == 0)) ||
+		    ((cam_version->major == 1) && (cam_version->minor == 2) &&
+		     (cam_version->incr == 0))) {
+			CAM_DBG(CAM_CDM, "cam_hw_version=%x:%x:%x supported",
 				cam_version->major, cam_version->minor,
 				cam_version->incr);
 			return &CDM170_ops;
@@ -110,12 +104,12 @@ struct cam_cdm_utils_ops *cam_cdm_get_ops(
 	return NULL;
 }
 
-struct cam_cdm_bl_cb_request_entry *cam_cdm_find_request_by_bl_tag(
-	uint32_t tag, struct list_head *bl_list)
+struct cam_cdm_bl_cb_request_entry *
+cam_cdm_find_request_by_bl_tag(uint32_t tag, struct list_head *bl_list)
 {
 	struct cam_cdm_bl_cb_request_entry *node;
 
-	list_for_each_entry(node, bl_list, entry) {
+	list_for_each_entry (node, bl_list, entry) {
 		if (node->bl_tag == tag)
 			return node;
 	}
@@ -124,14 +118,13 @@ struct cam_cdm_bl_cb_request_entry *cam_cdm_find_request_by_bl_tag(
 	return NULL;
 }
 
-int cam_cdm_get_caps(void *hw_priv,
-	void *get_hw_cap_args, uint32_t arg_size)
+int cam_cdm_get_caps(void *hw_priv, void *get_hw_cap_args, uint32_t arg_size)
 {
 	struct cam_hw_info *cdm_hw = hw_priv;
 	struct cam_cdm *cdm_core;
 
 	if ((cdm_hw) && (cdm_hw->core_info) && (get_hw_cap_args) &&
-		(sizeof(struct cam_iommu_handle) == arg_size)) {
+	    (sizeof(struct cam_iommu_handle) == arg_size)) {
 		cdm_core = (struct cam_cdm *)cdm_hw->core_info;
 		*((struct cam_iommu_handle *)get_hw_cap_args) =
 			cdm_core->iommu_hdl;
@@ -156,9 +149,8 @@ int cam_cdm_find_free_client_slot(struct cam_cdm *hw)
 	return -EBUSY;
 }
 
-
 void cam_cdm_notify_clients(struct cam_hw_info *cdm_hw,
-	enum cam_cdm_cb_status status, void *data)
+			    enum cam_cdm_cb_status status, void *data)
 {
 	int i;
 	struct cam_cdm *core = NULL;
@@ -186,9 +178,9 @@ void cam_cdm_notify_clients(struct cam_hw_info *cdm_hw,
 		if (client->data.cam_cdm_callback) {
 			CAM_DBG(CAM_CDM, "Calling client=%s cb cookie=%d",
 				client->data.identifier, node->cookie);
-			client->data.cam_cdm_callback(node->client_hdl,
-				node->userdata, CAM_CDM_CB_STATUS_BL_SUCCESS,
-				node->cookie);
+			client->data.cam_cdm_callback(
+				node->client_hdl, node->userdata,
+				CAM_CDM_CB_STATUS_BL_SUCCESS, node->cookie);
 			CAM_DBG(CAM_CDM, "Exit client cb cookie=%d",
 				node->cookie);
 		} else {
@@ -225,8 +217,7 @@ void cam_cdm_notify_clients(struct cam_hw_info *cdm_hw,
 	}
 }
 
-int cam_cdm_stream_ops_internal(void *hw_priv,
-	void *start_args, bool operation)
+int cam_cdm_stream_ops_internal(void *hw_priv, void *start_args, bool operation)
 {
 	struct cam_hw_info *cdm_hw = hw_priv;
 	struct cam_cdm *core = NULL;
@@ -271,7 +262,7 @@ int cam_cdm_stream_ops_internal(void *hw_priv,
 	if (operation == true) {
 		if (!cdm_hw->open_count) {
 			struct cam_ahb_vote ahb_vote;
-			struct cam_axi_vote axi_vote = {0};
+			struct cam_axi_vote axi_vote = { 0 };
 
 			ahb_vote.type = CAM_VOTE_ABSOLUTE;
 			ahb_vote.vote.level = CAM_LOWSVS_VOTE;
@@ -287,8 +278,8 @@ int cam_cdm_stream_ops_internal(void *hw_priv,
 			axi_vote.axi_path[0].mnoc_ib_bw =
 				CAM_CPAS_DEFAULT_AXI_BW;
 
-			rc = cam_cpas_start(core->cpas_handle,
-				&ahb_vote, &axi_vote);
+			rc = cam_cpas_start(core->cpas_handle, &ahb_vote,
+					    &axi_vote);
 			if (rc != 0) {
 				CAM_ERR(CAM_CDM, "CPAS start failed");
 				goto end;
@@ -307,8 +298,8 @@ int cam_cdm_stream_ops_internal(void *hw_priv,
 					if (rc != 0) {
 						CAM_ERR(CAM_CDM,
 							"Genirqalloc failed");
-						cam_hw_cdm_deinit(hw_priv,
-							NULL, 0);
+						cam_hw_cdm_deinit(hw_priv, NULL,
+								  0);
 					}
 				} else {
 					CAM_ERR(CAM_CDM, "CDM HW init failed");
@@ -341,10 +332,10 @@ int cam_cdm_stream_ops_internal(void *hw_priv,
 					rc = 0;
 				} else {
 					CAM_DBG(CAM_CDM, "CDM HW Deinit now");
-					rc = cam_hw_cdm_deinit(
-						hw_priv, NULL, 0);
+					rc = cam_hw_cdm_deinit(hw_priv, NULL,
+							       0);
 					if (cam_hw_cdm_release_genirq_mem(
-						hw_priv))
+						    hw_priv))
 						CAM_ERR(CAM_CDM,
 							"Genirq release fail");
 				}
@@ -377,8 +368,7 @@ end:
 	return rc;
 }
 
-int cam_cdm_stream_start(void *hw_priv,
-	void *start_args, uint32_t size)
+int cam_cdm_stream_start(void *hw_priv, void *start_args, uint32_t size)
 {
 	int rc = 0;
 
@@ -387,11 +377,9 @@ int cam_cdm_stream_start(void *hw_priv,
 
 	rc = cam_cdm_stream_ops_internal(hw_priv, start_args, true);
 	return rc;
-
 }
 
-int cam_cdm_stream_stop(void *hw_priv,
-	void *start_args, uint32_t size)
+int cam_cdm_stream_stop(void *hw_priv, void *start_args, uint32_t size)
 {
 	int rc = 0;
 
@@ -400,19 +388,17 @@ int cam_cdm_stream_stop(void *hw_priv,
 
 	rc = cam_cdm_stream_ops_internal(hw_priv, start_args, false);
 	return rc;
-
 }
 
-int cam_cdm_process_cmd(void *hw_priv,
-	uint32_t cmd, void *cmd_args, uint32_t arg_size)
+int cam_cdm_process_cmd(void *hw_priv, uint32_t cmd, void *cmd_args,
+			uint32_t arg_size)
 {
 	struct cam_hw_info *cdm_hw = hw_priv;
 	struct cam_hw_soc_info *soc_data = NULL;
 	struct cam_cdm *core = NULL;
 	int rc = -EINVAL;
 
-	if ((!hw_priv) || (!cmd_args) ||
-		(cmd >= CAM_CDM_HW_INTF_CMD_INVALID))
+	if ((!hw_priv) || (!cmd_args) || (cmd >= CAM_CDM_HW_INTF_CMD_INVALID))
 		return rc;
 
 	soc_data = &cdm_hw->soc_info;
@@ -430,7 +416,7 @@ int cam_cdm_process_cmd(void *hw_priv,
 		}
 		req = (struct cam_cdm_hw_intf_cmd_submit_bl *)cmd_args;
 		if ((req->data->type < 0) ||
-			(req->data->type > CAM_CDM_BL_CMD_TYPE_KERNEL_IOVA)) {
+		    (req->data->type > CAM_CDM_BL_CMD_TYPE_KERNEL_IOVA)) {
 			CAM_ERR(CAM_CDM, "Invalid req bl cmd addr type=%d",
 				req->data->type);
 			break;
@@ -444,7 +430,7 @@ int cam_cdm_process_cmd(void *hw_priv,
 		}
 		cam_cdm_get_client_refcount(client);
 		if ((req->data->flag == true) &&
-			(!client->data.cam_cdm_callback)) {
+		    (!client->data.cam_cdm_callback)) {
 			CAM_ERR(CAM_CDM,
 				"CDM request cb without registering cb");
 			cam_cdm_put_client_refcount(client);
@@ -484,11 +470,11 @@ int cam_cdm_process_cmd(void *hw_priv,
 			mutex_unlock(&cdm_hw->hw_mutex);
 			CAM_ERR(CAM_CDM,
 				"Fail to client slots, client=%s in hw idx=%d",
-			data->identifier, core->index);
+				data->identifier, core->index);
 			break;
 		}
-		core->clients[idx] = kzalloc(sizeof(struct cam_cdm_client),
-			GFP_KERNEL);
+		core->clients[idx] =
+			kzalloc(sizeof(struct cam_cdm_client), GFP_KERNEL);
 		if (!core->clients[idx]) {
 			mutex_unlock(&cdm_hw->hw_mutex);
 			rc = -ENOMEM;
@@ -504,15 +490,14 @@ int cam_cdm_process_cmd(void *hw_priv,
 			data->cdm_version.minor = 0;
 			data->cdm_version.incr = 0;
 			data->cdm_version.reserved = 0;
-			data->ops = cam_cdm_get_ops(0,
-					&data->cdm_version, true);
+			data->ops =
+				cam_cdm_get_ops(0, &data->cdm_version, true);
 			if (!data->ops) {
 				mutex_destroy(&client->lock);
 				mutex_lock(&cdm_hw->hw_mutex);
 				kfree(core->clients[idx]);
 				core->clients[idx] = NULL;
-				mutex_unlock(
-					&cdm_hw->hw_mutex);
+				mutex_unlock(&cdm_hw->hw_mutex);
 				rc = -EPERM;
 				CAM_ERR(CAM_CDM, "Invalid ops for virtual cdm");
 				break;
@@ -524,10 +509,8 @@ int cam_cdm_process_cmd(void *hw_priv,
 		cam_cdm_get_client_refcount(client);
 		mutex_lock(&client->lock);
 		memcpy(&client->data, data,
-			sizeof(struct cam_cdm_acquire_data));
-		client->handle = CAM_CDM_CREATE_CLIENT_HANDLE(
-					core->index,
-					idx);
+		       sizeof(struct cam_cdm_acquire_data));
+		client->handle = CAM_CDM_CREATE_CLIENT_HANDLE(core->index, idx);
 		client->stream_on = false;
 		data->handle = client->handle;
 		CAM_DBG(CAM_CDM, "Acquired client=%s in hwidx=%d",
@@ -543,16 +526,16 @@ int cam_cdm_process_cmd(void *hw_priv,
 
 		if (sizeof(uint32_t) != arg_size) {
 			CAM_ERR(CAM_CDM,
-				"Invalid CDM cmd %d size=%x for handle=%x",
-				cmd, arg_size, *handle);
+				"Invalid CDM cmd %d size=%x for handle=%x", cmd,
+				arg_size, *handle);
 			return -EINVAL;
 		}
 		idx = CAM_CDM_GET_CLIENT_IDX(*handle);
 		mutex_lock(&cdm_hw->hw_mutex);
 		client = core->clients[idx];
 		if ((!client) || (*handle != client->handle)) {
-			CAM_ERR(CAM_CDM, "Invalid client %pK hdl=%x",
-				client, *handle);
+			CAM_ERR(CAM_CDM, "Invalid client %pK hdl=%x", client,
+				*handle);
 			mutex_unlock(&cdm_hw->hw_mutex);
 			break;
 		}

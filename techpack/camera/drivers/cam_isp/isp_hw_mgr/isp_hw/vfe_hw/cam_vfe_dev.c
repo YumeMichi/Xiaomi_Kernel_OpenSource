@@ -3,7 +3,6 @@
  * Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
  */
 
-
 #include <linux/slab.h>
 #include <linux/mod_devicetable.h>
 #include <linux/of_device.h>
@@ -12,18 +11,18 @@
 #include "cam_vfe_soc.h"
 #include "cam_debug_util.h"
 
-static struct cam_hw_intf *cam_vfe_hw_list[CAM_VFE_HW_NUM_MAX] = {0, 0, 0, 0};
+static struct cam_hw_intf *cam_vfe_hw_list[CAM_VFE_HW_NUM_MAX] = { 0, 0, 0, 0 };
 
 static char vfe_dev_name[8];
 
 int cam_vfe_probe(struct platform_device *pdev)
 {
-	struct cam_hw_info                *vfe_hw = NULL;
-	struct cam_hw_intf                *vfe_hw_intf = NULL;
-	const struct of_device_id         *match_dev = NULL;
-	struct cam_vfe_hw_core_info       *core_info = NULL;
-	struct cam_vfe_hw_info            *hw_info = NULL;
-	int                                rc = 0;
+	struct cam_hw_info *vfe_hw = NULL;
+	struct cam_hw_intf *vfe_hw_intf = NULL;
+	const struct of_device_id *match_dev = NULL;
+	struct cam_vfe_hw_core_info *core_info = NULL;
+	struct cam_vfe_hw_info *hw_info = NULL;
+	int rc = 0;
 
 	vfe_hw_intf = kzalloc(sizeof(struct cam_hw_intf), GFP_KERNEL);
 	if (!vfe_hw_intf) {
@@ -31,8 +30,8 @@ int cam_vfe_probe(struct platform_device *pdev)
 		goto end;
 	}
 
-	of_property_read_u32(pdev->dev.of_node,
-		"cell-index", &vfe_hw_intf->hw_idx);
+	of_property_read_u32(pdev->dev.of_node, "cell-index",
+			     &vfe_hw_intf->hw_idx);
 
 	vfe_hw = kzalloc(sizeof(struct cam_hw_info), GFP_KERNEL);
 	if (!vfe_hw) {
@@ -41,8 +40,8 @@ int cam_vfe_probe(struct platform_device *pdev)
 	}
 
 	memset(vfe_dev_name, 0, sizeof(vfe_dev_name));
-	snprintf(vfe_dev_name, sizeof(vfe_dev_name),
-		"vfe%1u", vfe_hw_intf->hw_idx);
+	snprintf(vfe_dev_name, sizeof(vfe_dev_name), "vfe%1u",
+		 vfe_hw_intf->hw_idx);
 
 	vfe_hw->soc_info.pdev = pdev;
 	vfe_hw->soc_info.dev = &pdev->dev;
@@ -61,13 +60,13 @@ int cam_vfe_probe(struct platform_device *pdev)
 	vfe_hw_intf->hw_ops.process_cmd = cam_vfe_process_cmd;
 	vfe_hw_intf->hw_type = CAM_ISP_HW_TYPE_VFE;
 
-	CAM_DBG(CAM_ISP, "type %d index %d",
-		vfe_hw_intf->hw_type, vfe_hw_intf->hw_idx);
+	CAM_DBG(CAM_ISP, "type %d index %d", vfe_hw_intf->hw_type,
+		vfe_hw_intf->hw_idx);
 
 	platform_set_drvdata(pdev, vfe_hw_intf);
 
-	vfe_hw->core_info = kzalloc(sizeof(struct cam_vfe_hw_core_info),
-		GFP_KERNEL);
+	vfe_hw->core_info =
+		kzalloc(sizeof(struct cam_vfe_hw_core_info), GFP_KERNEL);
 	if (!vfe_hw->core_info) {
 		CAM_DBG(CAM_ISP, "Failed to alloc for core");
 		rc = -ENOMEM;
@@ -75,8 +74,8 @@ int cam_vfe_probe(struct platform_device *pdev)
 	}
 	core_info = (struct cam_vfe_hw_core_info *)vfe_hw->core_info;
 
-	match_dev = of_match_device(pdev->dev.driver->of_match_table,
-		&pdev->dev);
+	match_dev =
+		of_match_device(pdev->dev.driver->of_match_table, &pdev->dev);
 	if (!match_dev) {
 		CAM_ERR(CAM_ISP, "Of_match Failed");
 		rc = -EINVAL;
@@ -85,15 +84,14 @@ int cam_vfe_probe(struct platform_device *pdev)
 	hw_info = (struct cam_vfe_hw_info *)match_dev->data;
 	core_info->vfe_hw_info = hw_info;
 
-	rc = cam_vfe_init_soc_resources(&vfe_hw->soc_info, cam_vfe_irq,
-		vfe_hw);
+	rc = cam_vfe_init_soc_resources(&vfe_hw->soc_info, cam_vfe_irq, vfe_hw);
 	if (rc < 0) {
 		CAM_ERR(CAM_ISP, "Failed to init soc rc=%d", rc);
 		goto free_core_info;
 	}
 
-	rc = cam_vfe_core_init(core_info, &vfe_hw->soc_info,
-		vfe_hw_intf, hw_info);
+	rc = cam_vfe_core_init(core_info, &vfe_hw->soc_info, vfe_hw_intf,
+			       hw_info);
 	if (rc < 0) {
 		CAM_ERR(CAM_ISP, "Failed to init core rc=%d", rc);
 		goto deinit_soc;
@@ -129,10 +127,10 @@ end:
 
 int cam_vfe_remove(struct platform_device *pdev)
 {
-	struct cam_hw_info                *vfe_hw = NULL;
-	struct cam_hw_intf                *vfe_hw_intf = NULL;
-	struct cam_vfe_hw_core_info       *core_info = NULL;
-	int                                rc = 0;
+	struct cam_hw_info *vfe_hw = NULL;
+	struct cam_hw_intf *vfe_hw_intf = NULL;
+	struct cam_vfe_hw_core_info *core_info = NULL;
+	int rc = 0;
 
 	vfe_hw_intf = platform_get_drvdata(pdev);
 	if (!vfe_hw_intf) {
@@ -140,8 +138,8 @@ int cam_vfe_remove(struct platform_device *pdev)
 		return -EINVAL;
 	}
 
-	CAM_DBG(CAM_ISP, "type %d index %d",
-		vfe_hw_intf->hw_type, vfe_hw_intf->hw_idx);
+	CAM_DBG(CAM_ISP, "type %d index %d", vfe_hw_intf->hw_type,
+		vfe_hw_intf->hw_idx);
 
 	if (vfe_hw_intf->hw_idx < CAM_VFE_HW_NUM_MAX)
 		cam_vfe_hw_list[vfe_hw_intf->hw_idx] = NULL;

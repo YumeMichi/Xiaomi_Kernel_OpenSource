@@ -17,7 +17,7 @@ static char supported_clk_info[256];
 static char debugfs_dir_name[64];
 
 int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
-	int64_t clk_rate, int clk_idx, int32_t *clk_lvl)
+			       int64_t clk_rate, int clk_idx, int32_t *clk_lvl)
 {
 	int i;
 	long clk_rate_round;
@@ -30,20 +30,18 @@ int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
 
 	clk_rate_round = clk_round_rate(soc_info->clk[clk_idx], clk_rate);
 	if (clk_rate_round < 0) {
-		CAM_ERR(CAM_UTIL, "round failed rc = %ld",
-			clk_rate_round);
+		CAM_ERR(CAM_UTIL, "round failed rc = %ld", clk_rate_round);
 		*clk_lvl = -1;
 		return -EINVAL;
 	}
 
 	for (i = 0; i < CAM_MAX_VOTE; i++) {
 		if ((soc_info->clk_level_valid[i]) &&
-			(soc_info->clk_rate[i][clk_idx] >=
-			clk_rate_round)) {
+		    (soc_info->clk_rate[i][clk_idx] >= clk_rate_round)) {
 			CAM_DBG(CAM_UTIL,
 				"soc = %d round rate = %ld actual = %lld",
-				soc_info->clk_rate[i][clk_idx],
-				clk_rate_round, clk_rate);
+				soc_info->clk_rate[i][clk_idx], clk_rate_round,
+				clk_rate);
 			*clk_lvl = i;
 			return 0;
 		}
@@ -63,8 +61,7 @@ int cam_soc_util_get_clk_level(struct cam_hw_soc_info *soc_info,
  *
  * @return:    String corresponding to the clk level
  */
-static const char *cam_soc_util_get_string_from_level(
-	enum cam_vote_level level)
+static const char *cam_soc_util_get_string_from_level(enum cam_vote_level level)
 {
 	switch (level) {
 	case CAM_SUSPEND_VOTE:
@@ -98,14 +95,14 @@ static const char *cam_soc_util_get_string_from_level(
  *
  * @return:     String containing all supported clk levels
  */
-static const char *cam_soc_util_get_supported_clk_levels(
-	struct cam_hw_soc_info *soc_info)
+static const char *
+cam_soc_util_get_supported_clk_levels(struct cam_hw_soc_info *soc_info)
 {
 	int i = 0;
 
 	memset(supported_clk_info, 0, sizeof(supported_clk_info));
-	strlcat(supported_clk_info, "Supported levels: ",
-		sizeof(supported_clk_info));
+	strlcat(supported_clk_info,
+		"Supported levels: ", sizeof(supported_clk_info));
 
 	for (i = 0; i < CAM_MAX_VOTE; i++) {
 		if (soc_info->clk_level_valid[i] == true) {
@@ -122,14 +119,15 @@ static const char *cam_soc_util_get_supported_clk_levels(
 }
 
 static int cam_soc_util_clk_lvl_options_open(struct inode *inode,
-	struct file *file)
+					     struct file *file)
 {
 	file->private_data = inode->i_private;
 	return 0;
 }
 
 static ssize_t cam_soc_util_clk_lvl_options_read(struct file *file,
-	char __user *clk_info, size_t size_t, loff_t *loff_t)
+						 char __user *clk_info,
+						 size_t size_t, loff_t *loff_t)
 {
 	struct cam_hw_soc_info *soc_info =
 		(struct cam_hw_soc_info *)file->private_data;
@@ -137,7 +135,7 @@ static ssize_t cam_soc_util_clk_lvl_options_read(struct file *file,
 		cam_soc_util_get_supported_clk_levels(soc_info);
 
 	return simple_read_from_buffer(clk_info, size_t, loff_t, display_string,
-		strlen(display_string));
+				       strlen(display_string));
 }
 
 static const struct file_operations cam_soc_util_clk_lvl_options = {
@@ -169,8 +167,8 @@ static int cam_soc_util_get_clk_lvl(void *data, u64 *val)
 	return 0;
 }
 
-DEFINE_SIMPLE_ATTRIBUTE(cam_soc_util_clk_lvl_control,
-	cam_soc_util_get_clk_lvl, cam_soc_util_set_clk_lvl, "%08llu");
+DEFINE_SIMPLE_ATTRIBUTE(cam_soc_util_clk_lvl_control, cam_soc_util_get_clk_lvl,
+			cam_soc_util_set_clk_lvl, "%08llu");
 
 /**
  * cam_soc_util_create_clk_lvl_debugfs()
@@ -181,8 +179,7 @@ DEFINE_SIMPLE_ATTRIBUTE(cam_soc_util_clk_lvl_control,
  *
  * @return:     Success or failure
  */
-static int cam_soc_util_create_clk_lvl_debugfs(
-	struct cam_hw_soc_info *soc_info)
+static int cam_soc_util_create_clk_lvl_debugfs(struct cam_hw_soc_info *soc_info)
 {
 	struct dentry *dentry = NULL;
 
@@ -205,14 +202,14 @@ static int cam_soc_util_create_clk_lvl_debugfs(
 		return -ENOMEM;
 	}
 
-	if (!debugfs_create_file("clk_lvl_options", 0444,
-		dentry, soc_info, &cam_soc_util_clk_lvl_options)) {
+	if (!debugfs_create_file("clk_lvl_options", 0444, dentry, soc_info,
+				 &cam_soc_util_clk_lvl_options)) {
 		CAM_ERR(CAM_UTIL, "failed to create clk_lvl_options");
 		goto err;
 	}
 
-	if (!debugfs_create_file("clk_lvl_control", 0644,
-		dentry, soc_info, &cam_soc_util_clk_lvl_control)) {
+	if (!debugfs_create_file("clk_lvl_control", 0644, dentry, soc_info,
+				 &cam_soc_util_clk_lvl_control)) {
 		CAM_ERR(CAM_UTIL, "failed to create clk_lvl_control");
 		goto err;
 	}
@@ -237,15 +234,15 @@ err:
  * @soc_info:   Device soc information
  *
  */
-static void cam_soc_util_remove_clk_lvl_debugfs(
-	struct cam_hw_soc_info *soc_info)
+static void
+cam_soc_util_remove_clk_lvl_debugfs(struct cam_hw_soc_info *soc_info)
 {
 	debugfs_remove_recursive(soc_info->dentry);
 	soc_info->dentry = NULL;
 }
 
 int cam_soc_util_get_level_from_string(const char *string,
-	enum cam_vote_level *level)
+				       enum cam_vote_level *level)
 {
 	if (!level)
 		return -EINVAL;
@@ -287,9 +284,9 @@ int cam_soc_util_get_level_from_string(const char *string,
  *
  * @return:             success or failure
  */
-static int cam_soc_util_get_clk_level_to_apply(
-	struct cam_hw_soc_info *soc_info, enum cam_vote_level req_level,
-	enum cam_vote_level *apply_level)
+static int cam_soc_util_get_clk_level_to_apply(struct cam_hw_soc_info *soc_info,
+					       enum cam_vote_level req_level,
+					       enum cam_vote_level *apply_level)
 {
 	if (req_level >= CAM_MAX_VOTE) {
 		CAM_ERR(CAM_UTIL, "Invalid clock level parameter %d",
@@ -316,8 +313,7 @@ static int cam_soc_util_get_clk_level_to_apply(
 		}
 	}
 
-	CAM_DBG(CAM_UTIL, "Req level %d, Applying %d",
-		req_level, *apply_level);
+	CAM_DBG(CAM_UTIL, "Req level %d, Applying %d", req_level, *apply_level);
 
 	return 0;
 }
@@ -357,11 +353,11 @@ int cam_soc_util_irq_disable(struct cam_hw_soc_info *soc_info)
 }
 
 long cam_soc_util_get_clk_round_rate(struct cam_hw_soc_info *soc_info,
-	uint32_t clk_index, unsigned long clk_rate)
+				     uint32_t clk_index, unsigned long clk_rate)
 {
 	if (!soc_info || (clk_index >= soc_info->num_clk) || (clk_rate == 0)) {
-		CAM_ERR(CAM_UTIL, "Invalid input params %pK, %d %lu",
-			soc_info, clk_index, clk_rate);
+		CAM_ERR(CAM_UTIL, "Invalid input params %pK, %d %lu", soc_info,
+			clk_index, clk_rate);
 		return clk_rate;
 	}
 
@@ -369,11 +365,11 @@ long cam_soc_util_get_clk_round_rate(struct cam_hw_soc_info *soc_info,
 }
 
 int cam_soc_util_set_clk_flags(struct cam_hw_soc_info *soc_info,
-	uint32_t clk_index, unsigned long flags)
+			       uint32_t clk_index, unsigned long flags)
 {
 	if (!soc_info || (clk_index >= soc_info->num_clk)) {
-		CAM_ERR(CAM_UTIL, "Invalid input params %pK, %d",
-			soc_info, clk_index);
+		CAM_ERR(CAM_UTIL, "Invalid input params %pK, %d", soc_info,
+			clk_index);
 		return -EINVAL;
 	}
 
@@ -392,7 +388,7 @@ int cam_soc_util_set_clk_flags(struct cam_hw_soc_info *soc_info,
  * @return:         Success or failure
  */
 static int cam_soc_util_set_clk_rate(struct clk *clk, const char *clk_name,
-	int64_t clk_rate)
+				     int64_t clk_rate)
 {
 	int rc = 0;
 	long clk_rate_round;
@@ -436,7 +432,7 @@ static int cam_soc_util_set_clk_rate(struct clk *clk, const char *clk_name,
 }
 
 int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
-	int64_t clk_rate)
+				  int64_t clk_rate)
 {
 	int rc = 0;
 	int i = 0;
@@ -447,7 +443,7 @@ int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 	uint32_t clk_level_override = 0;
 
 	if (!soc_info || (soc_info->src_clk_idx < 0) ||
-		(soc_info->src_clk_idx >= CAM_SOC_MAX_CLK)) {
+	    (soc_info->src_clk_idx >= CAM_SOC_MAX_CLK)) {
 		CAM_ERR(CAM_UTIL, "Invalid src_clk_idx: %d",
 			soc_info ? soc_info->src_clk_idx : -1);
 		return -EINVAL;
@@ -456,31 +452,29 @@ int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 	src_clk_idx = soc_info->src_clk_idx;
 	clk_level_override = soc_info->clk_level_override;
 	if (clk_level_override && clk_rate)
-		clk_rate =
-			soc_info->clk_rate[clk_level_override][src_clk_idx];
+		clk_rate = soc_info->clk_rate[clk_level_override][src_clk_idx];
 
 	clk = soc_info->clk[src_clk_idx];
 	rc = cam_soc_util_get_clk_level(soc_info, clk_rate, src_clk_idx,
-		&apply_level);
+					&apply_level);
 	if (rc || (apply_level < 0) || (apply_level >= CAM_MAX_VOTE)) {
 		CAM_ERR(CAM_UTIL,
 			"set %s, rate %lld dev_name = %s apply level = %d",
 			soc_info->clk_name[src_clk_idx], clk_rate,
 			soc_info->dev_name, apply_level);
-			return -EINVAL;
+		return -EINVAL;
 	}
 
 	CAM_DBG(CAM_UTIL, "set %s, rate %lld dev_name = %s apply level = %d",
-		soc_info->clk_name[src_clk_idx], clk_rate,
-		soc_info->dev_name, apply_level);
+		soc_info->clk_name[src_clk_idx], clk_rate, soc_info->dev_name,
+		apply_level);
 
 	if ((soc_info->cam_cx_ipeak_enable) && (clk_rate >= 0)) {
-		cam_cx_ipeak_update_vote_cx_ipeak(soc_info,
-			apply_level);
+		cam_cx_ipeak_update_vote_cx_ipeak(soc_info, apply_level);
 	}
 
-	rc = cam_soc_util_set_clk_rate(clk,
-		soc_info->clk_name[src_clk_idx], clk_rate);
+	rc = cam_soc_util_set_clk_rate(clk, soc_info->clk_name[src_clk_idx],
+				       clk_rate);
 	if (rc) {
 		CAM_ERR(CAM_UTIL,
 			"SET_RATE Failed: src clk: %s, rate %lld, dev_name = %s rc: %d",
@@ -498,15 +492,16 @@ int cam_soc_util_set_src_clk_rate(struct cam_hw_soc_info *soc_info,
 			continue;
 		}
 		clk = soc_info->clk[scl_clk_idx];
-		rc = cam_soc_util_set_clk_rate(clk,
-			soc_info->clk_name[scl_clk_idx],
+		rc = cam_soc_util_set_clk_rate(
+			clk, soc_info->clk_name[scl_clk_idx],
 			soc_info->clk_rate[apply_level][scl_clk_idx]);
 		if (rc) {
-			CAM_WARN(CAM_UTIL,
-			"SET_RATE Failed: scl clk: %s, rate %d dev_name = %s, rc: %d",
-			soc_info->clk_name[scl_clk_idx],
-			soc_info->clk_rate[apply_level][scl_clk_idx],
-			soc_info->dev_name, rc);
+			CAM_WARN(
+				CAM_UTIL,
+				"SET_RATE Failed: scl clk: %s, rate %d dev_name = %s, rc: %d",
+				soc_info->clk_name[scl_clk_idx],
+				soc_info->clk_rate[apply_level][scl_clk_idx],
+				soc_info->dev_name, rc);
 		}
 	}
 
@@ -527,7 +522,7 @@ int cam_soc_util_clk_put(struct clk **clk)
 }
 
 static struct clk *cam_soc_util_option_clk_get(struct device_node *np,
-	int index)
+					       int index)
 {
 	struct of_phandle_args clkspec;
 	struct clk *clk;
@@ -537,7 +532,7 @@ static struct clk *cam_soc_util_option_clk_get(struct device_node *np,
 		return ERR_PTR(-EINVAL);
 
 	rc = of_parse_phandle_with_args(np, "clocks-option", "#clock-cells",
-		index, &clkspec);
+					index, &clkspec);
 	if (rc)
 		return ERR_PTR(rc);
 
@@ -548,8 +543,8 @@ static struct clk *cam_soc_util_option_clk_get(struct device_node *np,
 }
 
 int cam_soc_util_get_option_clk_by_name(struct cam_hw_soc_info *soc_info,
-	const char *clk_name, struct clk **clk, int32_t *clk_index,
-	int32_t *clk_rate)
+					const char *clk_name, struct clk **clk,
+					int32_t *clk_index, int32_t *clk_rate)
 {
 	int index = 0;
 	int rc = 0;
@@ -565,7 +560,7 @@ int cam_soc_util_get_option_clk_by_name(struct cam_hw_soc_info *soc_info,
 	of_node = soc_info->dev->of_node;
 
 	index = of_property_match_string(of_node, "clock-names-option",
-		clk_name);
+					 clk_name);
 
 	if (index < 0) {
 		CAM_INFO(CAM_UTIL, "No clk data for %s", clk_name);
@@ -583,8 +578,8 @@ int cam_soc_util_get_option_clk_by_name(struct cam_hw_soc_info *soc_info,
 	}
 	*clk_index = index;
 
-	rc = of_property_read_u32_index(of_node, "clock-rates-option",
-		index, clk_rate);
+	rc = of_property_read_u32_index(of_node, "clock-rates-option", index,
+					clk_rate);
 	if (rc) {
 		CAM_ERR(CAM_UTIL,
 			"Error reading clock-rates clk_name %s index %d",
@@ -600,14 +595,14 @@ int cam_soc_util_get_option_clk_by_name(struct cam_hw_soc_info *soc_info,
 	 */
 	*clk_rate = (*clk_rate == 0) ? (int32_t)INIT_RATE : *clk_rate;
 
-	CAM_DBG(CAM_UTIL, "clk_name %s index %d clk_rate %d",
-		clk_name, *clk_index, *clk_rate);
+	CAM_DBG(CAM_UTIL, "clk_name %s index %d clk_rate %d", clk_name,
+		*clk_index, *clk_rate);
 
 	return 0;
 }
 
 int cam_soc_util_clk_enable(struct clk *clk, const char *clk_name,
-	int32_t clk_rate)
+			    int32_t clk_rate)
 {
 	int rc = 0;
 
@@ -650,20 +645,20 @@ int cam_soc_util_clk_disable(struct clk *clk, const char *clk_name)
  * @return:             success or failure
  */
 int cam_soc_util_clk_enable_default(struct cam_hw_soc_info *soc_info,
-	enum cam_vote_level clk_level)
+				    enum cam_vote_level clk_level)
 {
 	int i, rc = 0;
 	enum cam_vote_level apply_level;
 
 	if ((soc_info->num_clk == 0) ||
-		(soc_info->num_clk >= CAM_SOC_MAX_CLK)) {
+	    (soc_info->num_clk >= CAM_SOC_MAX_CLK)) {
 		CAM_ERR(CAM_UTIL, "Invalid number of clock %d",
 			soc_info->num_clk);
 		return -EINVAL;
 	}
 
 	rc = cam_soc_util_get_clk_level_to_apply(soc_info, clk_level,
-		&apply_level);
+						 &apply_level);
 	if (rc)
 		return rc;
 
@@ -671,19 +666,18 @@ int cam_soc_util_clk_enable_default(struct cam_hw_soc_info *soc_info,
 		cam_cx_ipeak_update_vote_cx_ipeak(soc_info, apply_level);
 
 	for (i = 0; i < soc_info->num_clk; i++) {
-		rc = cam_soc_util_clk_enable(soc_info->clk[i],
-			soc_info->clk_name[i],
+		rc = cam_soc_util_clk_enable(
+			soc_info->clk[i], soc_info->clk_name[i],
 			soc_info->clk_rate[apply_level][i]);
 		if (rc)
 			goto clk_disable;
 		if (soc_info->cam_cx_ipeak_enable) {
 			CAM_DBG(CAM_UTIL,
-			"dev name = %s clk name = %s idx = %d\n"
-			"apply_level = %d clc idx = %d",
-			soc_info->dev_name, soc_info->clk_name[i], i,
-			apply_level, i);
+				"dev name = %s clk name = %s idx = %d\n"
+				"apply_level = %d clc idx = %d",
+				soc_info->dev_name, soc_info->clk_name[i], i,
+				apply_level, i);
 		}
-
 	}
 
 	return rc;
@@ -693,7 +687,7 @@ clk_disable:
 		cam_cx_ipeak_update_vote_cx_ipeak(soc_info, 0);
 	for (i--; i >= 0; i--) {
 		cam_soc_util_clk_disable(soc_info->clk[i],
-			soc_info->clk_name[i]);
+					 soc_info->clk_name[i]);
 	}
 
 	return rc;
@@ -720,7 +714,7 @@ void cam_soc_util_clk_disable_default(struct cam_hw_soc_info *soc_info)
 		cam_cx_ipeak_unvote_cx_ipeak(soc_info);
 	for (i = soc_info->num_clk - 1; i >= 0; i--)
 		cam_soc_util_clk_disable(soc_info->clk[i],
-			soc_info->clk_name[i]);
+					 soc_info->clk_name[i]);
 }
 
 /**
@@ -760,8 +754,8 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 
 	count = of_property_count_strings(of_node, "clock-names");
 
-	CAM_DBG(CAM_UTIL, "E: dev_name = %s count = %d",
-		soc_info->dev_name, count);
+	CAM_DBG(CAM_UTIL, "E: dev_name = %s count = %d", soc_info->dev_name,
+		count);
 	if (count > CAM_SOC_MAX_CLK) {
 		CAM_ERR(CAM_UTIL, "invalid count of clocks, count=%d", count);
 		rc = -EINVAL;
@@ -776,14 +770,14 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 	soc_info->num_clk = count;
 
 	for (i = 0; i < count; i++) {
-		rc = of_property_read_string_index(of_node, "clock-names",
-				i, &(soc_info->clk_name[i]));
-		CAM_DBG(CAM_UTIL, "clock-names[%d] = %s",
-			i, soc_info->clk_name[i]);
+		rc = of_property_read_string_index(of_node, "clock-names", i,
+						   &(soc_info->clk_name[i]));
+		CAM_DBG(CAM_UTIL, "clock-names[%d] = %s", i,
+			soc_info->clk_name[i]);
 		if (rc) {
 			CAM_ERR(CAM_UTIL,
-				"i= %d count= %d reading clock-names failed",
-				i, count);
+				"i= %d count= %d reading clock-names failed", i,
+				count);
 			return rc;
 		}
 	}
@@ -803,8 +797,8 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 
 	num_clk_levels = (num_clk_rates / soc_info->num_clk);
 
-	num_clk_level_strings = of_property_count_strings(of_node,
-		"clock-cntl-level");
+	num_clk_level_strings =
+		of_property_count_strings(of_node, "clock-cntl-level");
 	if (num_clk_level_strings != num_clk_levels) {
 		CAM_ERR(CAM_UTIL,
 			"Mismatch No of levels=%d, No of level string=%d",
@@ -813,8 +807,8 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 	}
 
 	for (i = 0; i < num_clk_levels; i++) {
-		rc = of_property_read_string_index(of_node,
-			"clock-cntl-level", i, &clk_cntl_lvl_string);
+		rc = of_property_read_string_index(of_node, "clock-cntl-level",
+						   i, &clk_cntl_lvl_string);
 		if (rc) {
 			CAM_ERR(CAM_UTIL,
 				"Error reading clock-cntl-level, rc=%d", rc);
@@ -822,38 +816,37 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 		}
 
 		rc = cam_soc_util_get_level_from_string(clk_cntl_lvl_string,
-			&level);
+							&level);
 		if (rc)
 			return rc;
 
-		CAM_DBG(CAM_UTIL,
-			"[%d] : %s %d", i, clk_cntl_lvl_string, level);
+		CAM_DBG(CAM_UTIL, "[%d] : %s %d", i, clk_cntl_lvl_string,
+			level);
 		soc_info->clk_level_valid[level] = true;
 		for (j = 0; j < soc_info->num_clk; j++) {
-			rc = of_property_read_u32_index(of_node, "clock-rates",
+			rc = of_property_read_u32_index(
+				of_node, "clock-rates",
 				((i * soc_info->num_clk) + j),
 				&soc_info->clk_rate[level][j]);
 			if (rc) {
 				CAM_ERR(CAM_UTIL,
-					"Error reading clock-rates, rc=%d",
-					rc);
+					"Error reading clock-rates, rc=%d", rc);
 				return rc;
 			}
 
 			soc_info->clk_rate[level][j] =
 				(soc_info->clk_rate[level][j] == 0) ?
-				(int32_t)NO_SET_RATE :
-				soc_info->clk_rate[level][j];
+					(int32_t)NO_SET_RATE :
+					soc_info->clk_rate[level][j];
 
 			CAM_DBG(CAM_UTIL, "soc_info->clk_rate[%d][%d] = %d",
-				level, j,
-				soc_info->clk_rate[level][j]);
+				level, j, soc_info->clk_rate[level][j]);
 		}
 	}
 
 	soc_info->src_clk_idx = -1;
 	rc = of_property_read_string_index(of_node, "src-clock-name", 0,
-		&src_clk_str);
+					   &src_clk_str);
 	if (rc || !src_clk_str) {
 		CAM_DBG(CAM_UTIL, "No src_clk_str found");
 		rc = 0;
@@ -871,14 +864,14 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 
 	/* scalable clk info parsing */
 	soc_info->scl_clk_count = 0;
-	soc_info->scl_clk_count = of_property_count_strings(of_node,
-		"scl-clk-names");
+	soc_info->scl_clk_count =
+		of_property_count_strings(of_node, "scl-clk-names");
 	if ((soc_info->scl_clk_count <= 0) ||
-		(soc_info->scl_clk_count > CAM_SOC_MAX_CLK)) {
+	    (soc_info->scl_clk_count > CAM_SOC_MAX_CLK)) {
 		if (soc_info->scl_clk_count == -EINVAL) {
 			CAM_DBG(CAM_UTIL, "scl_clk_name prop not avialable");
 		} else if ((soc_info->scl_clk_count == -ENODATA) ||
-			(soc_info->scl_clk_count > CAM_SOC_MAX_CLK)) {
+			   (soc_info->scl_clk_count > CAM_SOC_MAX_CLK)) {
 			CAM_ERR(CAM_UTIL, "Invalid scl_clk_count: %d",
 				soc_info->scl_clk_count);
 			return -EINVAL;
@@ -890,8 +883,8 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 		CAM_DBG(CAM_UTIL, "No of scalable clocks: %d",
 			soc_info->scl_clk_count);
 		for (i = 0; i < soc_info->scl_clk_count; i++) {
-			rc = of_property_read_string_index(of_node,
-				"scl-clk-names", i,
+			rc = of_property_read_string_index(
+				of_node, "scl-clk-names", i,
 				(const char **)&scl_clk_str);
 			if (rc || !scl_clk_str) {
 				CAM_WARN(CAM_UTIL, "scl_clk_str is NULL");
@@ -900,7 +893,7 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 			}
 			for (j = 0; j < soc_info->num_clk; j++) {
 				if (strnstr(scl_clk_str, soc_info->clk_name[j],
-					strlen(scl_clk_str))) {
+					    strlen(scl_clk_str))) {
 					soc_info->scl_clk_idx[i] = j;
 					CAM_DBG(CAM_UTIL,
 						"scl clock = %s, index = %d",
@@ -911,8 +904,8 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 		}
 	}
 
-	rc = of_property_read_string_index(of_node,
-		"clock-control-debugfs", 0, &clk_control_debugfs);
+	rc = of_property_read_string_index(of_node, "clock-control-debugfs", 0,
+					   &clk_control_debugfs);
 	if (rc || !clk_control_debugfs) {
 		CAM_DBG(CAM_UTIL, "No clock_control_debugfs property found");
 		rc = 0;
@@ -922,27 +915,27 @@ static int cam_soc_util_get_dt_clk_info(struct cam_hw_soc_info *soc_info)
 	if (strcmp("true", clk_control_debugfs) == 0)
 		soc_info->clk_control_enable = true;
 
-	CAM_DBG(CAM_UTIL, "X: dev_name = %s count = %d",
-		soc_info->dev_name, count);
+	CAM_DBG(CAM_UTIL, "X: dev_name = %s count = %d", soc_info->dev_name,
+		count);
 end:
 	return rc;
 }
 
 int cam_soc_util_set_clk_rate_level(struct cam_hw_soc_info *soc_info,
-	enum cam_vote_level clk_level)
+				    enum cam_vote_level clk_level)
 {
 	int i, rc = 0;
 	enum cam_vote_level apply_level;
 
 	if ((soc_info->num_clk == 0) ||
-		(soc_info->num_clk >= CAM_SOC_MAX_CLK)) {
+	    (soc_info->num_clk >= CAM_SOC_MAX_CLK)) {
 		CAM_ERR(CAM_UTIL, "Invalid number of clock %d",
 			soc_info->num_clk);
 		return -EINVAL;
 	}
 
 	rc = cam_soc_util_get_clk_level_to_apply(soc_info, clk_level,
-		&apply_level);
+						 &apply_level);
 	if (rc)
 		return rc;
 
@@ -950,15 +943,15 @@ int cam_soc_util_set_clk_rate_level(struct cam_hw_soc_info *soc_info,
 		cam_cx_ipeak_update_vote_cx_ipeak(soc_info, apply_level);
 
 	for (i = 0; i < soc_info->num_clk; i++) {
-		rc = cam_soc_util_set_clk_rate(soc_info->clk[i],
-			soc_info->clk_name[i],
+		rc = cam_soc_util_set_clk_rate(
+			soc_info->clk[i], soc_info->clk_name[i],
 			soc_info->clk_rate[apply_level][i]);
 		if (rc < 0) {
 			CAM_DBG(CAM_UTIL,
 				"dev name = %s clk_name = %s idx = %d\n"
 				"apply_level = %d",
-				soc_info->dev_name, soc_info->clk_name[i],
-				i, apply_level);
+				soc_info->dev_name, soc_info->clk_name[i], i,
+				apply_level);
 			if (soc_info->cam_cx_ipeak_enable)
 				cam_cx_ipeak_update_vote_cx_ipeak(soc_info, 0);
 			break;
@@ -969,8 +962,9 @@ int cam_soc_util_set_clk_rate_level(struct cam_hw_soc_info *soc_info,
 };
 
 static int cam_soc_util_get_dt_gpio_req_tbl(struct device_node *of_node,
-	struct cam_soc_gpio_data *gconf, uint16_t *gpio_array,
-	uint16_t gpio_array_size)
+					    struct cam_soc_gpio_data *gconf,
+					    uint16_t *gpio_array,
+					    uint16_t gpio_array_size)
 {
 	int32_t rc = 0, i = 0;
 	uint32_t count = 0;
@@ -989,16 +983,16 @@ static int cam_soc_util_get_dt_gpio_req_tbl(struct device_node *of_node,
 	if (!val_array)
 		return -ENOMEM;
 
-	gconf->cam_gpio_req_tbl = kcalloc(count, sizeof(struct gpio),
-		GFP_KERNEL);
+	gconf->cam_gpio_req_tbl =
+		kcalloc(count, sizeof(struct gpio), GFP_KERNEL);
 	if (!gconf->cam_gpio_req_tbl) {
 		rc = -ENOMEM;
 		goto free_val_array;
 	}
 	gconf->cam_gpio_req_tbl_size = count;
 
-	rc = of_property_read_u32_array(of_node, "gpio-req-tbl-num",
-		val_array, count);
+	rc = of_property_read_u32_array(of_node, "gpio-req-tbl-num", val_array,
+					count);
 	if (rc) {
 		CAM_ERR(CAM_UTIL, "failed in reading gpio-req-tbl-num, rc = %d",
 			rc);
@@ -1017,7 +1011,7 @@ static int cam_soc_util_get_dt_gpio_req_tbl(struct device_node *of_node,
 	}
 
 	rc = of_property_read_u32_array(of_node, "gpio-req-tbl-flags",
-		val_array, count);
+					val_array, count);
 	if (rc) {
 		CAM_ERR(CAM_UTIL, "Failed in gpio-req-tbl-flags, rc %d", rc);
 		goto free_gpio_req_tbl;
@@ -1030,8 +1024,8 @@ static int cam_soc_util_get_dt_gpio_req_tbl(struct device_node *of_node,
 	}
 
 	for (i = 0; i < count; i++) {
-		rc = of_property_read_string_index(of_node,
-			"gpio-req-tbl-label", i,
+		rc = of_property_read_string_index(
+			of_node, "gpio-req-tbl-label", i,
 			&gconf->cam_gpio_req_tbl[i].label);
 		if (rc) {
 			CAM_ERR(CAM_UTIL, "Failed rc %d", rc);
@@ -1094,14 +1088,14 @@ static int cam_soc_util_get_gpio_info(struct cam_hw_soc_info *soc_info)
 		return -ENOMEM;
 
 	rc = cam_soc_util_get_dt_gpio_req_tbl(of_node, gconf, gpio_array,
-		gpio_array_size);
+					      gpio_array_size);
 	if (rc) {
 		CAM_ERR(CAM_UTIL, "failed in msm_camera_get_dt_gpio_req_tbl");
 		goto free_gpio_array;
 	}
 
-	gconf->cam_gpio_common_tbl = kcalloc(gpio_array_size,
-				sizeof(struct gpio), GFP_KERNEL);
+	gconf->cam_gpio_common_tbl =
+		kcalloc(gpio_array_size, sizeof(struct gpio), GFP_KERNEL);
 	if (!gconf->cam_gpio_common_tbl) {
 		rc = -ENOMEM;
 		goto free_gpio_array;
@@ -1125,15 +1119,13 @@ free_gpio_conf:
 	return rc;
 }
 
-static int cam_soc_util_request_gpio_table(
-	struct cam_hw_soc_info *soc_info, bool gpio_en)
+static int cam_soc_util_request_gpio_table(struct cam_hw_soc_info *soc_info,
+					   bool gpio_en)
 {
 	int rc = 0, i = 0;
 	uint8_t size = 0;
-	struct cam_soc_gpio_data *gpio_conf =
-			soc_info->gpio_data;
+	struct cam_soc_gpio_data *gpio_conf = soc_info->gpio_data;
 	struct gpio *gpio_tbl = NULL;
-
 
 	if (!gpio_conf) {
 		CAM_DBG(CAM_UTIL, "No GPIO entry");
@@ -1147,18 +1139,19 @@ static int cam_soc_util_request_gpio_table(
 	gpio_tbl = gpio_conf->cam_gpio_req_tbl;
 
 	if (!gpio_tbl || !size) {
-		CAM_ERR(CAM_UTIL, "Invalid gpio_tbl %pK / size %d",
-			gpio_tbl, size);
+		CAM_ERR(CAM_UTIL, "Invalid gpio_tbl %pK / size %d", gpio_tbl,
+			size);
 		return -EINVAL;
 	}
 	for (i = 0; i < size; i++) {
-		CAM_DBG(CAM_UTIL, "i=%d, gpio=%d dir=%ld", i,
-			gpio_tbl[i].gpio, gpio_tbl[i].flags);
+		CAM_DBG(CAM_UTIL, "i=%d, gpio=%d dir=%ld", i, gpio_tbl[i].gpio,
+			gpio_tbl[i].flags);
 	}
 	if (gpio_en) {
 		for (i = 0; i < size; i++) {
 			rc = gpio_request_one(gpio_tbl[i].gpio,
-				gpio_tbl[i].flags, gpio_tbl[i].label);
+					      gpio_tbl[i].flags,
+					      gpio_tbl[i].label);
 			if (rc) {
 				/*
 				 * After GPIO request fails, contine to
@@ -1176,8 +1169,7 @@ static int cam_soc_util_request_gpio_table(
 	return rc;
 }
 
-static int cam_soc_util_get_dt_regulator_info
-	(struct cam_hw_soc_info *soc_info)
+static int cam_soc_util_get_dt_regulator_info(struct cam_hw_soc_info *soc_info)
 {
 	int rc = 0, count = 0, i = 0;
 	struct device_node *of_node = NULL;
@@ -1206,10 +1198,10 @@ static int cam_soc_util_get_dt_regulator_info
 	}
 
 	for (i = 0; i < soc_info->num_rgltr; i++) {
-		rc = of_property_read_string_index(of_node,
-			"regulator-names", i, &soc_info->rgltr_name[i]);
-		CAM_DBG(CAM_UTIL, "rgltr_name[%d] = %s",
-			i, soc_info->rgltr_name[i]);
+		rc = of_property_read_string_index(of_node, "regulator-names",
+						   i, &soc_info->rgltr_name[i]);
+		CAM_DBG(CAM_UTIL, "rgltr_name[%d] = %s", i,
+			soc_info->rgltr_name[i]);
 		if (rc) {
 			CAM_ERR(CAM_UTIL, "no regulator resource at cnt=%d", i);
 			return -ENODEV;
@@ -1225,21 +1217,24 @@ static int cam_soc_util_get_dt_regulator_info
 	soc_info->rgltr_ctrl_support = true;
 
 	rc = of_property_read_u32_array(of_node, "rgltr-min-voltage",
-		soc_info->rgltr_min_volt, soc_info->num_rgltr);
+					soc_info->rgltr_min_volt,
+					soc_info->num_rgltr);
 	if (rc) {
 		CAM_ERR(CAM_UTIL, "No minimum volatage value found, rc=%d", rc);
 		return -EINVAL;
 	}
 
 	rc = of_property_read_u32_array(of_node, "rgltr-max-voltage",
-		soc_info->rgltr_max_volt, soc_info->num_rgltr);
+					soc_info->rgltr_max_volt,
+					soc_info->num_rgltr);
 	if (rc) {
 		CAM_ERR(CAM_UTIL, "No maximum volatage value found, rc=%d", rc);
 		return -EINVAL;
 	}
 
 	rc = of_property_read_u32_array(of_node, "rgltr-load-current",
-		soc_info->rgltr_op_mode, soc_info->num_rgltr);
+					soc_info->rgltr_op_mode,
+					soc_info->num_rgltr);
 	if (rc) {
 		CAM_ERR(CAM_UTIL, "No Load curent found rc=%d", rc);
 		return -EINVAL;
@@ -1274,15 +1269,15 @@ int cam_soc_util_get_dt_properties(struct cam_hw_soc_info *soc_info)
 	soc_info->num_mem_block = count;
 
 	for (i = 0; i < soc_info->num_mem_block; i++) {
-		rc = of_property_read_string_index(of_node, "reg-names", i,
-			&soc_info->mem_block_name[i]);
+		rc = of_property_read_string_index(
+			of_node, "reg-names", i, &soc_info->mem_block_name[i]);
 		if (rc) {
 			CAM_ERR(CAM_UTIL, "failed to read reg-names at %d", i);
 			return rc;
 		}
-		soc_info->mem_block[i] =
-			platform_get_resource_byname(soc_info->pdev,
-			IORESOURCE_MEM, soc_info->mem_block_name[i]);
+		soc_info->mem_block[i] = platform_get_resource_byname(
+			soc_info->pdev, IORESOURCE_MEM,
+			soc_info->mem_block_name[i]);
 
 		if (!soc_info->mem_block[i]) {
 			CAM_ERR(CAM_UTIL, "no mem resource by name %s",
@@ -1294,7 +1289,8 @@ int cam_soc_util_get_dt_properties(struct cam_hw_soc_info *soc_info)
 
 	if (soc_info->num_mem_block > 0) {
 		rc = of_property_read_u32_array(of_node, "reg-cam-base",
-			soc_info->mem_block_cam_base, soc_info->num_mem_block);
+						soc_info->mem_block_cam_base,
+						soc_info->num_mem_block);
 		if (rc) {
 			CAM_ERR(CAM_UTIL, "Error reading register offsets");
 			return rc;
@@ -1302,15 +1298,14 @@ int cam_soc_util_get_dt_properties(struct cam_hw_soc_info *soc_info)
 	}
 
 	rc = of_property_read_string_index(of_node, "interrupt-names", 0,
-		&soc_info->irq_name);
+					   &soc_info->irq_name);
 	if (rc) {
 		CAM_DBG(CAM_UTIL, "No interrupt line preset for: %s",
 			soc_info->dev_name);
 		rc = 0;
 	} else {
-		soc_info->irq_line =
-			platform_get_resource_byname(soc_info->pdev,
-			IORESOURCE_IRQ, soc_info->irq_name);
+		soc_info->irq_line = platform_get_resource_byname(
+			soc_info->pdev, IORESOURCE_IRQ, soc_info->irq_name);
 		if (!soc_info->irq_line) {
 			CAM_ERR(CAM_UTIL, "no irq resource");
 			rc = -ENODEV;
@@ -1318,8 +1313,8 @@ int cam_soc_util_get_dt_properties(struct cam_hw_soc_info *soc_info)
 		}
 	}
 
-	rc = of_property_read_string_index(of_node, "compatible", 0,
-		(const char **)&soc_info->compatible);
+	rc = of_property_read_string_index(
+		of_node, "compatible", 0, (const char **)&soc_info->compatible);
 	if (rc) {
 		CAM_DBG(CAM_UTIL, "No compatible string present for: %s",
 			soc_info->dev_name);
@@ -1356,7 +1351,8 @@ int cam_soc_util_get_dt_properties(struct cam_hw_soc_info *soc_info)
  * @return:             0 for Success, negative value for failure
  */
 static int cam_soc_util_get_regulator(struct device *dev,
-	struct regulator **reg, const char *rgltr_name)
+				      struct regulator **reg,
+				      const char *rgltr_name)
 {
 	int rc = 0;
 	*reg = regulator_get(dev, rgltr_name);
@@ -1370,9 +1366,11 @@ static int cam_soc_util_get_regulator(struct device *dev,
 }
 
 int cam_soc_util_regulator_disable(struct regulator *rgltr,
-	const char *rgltr_name, uint32_t rgltr_min_volt,
-	uint32_t rgltr_max_volt, uint32_t rgltr_op_mode,
-	uint32_t rgltr_delay_ms)
+				   const char *rgltr_name,
+				   uint32_t rgltr_min_volt,
+				   uint32_t rgltr_max_volt,
+				   uint32_t rgltr_op_mode,
+				   uint32_t rgltr_delay_ms)
 {
 	int32_t rc = 0;
 
@@ -1391,7 +1389,7 @@ int cam_soc_util_regulator_disable(struct regulator *rgltr,
 		msleep(rgltr_delay_ms);
 	else if (rgltr_delay_ms)
 		usleep_range(rgltr_delay_ms * 1000,
-			(rgltr_delay_ms * 1000) + 1000);
+			     (rgltr_delay_ms * 1000) + 1000);
 
 	if (regulator_count_voltages(rgltr) > 0) {
 		regulator_set_load(rgltr, 0);
@@ -1401,11 +1399,11 @@ int cam_soc_util_regulator_disable(struct regulator *rgltr,
 	return rc;
 }
 
-
 int cam_soc_util_regulator_enable(struct regulator *rgltr,
-	const char *rgltr_name,
-	uint32_t rgltr_min_volt, uint32_t rgltr_max_volt,
-	uint32_t rgltr_op_mode, uint32_t rgltr_delay)
+				  const char *rgltr_name,
+				  uint32_t rgltr_min_volt,
+				  uint32_t rgltr_max_volt,
+				  uint32_t rgltr_op_mode, uint32_t rgltr_delay)
 {
 	int32_t rc = 0;
 
@@ -1415,11 +1413,11 @@ int cam_soc_util_regulator_enable(struct regulator *rgltr,
 	}
 
 	if (regulator_count_voltages(rgltr) > 0) {
-		CAM_DBG(CAM_UTIL, "voltage min=%d, max=%d",
-			rgltr_min_volt, rgltr_max_volt);
+		CAM_DBG(CAM_UTIL, "voltage min=%d, max=%d", rgltr_min_volt,
+			rgltr_max_volt);
 
-		rc = regulator_set_voltage(
-			rgltr, rgltr_min_volt, rgltr_max_volt);
+		rc = regulator_set_voltage(rgltr, rgltr_min_volt,
+					   rgltr_max_volt);
 		if (rc) {
 			CAM_ERR(CAM_UTIL, "%s set voltage failed", rgltr_name);
 			return rc;
@@ -1442,16 +1440,13 @@ int cam_soc_util_regulator_enable(struct regulator *rgltr,
 	if (rgltr_delay > 20)
 		msleep(rgltr_delay);
 	else if (rgltr_delay)
-		usleep_range(rgltr_delay * 1000,
-			(rgltr_delay * 1000) + 1000);
+		usleep_range(rgltr_delay * 1000, (rgltr_delay * 1000) + 1000);
 
 	return rc;
 }
 
-static int cam_soc_util_request_pinctrl(
-	struct cam_hw_soc_info *soc_info)
+static int cam_soc_util_request_pinctrl(struct cam_hw_soc_info *soc_info)
 {
-
 	struct cam_soc_pinctrl_info *device_pctrl = &soc_info->pinctrl_info;
 	struct device *dev = soc_info->dev;
 
@@ -1461,18 +1456,16 @@ static int cam_soc_util_request_pinctrl(
 		device_pctrl->pinctrl = NULL;
 		return 0;
 	}
-	device_pctrl->gpio_state_active =
-		pinctrl_lookup_state(device_pctrl->pinctrl,
-				CAM_SOC_PINCTRL_STATE_DEFAULT);
+	device_pctrl->gpio_state_active = pinctrl_lookup_state(
+		device_pctrl->pinctrl, CAM_SOC_PINCTRL_STATE_DEFAULT);
 	if (IS_ERR_OR_NULL(device_pctrl->gpio_state_active)) {
 		CAM_ERR(CAM_UTIL,
 			"Failed to get the active state pinctrl handle");
 		device_pctrl->gpio_state_active = NULL;
 		return -EINVAL;
 	}
-	device_pctrl->gpio_state_suspend
-		= pinctrl_lookup_state(device_pctrl->pinctrl,
-				CAM_SOC_PINCTRL_STATE_SLEEP);
+	device_pctrl->gpio_state_suspend = pinctrl_lookup_state(
+		device_pctrl->pinctrl, CAM_SOC_PINCTRL_STATE_SLEEP);
 	if (IS_ERR_OR_NULL(device_pctrl->gpio_state_suspend)) {
 		CAM_ERR(CAM_UTIL,
 			"Failed to get the suspend state pinctrl handle");
@@ -1482,16 +1475,16 @@ static int cam_soc_util_request_pinctrl(
 	return 0;
 }
 
-static void cam_soc_util_regulator_disable_default(
-	struct cam_hw_soc_info *soc_info)
+static void
+cam_soc_util_regulator_disable_default(struct cam_hw_soc_info *soc_info)
 {
 	int j = 0;
 	uint32_t num_rgltr = soc_info->num_rgltr;
 
-	for (j = num_rgltr-1; j >= 0; j--) {
+	for (j = num_rgltr - 1; j >= 0; j--) {
 		if (soc_info->rgltr_ctrl_support == true) {
-			cam_soc_util_regulator_disable(soc_info->rgltr[j],
-				soc_info->rgltr_name[j],
+			cam_soc_util_regulator_disable(
+				soc_info->rgltr[j], soc_info->rgltr_name[j],
 				soc_info->rgltr_min_volt[j],
 				soc_info->rgltr_max_volt[j],
 				soc_info->rgltr_op_mode[j],
@@ -1503,16 +1496,16 @@ static void cam_soc_util_regulator_disable_default(
 	}
 }
 
-static int cam_soc_util_regulator_enable_default(
-	struct cam_hw_soc_info *soc_info)
+static int
+cam_soc_util_regulator_enable_default(struct cam_hw_soc_info *soc_info)
 {
 	int j = 0, rc = 0;
 	uint32_t num_rgltr = soc_info->num_rgltr;
 
 	for (j = 0; j < num_rgltr; j++) {
 		if (soc_info->rgltr_ctrl_support == true) {
-			rc = cam_soc_util_regulator_enable(soc_info->rgltr[j],
-				soc_info->rgltr_name[j],
+			rc = cam_soc_util_regulator_enable(
+				soc_info->rgltr[j], soc_info->rgltr_name[j],
 				soc_info->rgltr_min_volt[j],
 				soc_info->rgltr_max_volt[j],
 				soc_info->rgltr_op_mode[j],
@@ -1534,8 +1527,8 @@ disable_rgltr:
 
 	for (j--; j >= 0; j--) {
 		if (soc_info->rgltr_ctrl_support == true) {
-			cam_soc_util_regulator_disable(soc_info->rgltr[j],
-				soc_info->rgltr_name[j],
+			cam_soc_util_regulator_disable(
+				soc_info->rgltr[j], soc_info->rgltr_name[j],
 				soc_info->rgltr_min_volt[j],
 				soc_info->rgltr_max_volt[j],
 				soc_info->rgltr_op_mode[j],
@@ -1549,9 +1542,9 @@ disable_rgltr:
 	return rc;
 }
 
-int cam_soc_util_request_platform_resource(
-	struct cam_hw_soc_info *soc_info,
-	irq_handler_t handler, void *irq_data)
+int cam_soc_util_request_platform_resource(struct cam_hw_soc_info *soc_info,
+					   irq_handler_t handler,
+					   void *irq_data)
 {
 	int i = 0, rc = 0;
 
@@ -1562,9 +1555,10 @@ int cam_soc_util_request_platform_resource(
 
 	for (i = 0; i < soc_info->num_mem_block; i++) {
 		if (soc_info->reserve_mem) {
-			if (!request_mem_region(soc_info->mem_block[i]->start,
-				resource_size(soc_info->mem_block[i]),
-				soc_info->mem_block_name[i])){
+			if (!request_mem_region(
+				    soc_info->mem_block[i]->start,
+				    resource_size(soc_info->mem_block[i]),
+				    soc_info->mem_block_name[i])) {
 				CAM_ERR(CAM_UTIL,
 					"Error Mem region request Failed:%s",
 					soc_info->mem_block_name[i]);
@@ -1572,9 +1566,9 @@ int cam_soc_util_request_platform_resource(
 				goto unmap_base;
 			}
 		}
-		soc_info->reg_map[i].mem_base = ioremap(
-			soc_info->mem_block[i]->start,
-			resource_size(soc_info->mem_block[i]));
+		soc_info->reg_map[i].mem_base =
+			ioremap(soc_info->mem_block[i]->start,
+				resource_size(soc_info->mem_block[i]));
 		if (!soc_info->reg_map[i].mem_base) {
 			CAM_ERR(CAM_UTIL, "i= %d base NULL", i);
 			rc = -ENOMEM;
@@ -1594,16 +1588,16 @@ int cam_soc_util_request_platform_resource(
 		}
 
 		rc = cam_soc_util_get_regulator(soc_info->dev,
-			&soc_info->rgltr[i],
-			soc_info->rgltr_name[i]);
+						&soc_info->rgltr[i],
+						soc_info->rgltr_name[i]);
 		if (rc)
 			goto put_regulator;
 	}
 
 	if (soc_info->irq_line) {
 		rc = devm_request_irq(soc_info->dev, soc_info->irq_line->start,
-			handler, IRQF_TRIGGER_RISING,
-			soc_info->irq_name, irq_data);
+				      handler, IRQF_TRIGGER_RISING,
+				      soc_info->irq_name, irq_data);
 		if (rc) {
 			CAM_ERR(CAM_UTIL, "irq request fail");
 			rc = -EBUSY;
@@ -1615,8 +1609,8 @@ int cam_soc_util_request_platform_resource(
 
 	/* Get Clock */
 	for (i = 0; i < soc_info->num_clk; i++) {
-		soc_info->clk[i] = clk_get(soc_info->dev,
-			soc_info->clk_name[i]);
+		soc_info->clk[i] =
+			clk_get(soc_info->dev, soc_info->clk_name[i]);
 		if (!soc_info->clk[i]) {
 			CAM_ERR(CAM_UTIL, "get failed for %s",
 				soc_info->clk_name[i]);
@@ -1652,8 +1646,8 @@ put_clk:
 
 	if (soc_info->irq_line) {
 		disable_irq(soc_info->irq_line->start);
-		devm_free_irq(soc_info->dev,
-			soc_info->irq_line->start, irq_data);
+		devm_free_irq(soc_info->dev, soc_info->irq_line->start,
+			      irq_data);
 	}
 
 put_regulator:
@@ -1672,7 +1666,8 @@ unmap_base:
 		i = soc_info->num_reg_map;
 	for (i = i - 1; i >= 0; i--) {
 		if (soc_info->reserve_mem)
-			release_mem_region(soc_info->mem_block[i]->start,
+			release_mem_region(
+				soc_info->mem_block[i]->start,
 				resource_size(soc_info->mem_block[i]));
 		iounmap(soc_info->reg_map[i].mem_base);
 		soc_info->reg_map[i].mem_base = NULL;
@@ -1711,13 +1706,12 @@ int cam_soc_util_release_platform_resource(struct cam_hw_soc_info *soc_info)
 
 	if (soc_info->irq_line) {
 		disable_irq(soc_info->irq_line->start);
-		devm_free_irq(soc_info->dev,
-			soc_info->irq_line->start, soc_info->irq_data);
+		devm_free_irq(soc_info->dev, soc_info->irq_line->start,
+			      soc_info->irq_data);
 	}
 
 	if (soc_info->pinctrl_info.pinctrl)
 		devm_pinctrl_put(soc_info->pinctrl_info.pinctrl);
-
 
 	/* release for gpio */
 	cam_soc_util_request_gpio_table(soc_info, false);
@@ -1729,7 +1723,9 @@ int cam_soc_util_release_platform_resource(struct cam_hw_soc_info *soc_info)
 }
 
 int cam_soc_util_enable_platform_resource(struct cam_hw_soc_info *soc_info,
-	bool enable_clocks, enum cam_vote_level clk_level, bool enable_irq)
+					  bool enable_clocks,
+					  enum cam_vote_level clk_level,
+					  bool enable_irq)
 {
 	int rc = 0;
 
@@ -1749,14 +1745,15 @@ int cam_soc_util_enable_platform_resource(struct cam_hw_soc_info *soc_info,
 	}
 
 	if (enable_irq) {
-		rc  = cam_soc_util_irq_enable(soc_info);
+		rc = cam_soc_util_irq_enable(soc_info);
 		if (rc)
 			goto disable_clk;
 	}
 
 	if (soc_info->pinctrl_info.pinctrl &&
-		soc_info->pinctrl_info.gpio_state_active) {
-		rc = pinctrl_select_state(soc_info->pinctrl_info.pinctrl,
+	    soc_info->pinctrl_info.gpio_state_active) {
+		rc = pinctrl_select_state(
+			soc_info->pinctrl_info.pinctrl,
 			soc_info->pinctrl_info.gpio_state_active);
 
 		if (rc)
@@ -1776,12 +1773,12 @@ disable_clk:
 disable_regulator:
 	cam_soc_util_regulator_disable_default(soc_info);
 
-
 	return rc;
 }
 
 int cam_soc_util_disable_platform_resource(struct cam_hw_soc_info *soc_info,
-	bool disable_clocks, bool disable_irq)
+					   bool disable_clocks,
+					   bool disable_irq)
 {
 	int rc = 0;
 
@@ -1797,23 +1794,23 @@ int cam_soc_util_disable_platform_resource(struct cam_hw_soc_info *soc_info,
 	cam_soc_util_regulator_disable_default(soc_info);
 
 	if (soc_info->pinctrl_info.pinctrl &&
-		soc_info->pinctrl_info.gpio_state_suspend)
-		rc = pinctrl_select_state(soc_info->pinctrl_info.pinctrl,
+	    soc_info->pinctrl_info.gpio_state_suspend)
+		rc = pinctrl_select_state(
+			soc_info->pinctrl_info.pinctrl,
 			soc_info->pinctrl_info.gpio_state_suspend);
 
 	return rc;
 }
 
-int cam_soc_util_reg_dump(struct cam_hw_soc_info *soc_info,
-	uint32_t base_index, uint32_t offset, int size)
+int cam_soc_util_reg_dump(struct cam_hw_soc_info *soc_info, uint32_t base_index,
+			  uint32_t offset, int size)
 {
-	void __iomem     *base_addr = NULL;
+	void __iomem *base_addr = NULL;
 
 	CAM_DBG(CAM_UTIL, "base_idx %u size=%d", base_index, size);
 
-	if (!soc_info || base_index >= soc_info->num_reg_map ||
-		size <= 0 || (offset + size) >=
-		CAM_SOC_GET_REG_MAP_SIZE(soc_info, base_index))
+	if (!soc_info || base_index >= soc_info->num_reg_map || size <= 0 ||
+	    (offset + size) >= CAM_SOC_GET_REG_MAP_SIZE(soc_info, base_index))
 		return -EINVAL;
 
 	base_addr = CAM_SOC_GET_REG_MAP_START(soc_info, base_index);
@@ -1832,8 +1829,8 @@ static int cam_soc_util_dump_cont_reg_range(
 	struct cam_reg_range_read_desc *reg_read, uint32_t base_idx,
 	struct cam_reg_dump_out_buffer *dump_out_buf, uintptr_t cmd_buf_end)
 {
-	int         i = 0, rc = 0;
-	uint32_t    write_idx = 0;
+	int i = 0, rc = 0;
+	uint32_t write_idx = 0;
 
 	if (!soc_info || !dump_out_buf || !reg_read || !cmd_buf_end) {
 		CAM_ERR(CAM_UTIL,
@@ -1843,11 +1840,12 @@ static int cam_soc_util_dump_cont_reg_range(
 		goto end;
 	}
 
-	if ((reg_read->num_values) && ((reg_read->num_values > U32_MAX / 2) ||
-		(sizeof(uint32_t) > ((U32_MAX -
-		sizeof(struct cam_reg_dump_out_buffer) -
+	if ((reg_read->num_values) &&
+	    ((reg_read->num_values > U32_MAX / 2) ||
+	     (sizeof(uint32_t) >
+	      ((U32_MAX - sizeof(struct cam_reg_dump_out_buffer) -
 		dump_out_buf->bytes_written) /
-		(reg_read->num_values * 2))))) {
+	       (reg_read->num_values * 2))))) {
 		CAM_ERR(CAM_UTIL,
 			"Integer Overflow bytes_written: [%u] num_values: [%u]",
 			dump_out_buf->bytes_written, reg_read->num_values);
@@ -1856,9 +1854,9 @@ static int cam_soc_util_dump_cont_reg_range(
 	}
 
 	if ((cmd_buf_end - (uintptr_t)dump_out_buf) <=
-		(uintptr_t)(sizeof(struct cam_reg_dump_out_buffer)
-		- sizeof(uint32_t) + dump_out_buf->bytes_written +
-		(reg_read->num_values * 2 * sizeof(uint32_t)))) {
+	    (uintptr_t)(sizeof(struct cam_reg_dump_out_buffer) -
+			sizeof(uint32_t) + dump_out_buf->bytes_written +
+			(reg_read->num_values * 2 * sizeof(uint32_t)))) {
 		CAM_ERR(CAM_UTIL,
 			"Insufficient space in out buffer num_values: [%d] cmd_buf_end: %pK dump_out_buf: %pK",
 			reg_read->num_values, cmd_buf_end,
@@ -1870,7 +1868,7 @@ static int cam_soc_util_dump_cont_reg_range(
 	write_idx = dump_out_buf->bytes_written / sizeof(uint32_t);
 	for (i = 0; i < reg_read->num_values; i++) {
 		if ((reg_read->offset + (i * sizeof(uint32_t))) >
-			(uint32_t)soc_info->reg_map[base_idx].size) {
+		    (uint32_t)soc_info->reg_map[base_idx].size) {
 			CAM_ERR(CAM_UTIL,
 				"Reg offset out of range, offset: 0x%X reg_map size: 0x%X",
 				(reg_read->offset + (i * sizeof(uint32_t))),
@@ -1879,10 +1877,10 @@ static int cam_soc_util_dump_cont_reg_range(
 			goto end;
 		}
 
-		dump_out_buf->dump_data[write_idx++] = reg_read->offset +
-			(i * sizeof(uint32_t));
 		dump_out_buf->dump_data[write_idx++] =
-			cam_soc_util_r(soc_info, base_idx,
+			reg_read->offset + (i * sizeof(uint32_t));
+		dump_out_buf->dump_data[write_idx++] = cam_soc_util_r(
+			soc_info, base_idx,
 			(reg_read->offset + (i * sizeof(uint32_t))));
 		dump_out_buf->bytes_written += (2 * sizeof(uint32_t));
 	}
@@ -1892,12 +1890,12 @@ end:
 }
 
 static int cam_soc_util_dump_dmi_reg_range(
-	struct cam_hw_soc_info *soc_info,
-	struct cam_dmi_read_desc *dmi_read, uint32_t base_idx,
-	struct cam_reg_dump_out_buffer *dump_out_buf, uintptr_t cmd_buf_end)
+	struct cam_hw_soc_info *soc_info, struct cam_dmi_read_desc *dmi_read,
+	uint32_t base_idx, struct cam_reg_dump_out_buffer *dump_out_buf,
+	uintptr_t cmd_buf_end)
 {
-	int        i = 0, rc = 0;
-	uint32_t   write_idx = 0;
+	int i = 0, rc = 0;
+	uint32_t write_idx = 0;
 
 	if (!soc_info || !dump_out_buf || !dmi_read || !cmd_buf_end) {
 		CAM_ERR(CAM_UTIL,
@@ -1908,7 +1906,7 @@ static int cam_soc_util_dump_dmi_reg_range(
 	}
 
 	if (dmi_read->num_pre_writes > CAM_REG_DUMP_DMI_CONFIG_MAX ||
-		dmi_read->num_post_writes > CAM_REG_DUMP_DMI_CONFIG_MAX) {
+	    dmi_read->num_post_writes > CAM_REG_DUMP_DMI_CONFIG_MAX) {
 		CAM_ERR(CAM_UTIL,
 			"Invalid number of requested writes, pre: %d post: %d",
 			dmi_read->num_pre_writes, dmi_read->num_post_writes);
@@ -1916,15 +1914,16 @@ static int cam_soc_util_dump_dmi_reg_range(
 		goto end;
 	}
 
-	if ((dmi_read->num_pre_writes + dmi_read->dmi_data_read.num_values)
-		&& ((dmi_read->num_pre_writes > U32_MAX / 2) ||
-		(dmi_read->dmi_data_read.num_values > U32_MAX / 2) ||
-		((dmi_read->num_pre_writes * 2) > U32_MAX -
-		(dmi_read->dmi_data_read.num_values * 2)) ||
-		(sizeof(uint32_t) > ((U32_MAX -
-		sizeof(struct cam_reg_dump_out_buffer) -
-		dump_out_buf->bytes_written) / ((dmi_read->num_pre_writes +
-		dmi_read->dmi_data_read.num_values) * 2))))) {
+	if ((dmi_read->num_pre_writes + dmi_read->dmi_data_read.num_values) &&
+	    ((dmi_read->num_pre_writes > U32_MAX / 2) ||
+	     (dmi_read->dmi_data_read.num_values > U32_MAX / 2) ||
+	     ((dmi_read->num_pre_writes * 2) >
+	      U32_MAX - (dmi_read->dmi_data_read.num_values * 2)) ||
+	     (sizeof(uint32_t) >
+	      ((U32_MAX - sizeof(struct cam_reg_dump_out_buffer) -
+		dump_out_buf->bytes_written) /
+	       ((dmi_read->num_pre_writes + dmi_read->dmi_data_read.num_values) *
+		2))))) {
 		CAM_ERR(CAM_UTIL,
 			"Integer Overflow bytes_written: [%u] num_pre_writes: [%u] num_values: [%u]",
 			dump_out_buf->bytes_written, dmi_read->num_pre_writes,
@@ -1934,12 +1933,12 @@ static int cam_soc_util_dump_dmi_reg_range(
 	}
 
 	if ((cmd_buf_end - (uintptr_t)dump_out_buf) <=
-		(uintptr_t)(
-		sizeof(struct cam_reg_dump_out_buffer) - sizeof(uint32_t) +
-		(dump_out_buf->bytes_written +
-		(dmi_read->num_pre_writes * 2 * sizeof(uint32_t)) +
-		(dmi_read->dmi_data_read.num_values * 2 *
-		sizeof(uint32_t))))) {
+	    (uintptr_t)(sizeof(struct cam_reg_dump_out_buffer) -
+			sizeof(uint32_t) +
+			(dump_out_buf->bytes_written +
+			 (dmi_read->num_pre_writes * 2 * sizeof(uint32_t)) +
+			 (dmi_read->dmi_data_read.num_values * 2 *
+			  sizeof(uint32_t))))) {
 		CAM_ERR(CAM_UTIL,
 			"Insufficient space in out buffer num_read_val: [%d] num_write_val: [%d] cmd_buf_end: %pK dump_out_buf: %pK",
 			dmi_read->dmi_data_read.num_values,
@@ -1952,7 +1951,7 @@ static int cam_soc_util_dump_dmi_reg_range(
 	write_idx = dump_out_buf->bytes_written / sizeof(uint32_t);
 	for (i = 0; i < dmi_read->num_pre_writes; i++) {
 		if (dmi_read->pre_read_config[i].offset >
-			(uint32_t)soc_info->reg_map[base_idx].size) {
+		    (uint32_t)soc_info->reg_map[base_idx].size) {
 			CAM_ERR(CAM_UTIL,
 				"Reg offset out of range, offset: 0x%X reg_map size: 0x%X",
 				dmi_read->pre_read_config[i].offset,
@@ -1962,8 +1961,8 @@ static int cam_soc_util_dump_dmi_reg_range(
 		}
 
 		cam_soc_util_w_mb(soc_info, base_idx,
-			dmi_read->pre_read_config[i].offset,
-			dmi_read->pre_read_config[i].value);
+				  dmi_read->pre_read_config[i].offset,
+				  dmi_read->pre_read_config[i].value);
 		dump_out_buf->dump_data[write_idx++] =
 			dmi_read->pre_read_config[i].offset;
 		dump_out_buf->dump_data[write_idx++] =
@@ -1972,7 +1971,7 @@ static int cam_soc_util_dump_dmi_reg_range(
 	}
 
 	if (dmi_read->dmi_data_read.offset >
-		(uint32_t)soc_info->reg_map[base_idx].size) {
+	    (uint32_t)soc_info->reg_map[base_idx].size) {
 		CAM_ERR(CAM_UTIL,
 			"Reg offset out of range, offset: 0x%X reg_map size: 0x%X",
 			dmi_read->dmi_data_read.offset,
@@ -1984,15 +1983,14 @@ static int cam_soc_util_dump_dmi_reg_range(
 	for (i = 0; i < dmi_read->dmi_data_read.num_values; i++) {
 		dump_out_buf->dump_data[write_idx++] =
 			dmi_read->dmi_data_read.offset;
-		dump_out_buf->dump_data[write_idx++] =
-			cam_soc_util_r_mb(soc_info, base_idx,
-			dmi_read->dmi_data_read.offset);
+		dump_out_buf->dump_data[write_idx++] = cam_soc_util_r_mb(
+			soc_info, base_idx, dmi_read->dmi_data_read.offset);
 		dump_out_buf->bytes_written += (2 * sizeof(uint32_t));
 	}
 
 	for (i = 0; i < dmi_read->num_post_writes; i++) {
 		if (dmi_read->post_read_config[i].offset >
-			(uint32_t)soc_info->reg_map[base_idx].size) {
+		    (uint32_t)soc_info->reg_map[base_idx].size) {
 			CAM_ERR(CAM_UTIL,
 				"Reg offset out of range, offset: 0x%X reg_map size: 0x%X",
 				dmi_read->post_read_config[i].offset,
@@ -2002,8 +2000,8 @@ static int cam_soc_util_dump_dmi_reg_range(
 		}
 
 		cam_soc_util_w_mb(soc_info, base_idx,
-			dmi_read->post_read_config[i].offset,
-			dmi_read->post_read_config[i].value);
+				  dmi_read->post_read_config[i].offset,
+				  dmi_read->post_read_config[i].value);
 	}
 
 end:
@@ -2011,22 +2009,23 @@ end:
 }
 
 int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
-	struct cam_cmd_buf_desc *cmd_desc, uint64_t req_id,
-	cam_soc_util_regspace_data_cb reg_data_cb)
+				     struct cam_cmd_buf_desc *cmd_desc,
+				     uint64_t req_id,
+				     cam_soc_util_regspace_data_cb reg_data_cb)
 {
-	int                               rc = 0, i, j;
-	uintptr_t                         cpu_addr = 0;
-	uintptr_t                         cmd_buf_start = 0;
-	uintptr_t                         cmd_in_data_end = 0;
-	uintptr_t                         cmd_buf_end = 0;
-	uint32_t                          reg_base_type = 0;
-	size_t                            buf_size = 0, remain_len = 0;
-	struct cam_reg_dump_input_info   *reg_input_info = NULL;
-	struct cam_reg_dump_desc         *reg_dump_desc = NULL;
-	struct cam_reg_dump_out_buffer   *dump_out_buf = NULL;
-	struct cam_reg_read_info         *reg_read_info = NULL;
-	struct cam_hw_soc_info           *soc_info;
-	uint32_t                          reg_base_idx = 0;
+	int rc = 0, i, j;
+	uintptr_t cpu_addr = 0;
+	uintptr_t cmd_buf_start = 0;
+	uintptr_t cmd_in_data_end = 0;
+	uintptr_t cmd_buf_end = 0;
+	uint32_t reg_base_type = 0;
+	size_t buf_size = 0, remain_len = 0;
+	struct cam_reg_dump_input_info *reg_input_info = NULL;
+	struct cam_reg_dump_desc *reg_dump_desc = NULL;
+	struct cam_reg_dump_out_buffer *dump_out_buf = NULL;
+	struct cam_reg_read_info *reg_read_info = NULL;
+	struct cam_hw_soc_info *soc_info;
+	uint32_t reg_base_idx = 0;
 
 	if (!ctx || !cmd_desc || !reg_data_cb) {
 		CAM_ERR(CAM_UTIL, "Invalid args to reg dump [%pK] [%pK]",
@@ -2050,7 +2049,7 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 	CAM_DBG(CAM_UTIL, "Get cpu buf success req_id: %llu buf_size: %zu",
 		req_id, buf_size);
 	if ((buf_size < sizeof(uint32_t)) ||
-		((size_t)cmd_desc->offset > (buf_size - sizeof(uint32_t)))) {
+	    ((size_t)cmd_desc->offset > (buf_size - sizeof(uint32_t)))) {
 		CAM_ERR(CAM_UTIL, "Invalid offset for cmd buf: %zu",
 			(size_t)cmd_desc->offset);
 		rc = -EINVAL;
@@ -2058,8 +2057,8 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 	}
 
 	remain_len = buf_size - (size_t)cmd_desc->offset;
-	if ((remain_len < (size_t)cmd_desc->size) || (cmd_desc->size <
-		cmd_desc->length)) {
+	if ((remain_len < (size_t)cmd_desc->size) ||
+	    (cmd_desc->size < cmd_desc->length)) {
 		CAM_ERR(CAM_UTIL,
 			"Invalid params for cmd buf len: %zu size: %zu remain_len: %zu",
 			(size_t)cmd_desc->length, (size_t)cmd_desc->length,
@@ -2072,7 +2071,7 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 	cmd_in_data_end = cmd_buf_start + (uintptr_t)cmd_desc->length;
 	cmd_buf_end = cmd_buf_start + (uintptr_t)cmd_desc->size;
 	if ((cmd_buf_end <= cmd_buf_start) ||
-		(cmd_in_data_end <= cmd_buf_start)) {
+	    (cmd_in_data_end <= cmd_buf_start)) {
 		CAM_ERR(CAM_UTIL,
 			"Invalid length or size for cmd buf: [%zu] [%zu]",
 			(size_t)cmd_desc->length, (size_t)cmd_desc->size);
@@ -2083,10 +2082,11 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 	CAM_DBG(CAM_UTIL,
 		"Buffer params start [%pK] input_end [%pK] buf_end [%pK]",
 		cmd_buf_start, cmd_in_data_end, cmd_buf_end);
-	reg_input_info = (struct cam_reg_dump_input_info *) cmd_buf_start;
-	if ((reg_input_info->num_dump_sets > 1) && (sizeof(uint32_t) >
-		((U32_MAX - sizeof(struct cam_reg_dump_input_info)) /
-		(reg_input_info->num_dump_sets - 1)))) {
+	reg_input_info = (struct cam_reg_dump_input_info *)cmd_buf_start;
+	if ((reg_input_info->num_dump_sets > 1) &&
+	    (sizeof(uint32_t) >
+	     ((U32_MAX - sizeof(struct cam_reg_dump_input_info)) /
+	      (reg_input_info->num_dump_sets - 1)))) {
 		CAM_ERR(CAM_UTIL,
 			"Integer Overflow req_id: [%llu] num_dump_sets: [%u]",
 			req_id, reg_input_info->num_dump_sets);
@@ -2095,9 +2095,10 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 	}
 
 	if ((!reg_input_info->num_dump_sets) ||
-		((cmd_in_data_end - cmd_buf_start) <= (uintptr_t)
-		(sizeof(struct cam_reg_dump_input_info) +
-		((reg_input_info->num_dump_sets - 1) * sizeof(uint32_t))))) {
+	    ((cmd_in_data_end - cmd_buf_start) <=
+	     (uintptr_t)(sizeof(struct cam_reg_dump_input_info) +
+			 ((reg_input_info->num_dump_sets - 1) *
+			  sizeof(uint32_t))))) {
 		CAM_ERR(CAM_UTIL,
 			"Invalid number of dump sets, req_id: [%llu] num_dump_sets: [%u]",
 			req_id, reg_input_info->num_dump_sets);
@@ -2106,11 +2107,11 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 	}
 
 	CAM_DBG(CAM_UTIL,
-		"reg_input_info req_id: %llu ctx %pK num_dump_sets: %d",
-		req_id, ctx, reg_input_info->num_dump_sets);
+		"reg_input_info req_id: %llu ctx %pK num_dump_sets: %d", req_id,
+		ctx, reg_input_info->num_dump_sets);
 	for (i = 0; i < reg_input_info->num_dump_sets; i++) {
-		if ((cmd_in_data_end - cmd_buf_start) <= (uintptr_t)
-			reg_input_info->dump_set_offsets[i]) {
+		if ((cmd_in_data_end - cmd_buf_start) <=
+		    (uintptr_t)reg_input_info->dump_set_offsets[i]) {
 			CAM_ERR(CAM_UTIL,
 				"Invalid dump set offset: [%pK], cmd_buf_start: [%pK] cmd_in_data_end: [%pK]",
 				(uintptr_t)reg_input_info->dump_set_offsets[i],
@@ -2119,13 +2120,14 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 			goto end;
 		}
 
-		reg_dump_desc = (struct cam_reg_dump_desc *)
-			(cmd_buf_start +
-			(uintptr_t)reg_input_info->dump_set_offsets[i]);
+		reg_dump_desc = (struct cam_reg_dump_desc
+					 *)(cmd_buf_start +
+					    (uintptr_t)reg_input_info
+						    ->dump_set_offsets[i]);
 		if ((reg_dump_desc->num_read_range > 1) &&
-			(sizeof(struct cam_reg_read_info) > ((U32_MAX -
-			sizeof(struct cam_reg_dump_desc)) /
-			(reg_dump_desc->num_read_range - 1)))) {
+		    (sizeof(struct cam_reg_read_info) >
+		     ((U32_MAX - sizeof(struct cam_reg_dump_desc)) /
+		      (reg_dump_desc->num_read_range - 1)))) {
 			CAM_ERR(CAM_UTIL,
 				"Integer Overflow req_id: [%llu] num_read_range: [%u]",
 				req_id, reg_dump_desc->num_read_range);
@@ -2134,10 +2136,10 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 		}
 
 		if ((!reg_dump_desc->num_read_range) ||
-			((cmd_in_data_end - (uintptr_t)reg_dump_desc) <=
-			(uintptr_t)(sizeof(struct cam_reg_dump_desc) +
-			((reg_dump_desc->num_read_range - 1) *
-			sizeof(struct cam_reg_read_info))))) {
+		    ((cmd_in_data_end - (uintptr_t)reg_dump_desc) <=
+		     (uintptr_t)(sizeof(struct cam_reg_dump_desc) +
+				 ((reg_dump_desc->num_read_range - 1) *
+				  sizeof(struct cam_reg_read_info))))) {
 			CAM_ERR(CAM_UTIL,
 				"Invalid number of read ranges, req_id: [%llu] num_read_range: [%d]",
 				req_id, reg_dump_desc->num_read_range);
@@ -2145,9 +2147,9 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 			goto end;
 		}
 
-		if ((cmd_buf_end - cmd_buf_start) <= (uintptr_t)
-			(reg_dump_desc->dump_buffer_offset +
-			sizeof(struct cam_reg_dump_out_buffer))) {
+		if ((cmd_buf_end - cmd_buf_start) <=
+		    (uintptr_t)(reg_dump_desc->dump_buffer_offset +
+				sizeof(struct cam_reg_dump_out_buffer))) {
 			CAM_ERR(CAM_UTIL,
 				"Invalid out buffer offset: [%pK],  cmd_buf_start: [%pK] cmd_buf_end: [%pK]",
 				(uintptr_t)reg_dump_desc->dump_buffer_offset,
@@ -2156,17 +2158,18 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 			goto end;
 		}
 
-		dump_out_buf = (struct cam_reg_dump_out_buffer *)
-			(cmd_buf_start +
-			(uintptr_t)reg_dump_desc->dump_buffer_offset);
+		dump_out_buf =
+			(struct cam_reg_dump_out_buffer
+				 *)(cmd_buf_start +
+				    (uintptr_t)
+					    reg_dump_desc->dump_buffer_offset);
 		dump_out_buf->req_id = req_id;
 		dump_out_buf->bytes_written = 0;
 
 		reg_base_type = reg_dump_desc->reg_base_type;
-		if (reg_base_type == 0 || reg_base_type >
-			CAM_REG_DUMP_BASE_TYPE_CAMNOC) {
-			CAM_ERR(CAM_UTIL,
-				"Invalid Reg dump base type: %d",
+		if (reg_base_type == 0 ||
+		    reg_base_type > CAM_REG_DUMP_BASE_TYPE_CAMNOC) {
+			CAM_ERR(CAM_UTIL, "Invalid Reg dump base type: %d",
 				reg_base_type);
 			rc = -EINVAL;
 			goto end;
@@ -2199,15 +2202,17 @@ int cam_soc_util_reg_dump_to_cmd_buf(void *ctx,
 				dump_out_buf->bytes_written, req_id);
 			reg_read_info = &reg_dump_desc->read_range[j];
 			if (reg_read_info->type ==
-				CAM_REG_DUMP_READ_TYPE_CONT_RANGE) {
-				rc = cam_soc_util_dump_cont_reg_range(soc_info,
-					&reg_read_info->reg_read, reg_base_idx,
-					dump_out_buf, cmd_buf_end);
+			    CAM_REG_DUMP_READ_TYPE_CONT_RANGE) {
+				rc = cam_soc_util_dump_cont_reg_range(
+					soc_info, &reg_read_info->reg_read,
+					reg_base_idx, dump_out_buf,
+					cmd_buf_end);
 			} else if (reg_read_info->type ==
-				CAM_REG_DUMP_READ_TYPE_DMI) {
-				rc = cam_soc_util_dump_dmi_reg_range(soc_info,
-					&reg_read_info->dmi_read, reg_base_idx,
-					dump_out_buf, cmd_buf_end);
+				   CAM_REG_DUMP_READ_TYPE_DMI) {
+				rc = cam_soc_util_dump_dmi_reg_range(
+					soc_info, &reg_read_info->dmi_read,
+					reg_base_idx, dump_out_buf,
+					cmd_buf_end);
 			} else {
 				CAM_ERR(CAM_UTIL,
 					"Invalid Reg dump read type: %d",

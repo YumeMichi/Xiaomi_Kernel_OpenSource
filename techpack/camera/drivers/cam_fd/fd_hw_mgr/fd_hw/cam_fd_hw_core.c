@@ -9,8 +9,9 @@
 
 #define CAM_FD_REG_VAL_PAIR_SIZE 256
 
-static uint32_t cam_fd_cdm_write_reg_val_pair(uint32_t *buffer,
-	uint32_t index, uint32_t reg_offset, uint32_t reg_value)
+static uint32_t cam_fd_cdm_write_reg_val_pair(uint32_t *buffer, uint32_t index,
+					      uint32_t reg_offset,
+					      uint32_t reg_value)
 {
 	buffer[index++] = reg_offset;
 	buffer[index++] = reg_value;
@@ -22,11 +23,12 @@ static uint32_t cam_fd_cdm_write_reg_val_pair(uint32_t *buffer,
 }
 
 static void cam_fd_hw_util_cdm_callback(uint32_t handle, void *userdata,
-	enum cam_cdm_cb_status status, uint64_t cookie)
+					enum cam_cdm_cb_status status,
+					uint64_t cookie)
 {
 	trace_cam_cdm_cb("FD", status);
-	CAM_DBG(CAM_FD, "CDM hdl=%x, udata=%pK, status=%d, cookie=%llu",
-		handle, userdata, status, cookie);
+	CAM_DBG(CAM_FD, "CDM hdl=%x, udata=%pK, status=%d, cookie=%llu", handle,
+		userdata, status, cookie);
 }
 
 static void cam_fd_hw_util_enable_power_on_settings(struct cam_hw_info *fd_hw)
@@ -38,21 +40,23 @@ static void cam_fd_hw_util_enable_power_on_settings(struct cam_hw_info *fd_hw)
 	if (hw_static_info->enable_errata_wa.single_irq_only == false) {
 		/* Enable IRQs here */
 		cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-			hw_static_info->wrapper_regs.irq_mask,
-			hw_static_info->irq_mask);
+					  hw_static_info->wrapper_regs.irq_mask,
+					  hw_static_info->irq_mask);
 	}
 
 	/* QoS settings */
-	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
+	cam_fd_soc_register_write(
+		soc_info, CAM_FD_REG_WRAPPER,
 		hw_static_info->wrapper_regs.vbif_req_priority,
 		hw_static_info->qos_priority);
-	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
+	cam_fd_soc_register_write(
+		soc_info, CAM_FD_REG_WRAPPER,
 		hw_static_info->wrapper_regs.vbif_priority_level,
 		hw_static_info->qos_priority_level);
 }
 
 int cam_fd_hw_util_get_hw_caps(struct cam_hw_info *fd_hw,
-	struct cam_fd_hw_caps *hw_caps)
+			       struct cam_fd_hw_caps *hw_caps)
 {
 	struct cam_hw_soc_info *soc_info = &fd_hw->soc_info;
 	struct cam_fd_hw_static_info *hw_static_info =
@@ -65,15 +69,14 @@ int cam_fd_hw_util_get_hw_caps(struct cam_hw_info *fd_hw,
 	}
 
 	reg_value = cam_fd_soc_register_read(soc_info, CAM_FD_REG_CORE,
-		hw_static_info->core_regs.version);
+					     hw_static_info->core_regs.version);
 	hw_caps->core_version.major =
 		CAM_BITS_MASK_SHIFT(reg_value, 0xf00, 0x8);
-	hw_caps->core_version.minor =
-		CAM_BITS_MASK_SHIFT(reg_value, 0xf0, 0x4);
-	hw_caps->core_version.incr =
-		CAM_BITS_MASK_SHIFT(reg_value, 0xf, 0x0);
+	hw_caps->core_version.minor = CAM_BITS_MASK_SHIFT(reg_value, 0xf0, 0x4);
+	hw_caps->core_version.incr = CAM_BITS_MASK_SHIFT(reg_value, 0xf, 0x0);
 
-	reg_value = cam_fd_soc_register_read(soc_info, CAM_FD_REG_WRAPPER,
+	reg_value = cam_fd_soc_register_read(
+		soc_info, CAM_FD_REG_WRAPPER,
 		hw_static_info->wrapper_regs.wrapper_version);
 	hw_caps->wrapper_version.major =
 		CAM_BITS_MASK_SHIFT(reg_value, 0xf0000000, 0x1c);
@@ -106,18 +109,20 @@ static int cam_fd_hw_util_fdwrapper_sync_reset(struct cam_hw_info *fd_hw)
 	reinit_completion(&fd_core->reset_complete);
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_CORE,
-		hw_static_info->core_regs.control, 0x1);
+				  hw_static_info->core_regs.control, 0x1);
 
 	if (hw_static_info->enable_errata_wa.single_irq_only) {
-		cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
+		cam_fd_soc_register_write(
+			soc_info, CAM_FD_REG_WRAPPER,
 			hw_static_info->wrapper_regs.irq_mask,
 			CAM_FD_IRQ_TO_MASK(CAM_FD_IRQ_RESET_DONE));
 	}
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.sw_reset, 0x1);
+				  hw_static_info->wrapper_regs.sw_reset, 0x1);
 
-	time_left = wait_for_completion_timeout(&fd_core->reset_complete,
+	time_left = wait_for_completion_timeout(
+		&fd_core->reset_complete,
 		msecs_to_jiffies(CAM_FD_HW_HALT_RESET_TIMEOUT));
 	if (time_left <= 0)
 		CAM_WARN(CAM_FD, "HW reset timeout time_left=%ld", time_left);
@@ -126,7 +131,6 @@ static int cam_fd_hw_util_fdwrapper_sync_reset(struct cam_hw_info *fd_hw)
 
 	return 0;
 }
-
 
 static int cam_fd_hw_util_fdwrapper_halt(struct cam_hw_info *fd_hw)
 {
@@ -139,15 +143,17 @@ static int cam_fd_hw_util_fdwrapper_halt(struct cam_hw_info *fd_hw)
 	reinit_completion(&fd_core->halt_complete);
 
 	if (hw_static_info->enable_errata_wa.single_irq_only) {
-		cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
+		cam_fd_soc_register_write(
+			soc_info, CAM_FD_REG_WRAPPER,
 			hw_static_info->wrapper_regs.irq_mask,
 			CAM_FD_IRQ_TO_MASK(CAM_FD_IRQ_HALT_DONE));
 	}
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.hw_stop, 0x1);
+				  hw_static_info->wrapper_regs.hw_stop, 0x1);
 
-	time_left = wait_for_completion_timeout(&fd_core->halt_complete,
+	time_left = wait_for_completion_timeout(
+		&fd_core->halt_complete,
 		msecs_to_jiffies(CAM_FD_HW_HALT_RESET_TIMEOUT));
 	if (time_left <= 0)
 		CAM_WARN(CAM_FD, "HW halt timeout time_left=%ld", time_left);
@@ -157,7 +163,8 @@ static int cam_fd_hw_util_fdwrapper_halt(struct cam_hw_info *fd_hw)
 	return 0;
 }
 
-static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
+static int cam_fd_hw_util_processcmd_prestart(
+	struct cam_hw_info *fd_hw,
 	struct cam_fd_hw_cmd_prestart_args *prestart_args)
 {
 	struct cam_hw_soc_info *soc_info = &fd_hw->soc_info;
@@ -183,7 +190,7 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 	}
 
 	if (prestart_args->get_raw_results &&
-		!hw_static_info->results.raw_results_available) {
+	    !hw_static_info->results.raw_results_available) {
 		CAM_ERR(CAM_FD, "Raw results not supported %d %d",
 			prestart_args->get_raw_results,
 			hw_static_info->results.raw_results_available);
@@ -198,10 +205,10 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 	req_private->raw_results = NULL;
 
 	/* Start preparing CDM register values that KMD has to insert */
-	num_cmds = cam_fd_cdm_write_reg_val_pair(reg_val_pair, num_cmds,
-		hw_static_info->core_regs.control, 0x1);
-	num_cmds = cam_fd_cdm_write_reg_val_pair(reg_val_pair, num_cmds,
-		hw_static_info->core_regs.control, 0x0);
+	num_cmds = cam_fd_cdm_write_reg_val_pair(
+		reg_val_pair, num_cmds, hw_static_info->core_regs.control, 0x1);
+	num_cmds = cam_fd_cdm_write_reg_val_pair(
+		reg_val_pair, num_cmds, hw_static_info->core_regs.control, 0x0);
 
 	for (i = 0; i < CAM_FD_MAX_IO_BUFFERS; i++) {
 		io_buf = &prestart_args->input_buf[i];
@@ -253,11 +260,12 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 		case CAM_FD_OUTPUT_PORT_ID_RESULTS: {
 			uint32_t face_results_offset;
 
-			size_required = hw_static_info->results.max_faces *
+			size_required =
+				hw_static_info->results.max_faces *
 				hw_static_info->results.per_face_entries * 4;
 
 			if (io_buf->io_cfg->planes[0].plane_stride <
-				size_required) {
+			    size_required) {
 				CAM_ERR(CAM_FD, "Invalid results size %d %d",
 					io_buf->io_cfg->planes[0].plane_stride,
 					size_required);
@@ -287,11 +295,10 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 					reg_val_pair, num_cmds,
 					hw_static_info->core_regs.result_addr,
 					io_buf->io_addr[0] +
-					face_results_offset);
+						face_results_offset);
 				num_cmds = cam_fd_cdm_write_reg_val_pair(
 					reg_val_pair, num_cmds,
-					hw_static_info->core_regs.ro_mode,
-					0x1);
+					hw_static_info->core_regs.ro_mode, 0x1);
 
 				req_private->ro_mode_enabled = true;
 			} else {
@@ -305,7 +312,7 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 				sizeof(uint32_t);
 
 			if (io_buf->io_cfg->planes[0].plane_stride <
-				size_required) {
+			    size_required) {
 				CAM_ERR(CAM_FD, "Invalid results size %d %d",
 					io_buf->io_cfg->planes[0].plane_stride,
 					size_required);
@@ -354,24 +361,24 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 		return -EINVAL;
 	}
 
-	mem_base = CAM_SOC_GET_REG_MAP_CAM_BASE(soc_info,
-		((struct cam_fd_soc_private *)soc_info->soc_private)->
-		regbase_index[CAM_FD_REG_CORE]);
+	mem_base = CAM_SOC_GET_REG_MAP_CAM_BASE(
+		soc_info, ((struct cam_fd_soc_private *)soc_info->soc_private)
+				  ->regbase_index[CAM_FD_REG_CORE]);
 
 	ctx_hw_private->cdm_ops->cdm_write_changebase(cmd_buf_addr, mem_base);
 	cmd_buf_addr += size;
 	available_size -= (size * 4);
 
-	size = ctx_hw_private->cdm_ops->cdm_required_size_reg_random(
-		num_cmds/2);
+	size = ctx_hw_private->cdm_ops->cdm_required_size_reg_random(num_cmds /
+								     2);
 	/* cdm util returns dwords, need to convert to bytes */
 	if ((size * 4) > available_size) {
 		CAM_ERR(CAM_FD, "Insufficient size:%d , expected size:%d",
 			available_size, size);
 		return -ENOMEM;
 	}
-	ctx_hw_private->cdm_ops->cdm_write_regrandom(cmd_buf_addr, num_cmds/2,
-		reg_val_pair);
+	ctx_hw_private->cdm_ops->cdm_write_regrandom(cmd_buf_addr, num_cmds / 2,
+						     reg_val_pair);
 	cmd_buf_addr += size;
 	available_size -= (size * 4);
 
@@ -380,17 +387,17 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 		prestart_args->size - available_size;
 
 	/* Insert start trigger command into CDM as post config commands. */
-	num_cmds = cam_fd_cdm_write_reg_val_pair(reg_val_pair, 0,
-		hw_static_info->core_regs.control, 0x2);
-	size = ctx_hw_private->cdm_ops->cdm_required_size_reg_random(
-		num_cmds/2);
+	num_cmds = cam_fd_cdm_write_reg_val_pair(
+		reg_val_pair, 0, hw_static_info->core_regs.control, 0x2);
+	size = ctx_hw_private->cdm_ops->cdm_required_size_reg_random(num_cmds /
+								     2);
 	if ((size * 4) > available_size) {
 		CAM_ERR(CAM_FD, "Insufficient size:%d , expected size:%d",
 			available_size, size);
 		return -ENOMEM;
 	}
-	ctx_hw_private->cdm_ops->cdm_write_regrandom(cmd_buf_addr, num_cmds/2,
-		reg_val_pair);
+	ctx_hw_private->cdm_ops->cdm_write_regrandom(cmd_buf_addr, num_cmds / 2,
+						     reg_val_pair);
 	cmd_buf_addr += size;
 	available_size -= (size * 4);
 
@@ -401,7 +408,9 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 		cmd_buf_addr, prestart_args->post_config_buf_size);
 
 	for (i = 0; i < (prestart_args->pre_config_buf_size +
-		prestart_args->post_config_buf_size) / 4; i++)
+			 prestart_args->post_config_buf_size) /
+				4;
+	     i++)
 		CAM_DBG(CAM_FD, "CDM KMD Commands [%d] : [%pK] [0x%x]", i,
 			&prestart_args->cmd_buf_addr[i],
 			prestart_args->cmd_buf_addr[i]);
@@ -409,7 +418,8 @@ static int cam_fd_hw_util_processcmd_prestart(struct cam_hw_info *fd_hw,
 	return 0;
 }
 
-static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
+static int cam_fd_hw_util_processcmd_frame_done(
+	struct cam_hw_info *fd_hw,
 	struct cam_fd_hw_frame_done_args *frame_done_args)
 {
 	struct cam_fd_core *fd_core = (struct cam_fd_core *)fd_hw->core_info;
@@ -423,8 +433,7 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 	mutex_lock(&fd_hw->hw_mutex);
 	spin_lock_irqsave(&fd_core->spin_lock, flags);
 	if ((fd_core->core_state != CAM_FD_CORE_STATE_IDLE) ||
-		(fd_core->results_valid == false) ||
-		!fd_core->hw_req_private) {
+	    (fd_core->results_valid == false) || !fd_core->hw_req_private) {
 		CAM_ERR(CAM_FD,
 			"Invalid state for results state=%d, results=%d %pK",
 			fd_core->core_state, fd_core->results_valid,
@@ -446,13 +455,13 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 	 */
 	req_private->fd_results->face_count =
 		cam_fd_soc_register_read(&fd_hw->soc_info, CAM_FD_REG_CORE,
-		hw_static_info->core_regs.result_cnt);
+					 hw_static_info->core_regs.result_cnt);
 
 	face_cnt = req_private->fd_results->face_count & 0x3F;
 
 	if (face_cnt > hw_static_info->results.max_faces) {
-		CAM_WARN(CAM_FD, "Face count greater than max %d %d",
-			face_cnt, hw_static_info->results.max_faces);
+		CAM_WARN(CAM_FD, "Face count greater than max %d %d", face_cnt,
+			 hw_static_info->results.max_faces);
 		face_cnt = hw_static_info->results.max_faces;
 	}
 
@@ -468,7 +477,7 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 	 *    are not gauranteed to be correct
 	 */
 	if (!req_private->ro_mode_enabled ||
-		hw_static_info->enable_errata_wa.ro_mode_results_invalid) {
+	    hw_static_info->enable_errata_wa.ro_mode_results_invalid) {
 		buffer = (uint32_t *)&req_private->fd_results->faces[0];
 		base = hw_static_info->core_regs.results_reg_base;
 
@@ -482,26 +491,26 @@ static int cam_fd_hw_util_processcmd_frame_done(struct cam_hw_info *fd_hw,
 		 * this transparent to UMD.
 		 */
 		for (i = 0;
-			i < (face_cnt *
-			hw_static_info->results.per_face_entries); i++) {
+		     i < (face_cnt * hw_static_info->results.per_face_entries);
+		     i++) {
 			*buffer = cam_fd_soc_register_read(&fd_hw->soc_info,
-				CAM_FD_REG_CORE, base + (i * 0x4));
+							   CAM_FD_REG_CORE,
+							   base + (i * 0x4));
 			CAM_DBG(CAM_FD, "FaceData[%d] : 0x%x", i / 4, *buffer);
 			buffer++;
 		}
 	}
 
-	if (req_private->get_raw_results &&
-		req_private->raw_results &&
-		hw_static_info->results.raw_results_available) {
+	if (req_private->get_raw_results && req_private->raw_results &&
+	    hw_static_info->results.raw_results_available) {
 		buffer = req_private->raw_results;
 		base = hw_static_info->core_regs.raw_results_reg_base;
 
-		for (i = 0;
-			i < hw_static_info->results.raw_results_entries;
-			i++) {
+		for (i = 0; i < hw_static_info->results.raw_results_entries;
+		     i++) {
 			*buffer = cam_fd_soc_register_read(&fd_hw->soc_info,
-				CAM_FD_REG_CORE, base + (i * 0x4));
+							   CAM_FD_REG_CORE,
+							   base + (i * 0x4));
 			CAM_DBG(CAM_FD, "RawData[%d] : 0x%x", i, *buffer);
 			buffer++;
 		}
@@ -531,18 +540,19 @@ irqreturn_t cam_fd_hw_irq(int irq_num, void *data)
 		return IRQ_NONE;
 	}
 
-	fd_core = (struct cam_fd_core *) fd_hw->core_info;
+	fd_core = (struct cam_fd_core *)fd_hw->core_info;
 	soc_info = &fd_hw->soc_info;
 	hw_static_info = fd_core->hw_static_info;
 
-	reg_value = cam_fd_soc_register_read(soc_info, CAM_FD_REG_WRAPPER,
+	reg_value = cam_fd_soc_register_read(
+		soc_info, CAM_FD_REG_WRAPPER,
 		hw_static_info->wrapper_regs.irq_status);
 
 	CAM_DBG(CAM_FD, "FD IRQ status 0x%x", reg_value);
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.irq_clear,
-		reg_value);
+				  hw_static_info->wrapper_regs.irq_clear,
+				  reg_value);
 
 	if (reg_value & CAM_FD_IRQ_TO_MASK(CAM_FD_IRQ_HALT_DONE)) {
 		complete_all(&fd_core->halt_complete);
@@ -586,26 +596,25 @@ irqreturn_t cam_fd_hw_irq(int irq_num, void *data)
 	spin_lock(&fd_core->spin_lock);
 	/* Do not change state to IDLE on HALT IRQ. Reset must follow halt */
 	if ((irq_type == CAM_FD_IRQ_RESET_DONE) ||
-		(irq_type == CAM_FD_IRQ_FRAME_DONE)) {
-
+	    (irq_type == CAM_FD_IRQ_FRAME_DONE)) {
 		fd_core->core_state = CAM_FD_CORE_STATE_IDLE;
 		if (irq_type == CAM_FD_IRQ_FRAME_DONE)
 			fd_core->results_valid = true;
 
-		CAM_DBG(CAM_FD, "FD IRQ type %d, state=%d",
-			irq_type, fd_core->core_state);
+		CAM_DBG(CAM_FD, "FD IRQ type %d, state=%d", irq_type,
+			fd_core->core_state);
 	}
 	spin_unlock(&fd_core->spin_lock);
 
 	if (fd_core->irq_cb.cam_fd_hw_mgr_cb)
 		fd_core->irq_cb.cam_fd_hw_mgr_cb(fd_core->irq_cb.data,
-			irq_type);
+						 irq_type);
 
 	return IRQ_HANDLED;
 }
 
 int cam_fd_hw_get_hw_caps(void *hw_priv, void *get_hw_cap_args,
-	uint32_t arg_size)
+			  uint32_t arg_size)
 {
 	struct cam_hw_info *fd_hw = (struct cam_hw_info *)hw_priv;
 	struct cam_fd_core *fd_core;
@@ -613,8 +622,8 @@ int cam_fd_hw_get_hw_caps(void *hw_priv, void *get_hw_cap_args,
 		(struct cam_fd_hw_caps *)get_hw_cap_args;
 
 	if (!hw_priv || !get_hw_cap_args) {
-		CAM_ERR(CAM_FD, "Invalid input pointers %pK %pK",
-			hw_priv, get_hw_cap_args);
+		CAM_ERR(CAM_FD, "Invalid input pointers %pK %pK", hw_priv,
+			get_hw_cap_args);
 		return -EINVAL;
 	}
 
@@ -622,11 +631,9 @@ int cam_fd_hw_get_hw_caps(void *hw_priv, void *get_hw_cap_args,
 	*fd_hw_caps = fd_core->hw_caps;
 
 	CAM_DBG(CAM_FD, "core:%d.%d wrapper:%d.%d mode:%d, raw:%d",
-		fd_hw_caps->core_version.major,
-		fd_hw_caps->core_version.minor,
+		fd_hw_caps->core_version.major, fd_hw_caps->core_version.minor,
 		fd_hw_caps->wrapper_version.major,
-		fd_hw_caps->wrapper_version.minor,
-		fd_hw_caps->supported_modes,
+		fd_hw_caps->wrapper_version.minor, fd_hw_caps->supported_modes,
 		fd_hw_caps->raw_results_available);
 
 	return 0;
@@ -673,13 +680,13 @@ int cam_fd_hw_init(void *hw_priv, void *init_hw_args, uint32_t arg_size)
 	fd_core->core_state = CAM_FD_CORE_STATE_IDLE;
 	spin_unlock_irqrestore(&fd_core->spin_lock, flags);
 
-    if (init_args->reset_required){
-        rc = cam_fd_hw_reset(hw_priv, NULL, 0);
-        if (rc) {
-            CAM_ERR(CAM_FD, "Reset Failed, rc=%d", rc);
-            goto disable_soc;
-        }
-    }
+	if (init_args->reset_required) {
+		rc = cam_fd_hw_reset(hw_priv, NULL, 0);
+		if (rc) {
+			CAM_ERR(CAM_FD, "Reset Failed, rc=%d", rc);
+			goto disable_soc;
+		}
+	}
 
 	cam_fd_hw_util_enable_power_on_settings(fd_hw);
 
@@ -803,7 +810,7 @@ int cam_fd_hw_reset(void *hw_priv, void *reset_core_args, uint32_t arg_size)
 
 	spin_lock_irqsave(&fd_core->spin_lock, flags);
 	if ((fd_core->core_state == CAM_FD_CORE_STATE_POWERDOWN) ||
-		(fd_core->core_state == CAM_FD_CORE_STATE_RESET_PROGRESS)) {
+	    (fd_core->core_state == CAM_FD_CORE_STATE_RESET_PROGRESS)) {
 		CAM_ERR(CAM_FD, "Reset not allowed in %d state",
 			fd_core->core_state);
 		spin_unlock_irqrestore(&fd_core->spin_lock, flags);
@@ -815,7 +822,8 @@ int cam_fd_hw_reset(void *hw_priv, void *reset_core_args, uint32_t arg_size)
 	spin_unlock_irqrestore(&fd_core->spin_lock, flags);
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.cgc_disable, 0x1);
+				  hw_static_info->wrapper_regs.cgc_disable,
+				  0x1);
 
 	rc = cam_fd_hw_util_fdwrapper_halt(fd_hw);
 	if (rc) {
@@ -830,7 +838,8 @@ int cam_fd_hw_reset(void *hw_priv, void *reset_core_args, uint32_t arg_size)
 	}
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.cgc_disable, 0x0);
+				  hw_static_info->wrapper_regs.cgc_disable,
+				  0x0);
 
 	spin_lock_irqsave(&fd_core->spin_lock, flags);
 	fd_core->core_state = CAM_FD_CORE_STATE_IDLE;
@@ -890,7 +899,8 @@ int cam_fd_hw_start(void *hw_priv, void *hw_start_args, uint32_t arg_size)
 	reinit_completion(&fd_core->processing_complete);
 
 	if (hw_static_info->enable_errata_wa.single_irq_only) {
-		cam_fd_soc_register_write(&fd_hw->soc_info, CAM_FD_REG_WRAPPER,
+		cam_fd_soc_register_write(
+			&fd_hw->soc_info, CAM_FD_REG_WRAPPER,
 			hw_static_info->wrapper_regs.irq_mask,
 			CAM_FD_IRQ_TO_MASK(CAM_FD_IRQ_FRAME_DONE));
 	}
@@ -906,7 +916,7 @@ int cam_fd_hw_start(void *hw_priv, void *hw_start_args, uint32_t arg_size)
 		cdm_cmd->userdata = NULL;
 		cdm_cmd->cookie = 0;
 
-		for (i = 0 ; i <= start_args->num_hw_update_entries; i++) {
+		for (i = 0; i <= start_args->num_hw_update_entries; i++) {
 			cmd = (start_args->hw_update_entries + i);
 			cdm_cmd->cmd[i].bl_addr.mem_handle = cmd->handle;
 			cdm_cmd->cmd[i].offset = cmd->offset;
@@ -915,8 +925,8 @@ int cam_fd_hw_start(void *hw_priv, void *hw_start_args, uint32_t arg_size)
 
 		rc = cam_cdm_submit_bls(ctx_hw_private->cdm_handle, cdm_cmd);
 		if (rc) {
-			CAM_ERR(CAM_FD,
-				"Failed to submit cdm commands, rc=%d", rc);
+			CAM_ERR(CAM_FD, "Failed to submit cdm commands, rc=%d",
+				rc);
 			goto error;
 		}
 	} else {
@@ -954,7 +964,7 @@ int cam_fd_hw_halt_reset(void *hw_priv, void *stop_args, uint32_t arg_size)
 
 	spin_lock_irqsave(&fd_core->spin_lock, flags);
 	if ((fd_core->core_state == CAM_FD_CORE_STATE_POWERDOWN) ||
-		(fd_core->core_state == CAM_FD_CORE_STATE_RESET_PROGRESS)) {
+	    (fd_core->core_state == CAM_FD_CORE_STATE_RESET_PROGRESS)) {
 		CAM_ERR(CAM_FD, "Reset not allowed in %d state",
 			fd_core->core_state);
 		spin_unlock_irqrestore(&fd_core->spin_lock, flags);
@@ -966,7 +976,8 @@ int cam_fd_hw_halt_reset(void *hw_priv, void *stop_args, uint32_t arg_size)
 	spin_unlock_irqrestore(&fd_core->spin_lock, flags);
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.cgc_disable, 0x1);
+				  hw_static_info->wrapper_regs.cgc_disable,
+				  0x1);
 
 	rc = cam_fd_hw_util_fdwrapper_halt(fd_hw);
 	if (rc) {
@@ -982,7 +993,8 @@ int cam_fd_hw_halt_reset(void *hw_priv, void *stop_args, uint32_t arg_size)
 	}
 
 	cam_fd_soc_register_write(soc_info, CAM_FD_REG_WRAPPER,
-		hw_static_info->wrapper_regs.cgc_disable, 0x0);
+				  hw_static_info->wrapper_regs.cgc_disable,
+				  0x0);
 
 	spin_lock_irqsave(&fd_core->spin_lock, flags);
 	fd_core->core_state = CAM_FD_CORE_STATE_IDLE;
@@ -1013,14 +1025,15 @@ int cam_fd_hw_reserve(void *hw_priv, void *hw_reserve_args, uint32_t arg_size)
 		return -EINVAL;
 	}
 
-	cdm_cmd = kzalloc(((sizeof(struct cam_cdm_bl_request)) +
-			((CAM_FD_MAX_HW_ENTRIES - 1) *
-			sizeof(struct cam_cdm_bl_cmd))), GFP_KERNEL);
+	cdm_cmd = kzalloc(
+		((sizeof(struct cam_cdm_bl_request)) +
+		 ((CAM_FD_MAX_HW_ENTRIES - 1) * sizeof(struct cam_cdm_bl_cmd))),
+		GFP_KERNEL);
 	if (!cdm_cmd)
 		return -ENOMEM;
 
-	ctx_hw_private = kzalloc(sizeof(struct cam_fd_ctx_hw_private),
-		GFP_KERNEL);
+	ctx_hw_private =
+		kzalloc(sizeof(struct cam_fd_ctx_hw_private), GFP_KERNEL);
 	if (!ctx_hw_private) {
 		kfree(cdm_cmd);
 		return -ENOMEM;
@@ -1097,14 +1110,13 @@ int cam_fd_hw_release(void *hw_priv, void *hw_release_args, uint32_t arg_size)
 	return 0;
 }
 
-int cam_fd_hw_process_cmd(void *hw_priv, uint32_t cmd_type,
-	void *cmd_args, uint32_t arg_size)
+int cam_fd_hw_process_cmd(void *hw_priv, uint32_t cmd_type, void *cmd_args,
+			  uint32_t arg_size)
 {
 	struct cam_hw_info *fd_hw = (struct cam_hw_info *)hw_priv;
 	int rc = -EINVAL;
 
-	if (!hw_priv || !cmd_args ||
-		(cmd_type >= CAM_FD_HW_CMD_MAX)) {
+	if (!hw_priv || !cmd_args || (cmd_type >= CAM_FD_HW_CMD_MAX)) {
 		CAM_ERR(CAM_FD, "Invalid arguments %pK %pK %d", hw_priv,
 			cmd_args, cmd_type);
 		return -EINVAL;
@@ -1145,8 +1157,7 @@ int cam_fd_hw_process_cmd(void *hw_priv, uint32_t cmd_type,
 	case CAM_FD_HW_CMD_FRAME_DONE: {
 		struct cam_fd_hw_frame_done_args *cmd_frame_results;
 
-		if (sizeof(struct cam_fd_hw_frame_done_args) !=
-			arg_size) {
+		if (sizeof(struct cam_fd_hw_frame_done_args) != arg_size) {
 			CAM_ERR(CAM_FD, "cmd_type %d, size mismatch %d",
 				cmd_type, arg_size);
 			break;
@@ -1155,7 +1166,7 @@ int cam_fd_hw_process_cmd(void *hw_priv, uint32_t cmd_type,
 		cmd_frame_results =
 			(struct cam_fd_hw_frame_done_args *)cmd_args;
 		rc = cam_fd_hw_util_processcmd_frame_done(fd_hw,
-			cmd_frame_results);
+							  cmd_frame_results);
 		break;
 	}
 	default:

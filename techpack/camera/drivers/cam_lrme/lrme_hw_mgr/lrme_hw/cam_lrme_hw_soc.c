@@ -13,14 +13,13 @@
 #include "cam_lrme_hw_core.h"
 #include "cam_lrme_hw_soc.h"
 
-
 int cam_lrme_soc_enable_resources(struct cam_hw_info *lrme_hw)
 {
 	struct cam_hw_soc_info *soc_info = &lrme_hw->soc_info;
 	struct cam_lrme_soc_private *soc_private =
 		(struct cam_lrme_soc_private *)soc_info->soc_private;
 	struct cam_ahb_vote ahb_vote;
-	struct cam_axi_vote axi_vote = {0};
+	struct cam_axi_vote axi_vote = { 0 };
 	int rc = 0;
 
 	ahb_vote.type = CAM_VOTE_ABSOLUTE;
@@ -44,10 +43,10 @@ int cam_lrme_soc_enable_resources(struct cam_hw_info *lrme_hw)
 	}
 
 	rc = cam_soc_util_enable_platform_resource(soc_info, true, CAM_SVS_VOTE,
-		true);
+						   true);
 	if (rc) {
-		CAM_ERR(CAM_LRME,
-			"Failed to enable platform resource, rc %d", rc);
+		CAM_ERR(CAM_LRME, "Failed to enable platform resource, rc %d",
+			rc);
 		goto stop_cpas;
 	}
 
@@ -85,7 +84,7 @@ int cam_lrme_soc_disable_resources(struct cam_hw_info *lrme_hw)
 }
 
 int cam_lrme_soc_init_resources(struct cam_hw_soc_info *soc_info,
-	irq_handler_t irq_handler, void *private_data)
+				irq_handler_t irq_handler, void *private_data)
 {
 	struct cam_lrme_soc_private *soc_private;
 	struct cam_cpas_register_params cpas_register_param;
@@ -98,7 +97,7 @@ int cam_lrme_soc_init_resources(struct cam_hw_soc_info *soc_info,
 	}
 
 	rc = cam_soc_util_request_platform_resource(soc_info, irq_handler,
-		private_data);
+						    private_data);
 	if (rc) {
 		CAM_ERR(CAM_LRME, "Failed in request_platform_resource rc=%d",
 			rc);
@@ -113,8 +112,8 @@ int cam_lrme_soc_init_resources(struct cam_hw_soc_info *soc_info,
 	soc_info->soc_private = soc_private;
 
 	memset(&cpas_register_param, 0, sizeof(cpas_register_param));
-	strlcpy(cpas_register_param.identifier,
-		"lrmecpas", CAM_HW_IDENTIFIER_LENGTH);
+	strlcpy(cpas_register_param.identifier, "lrmecpas",
+		CAM_HW_IDENTIFIER_LENGTH);
 	cpas_register_param.cell_index = soc_info->index;
 	cpas_register_param.dev = &soc_info->pdev->dev;
 	cpas_register_param.userdata = private_data;

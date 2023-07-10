@@ -20,16 +20,16 @@
 #include "cam_icp_hw_mgr_intf.h"
 #include "cam_debug_util.h"
 
-#define HFI_VERSION_INFO_MAJOR_VAL  1
-#define HFI_VERSION_INFO_MINOR_VAL  1
-#define HFI_VERSION_INFO_STEP_VAL   0
-#define HFI_VERSION_INFO_STEP_VAL   0
-#define HFI_VERSION_INFO_MAJOR_BMSK  0xFF000000
-#define HFI_VERSION_INFO_MAJOR_SHFT  24
-#define HFI_VERSION_INFO_MINOR_BMSK  0xFFFF00
-#define HFI_VERSION_INFO_MINOR_SHFT  8
-#define HFI_VERSION_INFO_STEP_BMSK   0xFF
-#define HFI_VERSION_INFO_STEP_SHFT  0
+#define HFI_VERSION_INFO_MAJOR_VAL 1
+#define HFI_VERSION_INFO_MINOR_VAL 1
+#define HFI_VERSION_INFO_STEP_VAL 0
+#define HFI_VERSION_INFO_STEP_VAL 0
+#define HFI_VERSION_INFO_MAJOR_BMSK 0xFF000000
+#define HFI_VERSION_INFO_MAJOR_SHFT 24
+#define HFI_VERSION_INFO_MINOR_BMSK 0xFFFF00
+#define HFI_VERSION_INFO_MINOR_SHFT 8
+#define HFI_VERSION_INFO_STEP_BMSK 0xFF
+#define HFI_VERSION_INFO_STEP_SHFT 0
 
 #define HFI_MAX_POLL_TRY 5
 
@@ -104,8 +104,7 @@ int hfi_write_cmd(void *cmd_ptr)
 		goto err;
 	}
 
-	if (g_hfi->hfi_state != HFI_READY ||
-		!g_hfi->cmd_q_state) {
+	if (g_hfi->hfi_state != HFI_READY || !g_hfi->cmd_q_state) {
 		CAM_ERR(CAM_HFI, "HFI state: %u, cmd q state: %u",
 			g_hfi->hfi_state, g_hfi->cmd_q_state);
 		rc = -ENODEV;
@@ -125,9 +124,10 @@ int hfi_write_cmd(void *cmd_ptr)
 	}
 
 	read_idx = q->qhdr_read_idx;
-	empty_space = (q->qhdr_write_idx >= read_idx) ?
-		(q->qhdr_q_size - (q->qhdr_write_idx - read_idx)) :
-		(read_idx - q->qhdr_write_idx);
+	empty_space =
+		(q->qhdr_write_idx >= read_idx) ?
+			(q->qhdr_q_size - (q->qhdr_write_idx - read_idx)) :
+			(read_idx - q->qhdr_write_idx);
 	if (empty_space <= size_in_words) {
 		CAM_ERR(CAM_HFI, "failed: empty space %u, size_in_words %u",
 			empty_space, size_in_words);
@@ -140,13 +140,13 @@ int hfi_write_cmd(void *cmd_ptr)
 
 	if (new_write_idx < q->qhdr_q_size) {
 		memcpy(write_ptr, (uint8_t *)cmd_ptr,
-			size_in_words << BYTE_WORD_SHIFT);
+		       size_in_words << BYTE_WORD_SHIFT);
 	} else {
 		new_write_idx -= q->qhdr_q_size;
 		temp = (size_in_words - new_write_idx) << BYTE_WORD_SHIFT;
 		memcpy(write_ptr, (uint8_t *)cmd_ptr, temp);
 		memcpy(write_q, (uint8_t *)cmd_ptr + temp,
-			new_write_idx << BYTE_WORD_SHIFT);
+		       new_write_idx << BYTE_WORD_SHIFT);
 	}
 
 	/*
@@ -163,14 +163,13 @@ int hfi_write_cmd(void *cmd_ptr)
 	 */
 	wmb();
 	cam_io_w_mb((uint32_t)INTR_ENABLE,
-		g_hfi->csr_base + HFI_REG_A5_CSR_HOST2ICPINT);
+		    g_hfi->csr_base + HFI_REG_A5_CSR_HOST2ICPINT);
 err:
 	mutex_unlock(&hfi_cmd_q_mutex);
 	return rc;
 }
 
-int hfi_read_message(uint32_t *pmsg, uint8_t q_id,
-	uint32_t *words_read)
+int hfi_read_message(uint32_t *pmsg, uint8_t q_id, uint32_t *words_read)
 {
 	struct hfi_qtbl *q_tbl_ptr;
 	struct hfi_q_hdr *q;
@@ -196,8 +195,7 @@ int hfi_read_message(uint32_t *pmsg, uint8_t q_id,
 		goto err;
 	}
 
-	if ((g_hfi->hfi_state != HFI_READY) ||
-		!g_hfi->msg_q_state) {
+	if ((g_hfi->hfi_state != HFI_READY) || !g_hfi->msg_q_state) {
 		CAM_ERR(CAM_HFI, "hfi state: %u, msg q state: %u",
 			g_hfi->hfi_state, g_hfi->msg_q_state);
 		rc = -ENODEV;
@@ -230,15 +228,16 @@ int hfi_read_message(uint32_t *pmsg, uint8_t q_id,
 	else {
 		word_diff = read_ptr - write_ptr;
 		if (q_id == Q_MSG)
-			size_in_words = (ICP_MSG_Q_SIZE_IN_BYTES >>
-			BYTE_WORD_SHIFT) - word_diff;
+			size_in_words =
+				(ICP_MSG_Q_SIZE_IN_BYTES >> BYTE_WORD_SHIFT) -
+				word_diff;
 		else
-			size_in_words = (ICP_DBG_Q_SIZE_IN_BYTES >>
-			BYTE_WORD_SHIFT) - word_diff;
+			size_in_words =
+				(ICP_DBG_Q_SIZE_IN_BYTES >> BYTE_WORD_SHIFT) -
+				word_diff;
 	}
 
-	if ((size_in_words == 0) ||
-		(size_in_words > size_upper_bound)) {
+	if ((size_in_words == 0) || (size_in_words > size_upper_bound)) {
 		CAM_ERR(CAM_HFI, "invalid HFI message packet size - 0x%08x",
 			size_in_words << BYTE_WORD_SHIFT);
 		q->qhdr_read_idx = q->qhdr_write_idx;
@@ -255,7 +254,7 @@ int hfi_read_message(uint32_t *pmsg, uint8_t q_id,
 		temp = (size_in_words - new_read_idx) << BYTE_WORD_SHIFT;
 		memcpy(pmsg, read_ptr, temp);
 		memcpy((uint8_t *)pmsg + temp, read_q,
-			new_read_idx << BYTE_WORD_SHIFT);
+		       new_read_idx << BYTE_WORD_SHIFT);
 	}
 
 	q->qhdr_read_idx = new_read_idx;
@@ -275,12 +274,10 @@ int hfi_cmd_ubwc_config(uint32_t *ubwc_cfg)
 	struct hfi_cmd_prop *dbg_prop;
 	uint32_t size = 0;
 
-	size = sizeof(struct hfi_cmd_prop) +
-		sizeof(struct hfi_cmd_ubwc_cfg);
+	size = sizeof(struct hfi_cmd_prop) + sizeof(struct hfi_cmd_ubwc_cfg);
 
-	CAM_DBG(CAM_HFI,
-		"size of ubwc %u, ubwc_cfg [rd-0x%x,wr-0x%x]",
-		size, ubwc_cfg[0],  ubwc_cfg[1]);
+	CAM_DBG(CAM_HFI, "size of ubwc %u, ubwc_cfg [rd-0x%x,wr-0x%x]", size,
+		ubwc_cfg[0], ubwc_cfg[1]);
 
 	prop = kzalloc(size, GFP_KERNEL);
 	if (!prop)
@@ -300,20 +297,19 @@ int hfi_cmd_ubwc_config(uint32_t *ubwc_cfg)
 	return 0;
 }
 
-int hfi_cmd_ubwc_config_ext(uint32_t *ubwc_ipe_cfg,
-	uint32_t *ubwc_bps_cfg)
+int hfi_cmd_ubwc_config_ext(uint32_t *ubwc_ipe_cfg, uint32_t *ubwc_bps_cfg)
 {
 	uint8_t *prop;
 	struct hfi_cmd_prop *dbg_prop;
 	uint32_t size = 0;
 
 	size = sizeof(struct hfi_cmd_prop) +
-		sizeof(struct hfi_cmd_ubwc_cfg_ext);
+	       sizeof(struct hfi_cmd_ubwc_cfg_ext);
 
 	CAM_DBG(CAM_HFI,
 		"size of ubwc %u, ubwc_ipe_cfg[rd-0x%x,wr-0x%x] ubwc_bps_cfg[rd-0x%x,wr-0x%x]",
-		size, ubwc_ipe_cfg[0], ubwc_ipe_cfg[1],
-		ubwc_bps_cfg[0], ubwc_bps_cfg[1]);
+		size, ubwc_ipe_cfg[0], ubwc_ipe_cfg[1], ubwc_bps_cfg[0],
+		ubwc_bps_cfg[1]);
 
 	prop = kzalloc(size, GFP_KERNEL);
 	if (!prop)
@@ -335,15 +331,13 @@ int hfi_cmd_ubwc_config_ext(uint32_t *ubwc_ipe_cfg,
 	return 0;
 }
 
-
 int hfi_enable_ipe_bps_pc(bool enable, uint32_t core_info)
 {
 	uint8_t *prop;
 	struct hfi_cmd_prop *dbg_prop;
 	uint32_t size = 0;
 
-	size = sizeof(struct hfi_cmd_prop) +
-		sizeof(struct hfi_ipe_bps_pc);
+	size = sizeof(struct hfi_cmd_prop) + sizeof(struct hfi_ipe_bps_pc);
 
 	prop = kzalloc(size, GFP_KERNEL);
 	if (!prop)
@@ -369,20 +363,14 @@ int hfi_set_debug_level(u64 a5_dbg_type, uint32_t lvl)
 	struct hfi_cmd_prop *dbg_prop;
 	uint32_t size = 0, val;
 
-	val = HFI_DEBUG_MSG_LOW |
-		HFI_DEBUG_MSG_MEDIUM |
-		HFI_DEBUG_MSG_HIGH |
-		HFI_DEBUG_MSG_ERROR |
-		HFI_DEBUG_MSG_FATAL |
-		HFI_DEBUG_MSG_PERF |
-		HFI_DEBUG_CFG_WFI |
-		HFI_DEBUG_CFG_ARM9WD;
+	val = HFI_DEBUG_MSG_LOW | HFI_DEBUG_MSG_MEDIUM | HFI_DEBUG_MSG_HIGH |
+	      HFI_DEBUG_MSG_ERROR | HFI_DEBUG_MSG_FATAL | HFI_DEBUG_MSG_PERF |
+	      HFI_DEBUG_CFG_WFI | HFI_DEBUG_CFG_ARM9WD;
 
 	if (lvl > val)
 		return -EINVAL;
 
-	size = sizeof(struct hfi_cmd_prop) +
-		sizeof(struct hfi_debug);
+	size = sizeof(struct hfi_cmd_prop) + sizeof(struct hfi_debug);
 
 	prop = kzalloc(size, GFP_KERNEL);
 	if (!prop)
@@ -422,16 +410,17 @@ int hfi_set_fw_dump_level(uint32_t lvl)
 	fw_dump_level_switch_prop->prop_data[0] = HFI_PROP_SYS_FW_DUMP_CFG;
 	fw_dump_level_switch_prop->prop_data[1] = lvl;
 
-	CAM_DBG(CAM_HFI, "prop->size = %d\n"
-			 "prop->pkt_type = %d\n"
-			 "prop->num_prop = %d\n"
-			 "prop->prop_data[0] = %d\n"
-			 "prop->prop_data[1] = %d\n",
-			 fw_dump_level_switch_prop->size,
-			 fw_dump_level_switch_prop->pkt_type,
-			 fw_dump_level_switch_prop->num_prop,
-			 fw_dump_level_switch_prop->prop_data[0],
-			 fw_dump_level_switch_prop->prop_data[1]);
+	CAM_DBG(CAM_HFI,
+		"prop->size = %d\n"
+		"prop->pkt_type = %d\n"
+		"prop->num_prop = %d\n"
+		"prop->prop_data[0] = %d\n"
+		"prop->prop_data[1] = %d\n",
+		fw_dump_level_switch_prop->size,
+		fw_dump_level_switch_prop->pkt_type,
+		fw_dump_level_switch_prop->num_prop,
+		fw_dump_level_switch_prop->prop_data[0],
+		fw_dump_level_switch_prop->prop_data[1]);
 
 	hfi_write_cmd(prop);
 	kfree(prop);
@@ -449,16 +438,14 @@ void hfi_send_system_cmd(uint32_t type, uint64_t data, uint32_t size)
 		init.size = sizeof(struct hfi_cmd_sys_init);
 		init.pkt_type = type;
 		hfi_write_cmd(&init);
-	}
-		break;
+	} break;
 	case HFI_CMD_SYS_PC_PREP: {
 		struct hfi_cmd_pc_prep prep;
 
 		prep.size = sizeof(struct hfi_cmd_pc_prep);
 		prep.pkt_type = type;
 		hfi_write_cmd(&prep);
-	}
-		break;
+	} break;
 	case HFI_CMD_SYS_SET_PROPERTY: {
 		struct hfi_cmd_prop prop;
 
@@ -469,8 +456,7 @@ void hfi_send_system_cmd(uint32_t type, uint64_t data, uint32_t size)
 			prop.prop_data[0] = HFI_PROP_SYS_DEBUG_CFG;
 			hfi_write_cmd(&prop);
 		}
-	}
-		break;
+	} break;
 	case HFI_CMD_SYS_GET_PROPERTY:
 		break;
 	case HFI_CMD_SYS_PING: {
@@ -480,8 +466,7 @@ void hfi_send_system_cmd(uint32_t type, uint64_t data, uint32_t size)
 		ping.pkt_type = type;
 		ping.user_data = (uint64_t)data;
 		hfi_write_cmd(&ping);
-	}
-		break;
+	} break;
 	case HFI_CMD_SYS_RESET: {
 		struct hfi_cmd_sys_reset_pkt reset;
 
@@ -489,8 +474,7 @@ void hfi_send_system_cmd(uint32_t type, uint64_t data, uint32_t size)
 		reset.pkt_type = type;
 		reset.user_data = (uint64_t)data;
 		hfi_write_cmd(&reset);
-	}
-		break;
+	} break;
 	case HFI_CMD_IPEBPS_CREATE_HANDLE: {
 		struct hfi_cmd_create_handle handle;
 
@@ -499,8 +483,7 @@ void hfi_send_system_cmd(uint32_t type, uint64_t data, uint32_t size)
 		handle.handle_type = (uint32_t)data;
 		handle.user_data1 = 0;
 		hfi_write_cmd(&handle);
-	}
-		break;
+	} break;
 	case HFI_CMD_IPEBPS_ASYNC_COMMAND_INDIRECT:
 		break;
 	default:
@@ -508,7 +491,6 @@ void hfi_send_system_cmd(uint32_t type, uint64_t data, uint32_t size)
 		break;
 	}
 }
-
 
 int hfi_get_hw_caps(void *query_buf)
 {
@@ -558,7 +540,7 @@ void cam_hfi_disable_cpu(void __iomem *icp_base)
 		 * at this time.
 		 */
 		usleep_range(HFI_POLL_TRY_SLEEP * 1000,
-			(HFI_POLL_TRY_SLEEP * 1000) + 1000);
+			     (HFI_POLL_TRY_SLEEP * 1000) + 1000);
 		try++;
 	}
 
@@ -570,20 +552,20 @@ void cam_hfi_disable_cpu(void __iomem *icp_base)
 	cam_io_w_mb(val, icp_base + HFI_REG_A5_CSR_NSEC_RESET);
 
 	cam_io_w_mb((uint32_t)ICP_INIT_REQUEST_RESET,
-		icp_base + HFI_REG_HOST_ICP_INIT_REQUEST);
+		    icp_base + HFI_REG_HOST_ICP_INIT_REQUEST);
 	cam_io_w_mb((uint32_t)INTR_DISABLE,
-		icp_base + HFI_REG_A5_CSR_A2HOSTINTEN);
+		    icp_base + HFI_REG_A5_CSR_A2HOSTINTEN);
 }
 
 void cam_hfi_enable_cpu(void __iomem *icp_base)
 {
 	cam_io_w_mb((uint32_t)ICP_FLAG_CSR_A5_EN,
-			icp_base + HFI_REG_A5_CSR_A5_CONTROL);
+		    icp_base + HFI_REG_A5_CSR_A5_CONTROL);
 	cam_io_w_mb((uint32_t)0x10, icp_base + HFI_REG_A5_CSR_NSEC_RESET);
 }
 
-int cam_hfi_resume(struct hfi_mem_info *hfi_mem,
-	void __iomem *icp_base, bool debug)
+int cam_hfi_resume(struct hfi_mem_info *hfi_mem, void __iomem *icp_base,
+		   bool debug)
 {
 	int rc = 0;
 	uint32_t data;
@@ -595,7 +577,7 @@ int cam_hfi_resume(struct hfi_mem_info *hfi_mem,
 
 	if (debug) {
 		cam_io_w_mb(ICP_FLAG_A5_CTRL_DBG_EN,
-			(icp_base + HFI_REG_A5_CSR_A5_CONTROL));
+			    (icp_base + HFI_REG_A5_CSR_A5_CONTROL));
 
 		/* Barrier needed as next write should be done after
 		 * sucessful previous write. Next write enable clock
@@ -604,16 +586,17 @@ int cam_hfi_resume(struct hfi_mem_info *hfi_mem,
 		wmb();
 
 		cam_io_w_mb((uint32_t)ICP_FLAG_A5_CTRL_EN,
-			icp_base + HFI_REG_A5_CSR_A5_CONTROL);
+			    icp_base + HFI_REG_A5_CSR_A5_CONTROL);
 
 	} else {
 		cam_io_w_mb((uint32_t)ICP_FLAG_A5_CTRL_EN,
-			icp_base + HFI_REG_A5_CSR_A5_CONTROL);
+			    icp_base + HFI_REG_A5_CSR_A5_CONTROL);
 	}
 
 	while (retry_cnt < HFI_MAX_POLL_TRY) {
 		readw_poll_timeout((icp_base + HFI_REG_ICP_HOST_INIT_RESPONSE),
-			status, (status == ICP_INIT_RESP_SUCCESS), 100, 10000);
+				   status, (status == ICP_INIT_RESP_SUCCESS),
+				   100, 10000);
 
 		CAM_DBG(CAM_HFI, "1: status = %u", status);
 		status = cam_io_r_mb(icp_base + HFI_REG_ICP_HOST_INIT_RESPONSE);
@@ -632,16 +615,15 @@ int cam_hfi_resume(struct hfi_mem_info *hfi_mem,
 	}
 
 	if ((retry_cnt == HFI_MAX_POLL_TRY) &&
-		(status == ICP_INIT_RESP_RESET)) {
-		CAM_ERR(CAM_HFI, "Reached Max retries. status = %u",
-				status);
+	    (status == ICP_INIT_RESP_RESET)) {
+		CAM_ERR(CAM_HFI, "Reached Max retries. status = %u", status);
 		fw_version = cam_io_r(icp_base + HFI_REG_FW_VERSION);
 		CAM_ERR(CAM_HFI, "fw version : [%x]", fw_version);
 		return -EINVAL;
 	}
 
-	cam_io_w_mb((uint32_t)(INTR_ENABLE|INTR_ENABLE_WD0),
-		icp_base + HFI_REG_A5_CSR_A2HOSTINTEN);
+	cam_io_w_mb((uint32_t)(INTR_ENABLE | INTR_ENABLE_WD0),
+		    icp_base + HFI_REG_A5_CSR_A2HOSTINTEN);
 
 	fw_version = cam_io_r(icp_base + HFI_REG_FW_VERSION);
 	CAM_DBG(CAM_HFI, "fw version : [%x]", fw_version);
@@ -651,38 +633,37 @@ int cam_hfi_resume(struct hfi_mem_info *hfi_mem,
 
 	cam_io_w_mb((uint32_t)hfi_mem->qtbl.iova, icp_base + HFI_REG_QTBL_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->sfr_buf.iova,
-		icp_base + HFI_REG_SFR_PTR);
+		    icp_base + HFI_REG_SFR_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->shmem.iova,
-		icp_base + HFI_REG_SHARED_MEM_PTR);
+		    icp_base + HFI_REG_SHARED_MEM_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->shmem.len,
-		icp_base + HFI_REG_SHARED_MEM_SIZE);
+		    icp_base + HFI_REG_SHARED_MEM_SIZE);
 	cam_io_w_mb((uint32_t)hfi_mem->sec_heap.iova,
-		icp_base + HFI_REG_UNCACHED_HEAP_PTR);
+		    icp_base + HFI_REG_UNCACHED_HEAP_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->sec_heap.len,
-		icp_base + HFI_REG_UNCACHED_HEAP_SIZE);
-	cam_io_w_mb((uint32_t)hfi_mem->qdss.iova,
-		icp_base + HFI_REG_QDSS_IOVA);
+		    icp_base + HFI_REG_UNCACHED_HEAP_SIZE);
+	cam_io_w_mb((uint32_t)hfi_mem->qdss.iova, icp_base + HFI_REG_QDSS_IOVA);
 	cam_io_w_mb((uint32_t)hfi_mem->qdss.len,
-		icp_base + HFI_REG_QDSS_IOVA_SIZE);
+		    icp_base + HFI_REG_QDSS_IOVA_SIZE);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem.iova,
-		icp_base + HFI_REG_IO_REGION_IOVA);
+		    icp_base + HFI_REG_IO_REGION_IOVA);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem.len,
-		icp_base + HFI_REG_IO_REGION_SIZE);
+		    icp_base + HFI_REG_IO_REGION_SIZE);
 
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem2.iova,
-		icp_base + HFI_REG_IO2_REGION_IOVA);
+		    icp_base + HFI_REG_IO2_REGION_IOVA);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem2.len,
-		icp_base + HFI_REG_IO2_REGION_SIZE);
+		    icp_base + HFI_REG_IO2_REGION_SIZE);
 
 	CAM_INFO(CAM_HFI, "Resume IO1 : [0x%x 0x%x] IO2 [0x%x 0x%x]",
-		hfi_mem->io_mem.iova, hfi_mem->io_mem.len,
-		hfi_mem->io_mem2.iova, hfi_mem->io_mem2.len);
+		 hfi_mem->io_mem.iova, hfi_mem->io_mem.len,
+		 hfi_mem->io_mem2.iova, hfi_mem->io_mem2.len);
 
 	return rc;
 }
 
 int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
-		void __iomem *icp_base, bool debug)
+		 void __iomem *icp_base, bool debug)
 {
 	int rc = 0;
 	struct hfi_qtbl *qtbl;
@@ -711,14 +692,15 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 	memcpy(&g_hfi->map, hfi_mem, sizeof(g_hfi->map));
 	g_hfi->hfi_state = HFI_DEINIT;
 	if (debug) {
-		cam_io_w_mb(
-		(uint32_t)(ICP_FLAG_CSR_A5_EN | ICP_FLAG_CSR_WAKE_UP_EN |
-		ICP_CSR_EDBGRQ | ICP_CSR_DBGSWENABLE),
-		icp_base + HFI_REG_A5_CSR_A5_CONTROL);
+		cam_io_w_mb((uint32_t)(ICP_FLAG_CSR_A5_EN |
+				       ICP_FLAG_CSR_WAKE_UP_EN |
+				       ICP_CSR_EDBGRQ | ICP_CSR_DBGSWENABLE),
+			    icp_base + HFI_REG_A5_CSR_A5_CONTROL);
 		msleep(100);
 		cam_io_w_mb((uint32_t)(ICP_FLAG_CSR_A5_EN |
-		ICP_FLAG_CSR_WAKE_UP_EN | ICP_CSR_EN_CLKGATE_WFI),
-		icp_base + HFI_REG_A5_CSR_A5_CONTROL);
+				       ICP_FLAG_CSR_WAKE_UP_EN |
+				       ICP_CSR_EN_CLKGATE_WFI),
+			    icp_base + HFI_REG_A5_CSR_A5_CONTROL);
 	} else {
 		/* Due to hardware bug in V1 ICP clock gating has to be
 		 * disabled, this is supposed to be fixed in V-2. But enabling
@@ -727,9 +709,9 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 		 * hardware team root causes this
 		 */
 		cam_io_w_mb((uint32_t)ICP_FLAG_CSR_A5_EN |
-			ICP_FLAG_CSR_WAKE_UP_EN |
-			ICP_CSR_EN_CLKGATE_WFI,
-			icp_base + HFI_REG_A5_CSR_A5_CONTROL);
+				    ICP_FLAG_CSR_WAKE_UP_EN |
+				    ICP_CSR_EN_CLKGATE_WFI,
+			    icp_base + HFI_REG_A5_CSR_A5_CONTROL);
 	}
 
 	qtbl = (struct hfi_qtbl *)hfi_mem->qtbl.kva;
@@ -745,7 +727,7 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 	cmd_q_hdr = &qtbl->q_hdr[Q_CMD];
 	cmd_q_hdr->qhdr_status = QHDR_ACTIVE;
 	cmd_q_hdr->qhdr_start_addr = hfi_mem->cmd_q.iova;
-	cmd_q_hdr->qhdr_q_size =  ICP_CMD_Q_SIZE_IN_BYTES >> BYTE_WORD_SHIFT;
+	cmd_q_hdr->qhdr_q_size = ICP_CMD_Q_SIZE_IN_BYTES >> BYTE_WORD_SHIFT;
 	cmd_q_hdr->qhdr_pkt_size = ICP_HFI_VAR_SIZE_PKT;
 	cmd_q_hdr->qhdr_pkt_drop_cnt = RESET;
 	cmd_q_hdr->qhdr_read_idx = RESET;
@@ -803,17 +785,17 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 		break;
 
 	case POLL_MODE:
-		cmd_q_hdr->qhdr_type = Q_CMD | TX_EVENT_POLL_MODE_2 |
-			RX_EVENT_POLL_MODE_2;
-		msg_q_hdr->qhdr_type = Q_MSG | TX_EVENT_POLL_MODE_2 |
-			RX_EVENT_POLL_MODE_2;
-		dbg_q_hdr->qhdr_type = Q_DBG | TX_EVENT_POLL_MODE_2 |
-			RX_EVENT_POLL_MODE_2;
+		cmd_q_hdr->qhdr_type =
+			Q_CMD | TX_EVENT_POLL_MODE_2 | RX_EVENT_POLL_MODE_2;
+		msg_q_hdr->qhdr_type =
+			Q_MSG | TX_EVENT_POLL_MODE_2 | RX_EVENT_POLL_MODE_2;
+		dbg_q_hdr->qhdr_type =
+			Q_DBG | TX_EVENT_POLL_MODE_2 | RX_EVENT_POLL_MODE_2;
 		break;
 
 	case WM_MODE:
-		cmd_q_hdr->qhdr_type = Q_CMD | TX_EVENT_DRIVEN_MODE_2 |
-			RX_EVENT_DRIVEN_MODE_2;
+		cmd_q_hdr->qhdr_type =
+			Q_CMD | TX_EVENT_DRIVEN_MODE_2 | RX_EVENT_DRIVEN_MODE_2;
 		cmd_q_hdr->qhdr_rx_wm = SET;
 		cmd_q_hdr->qhdr_tx_wm = SET;
 		cmd_q_hdr->qhdr_rx_req = RESET;
@@ -821,8 +803,8 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 		cmd_q_hdr->qhdr_rx_irq_status = RESET;
 		cmd_q_hdr->qhdr_tx_irq_status = RESET;
 
-		msg_q_hdr->qhdr_type = Q_MSG | TX_EVENT_DRIVEN_MODE_2 |
-			RX_EVENT_DRIVEN_MODE_2;
+		msg_q_hdr->qhdr_type =
+			Q_MSG | TX_EVENT_DRIVEN_MODE_2 | RX_EVENT_DRIVEN_MODE_2;
 		msg_q_hdr->qhdr_rx_wm = SET;
 		msg_q_hdr->qhdr_tx_wm = SET;
 		msg_q_hdr->qhdr_rx_req = SET;
@@ -830,8 +812,8 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 		msg_q_hdr->qhdr_rx_irq_status = RESET;
 		msg_q_hdr->qhdr_tx_irq_status = RESET;
 
-		dbg_q_hdr->qhdr_type = Q_DBG | TX_EVENT_DRIVEN_MODE_2 |
-			RX_EVENT_DRIVEN_MODE_2;
+		dbg_q_hdr->qhdr_type =
+			Q_DBG | TX_EVENT_DRIVEN_MODE_2 | RX_EVENT_DRIVEN_MODE_2;
 		dbg_q_hdr->qhdr_rx_wm = SET;
 		dbg_q_hdr->qhdr_tx_wm = SET_WM;
 		dbg_q_hdr->qhdr_rx_req = RESET;
@@ -846,42 +828,41 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 		break;
 	}
 
-	cam_io_w_mb((uint32_t)hfi_mem->qtbl.iova,
-		icp_base + HFI_REG_QTBL_PTR);
+	cam_io_w_mb((uint32_t)hfi_mem->qtbl.iova, icp_base + HFI_REG_QTBL_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->sfr_buf.iova,
-		icp_base + HFI_REG_SFR_PTR);
+		    icp_base + HFI_REG_SFR_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->shmem.iova,
-		icp_base + HFI_REG_SHARED_MEM_PTR);
+		    icp_base + HFI_REG_SHARED_MEM_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->shmem.len,
-		icp_base + HFI_REG_SHARED_MEM_SIZE);
+		    icp_base + HFI_REG_SHARED_MEM_SIZE);
 	cam_io_w_mb((uint32_t)hfi_mem->sec_heap.iova,
-		icp_base + HFI_REG_UNCACHED_HEAP_PTR);
+		    icp_base + HFI_REG_UNCACHED_HEAP_PTR);
 	cam_io_w_mb((uint32_t)hfi_mem->sec_heap.len,
-		icp_base + HFI_REG_UNCACHED_HEAP_SIZE);
+		    icp_base + HFI_REG_UNCACHED_HEAP_SIZE);
 	cam_io_w_mb((uint32_t)ICP_INIT_REQUEST_SET,
-		icp_base + HFI_REG_HOST_ICP_INIT_REQUEST);
-	cam_io_w_mb((uint32_t)hfi_mem->qdss.iova,
-		icp_base + HFI_REG_QDSS_IOVA);
+		    icp_base + HFI_REG_HOST_ICP_INIT_REQUEST);
+	cam_io_w_mb((uint32_t)hfi_mem->qdss.iova, icp_base + HFI_REG_QDSS_IOVA);
 	cam_io_w_mb((uint32_t)hfi_mem->qdss.len,
-		icp_base + HFI_REG_QDSS_IOVA_SIZE);
+		    icp_base + HFI_REG_QDSS_IOVA_SIZE);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem.iova,
-		icp_base + HFI_REG_IO_REGION_IOVA);
+		    icp_base + HFI_REG_IO_REGION_IOVA);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem.len,
-		icp_base + HFI_REG_IO_REGION_SIZE);
+		    icp_base + HFI_REG_IO_REGION_SIZE);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem2.iova,
-		icp_base + HFI_REG_IO2_REGION_IOVA);
+		    icp_base + HFI_REG_IO2_REGION_IOVA);
 	cam_io_w_mb((uint32_t)hfi_mem->io_mem2.len,
-		icp_base + HFI_REG_IO2_REGION_SIZE);
+		    icp_base + HFI_REG_IO2_REGION_SIZE);
 
 	CAM_INFO(CAM_HFI, "Init IO1 : [0x%x 0x%x] IO2 [0x%x 0x%x]",
-		hfi_mem->io_mem.iova, hfi_mem->io_mem.len,
-		hfi_mem->io_mem2.iova, hfi_mem->io_mem2.len);
+		 hfi_mem->io_mem.iova, hfi_mem->io_mem.len,
+		 hfi_mem->io_mem2.iova, hfi_mem->io_mem2.len);
 
 	hw_version = cam_io_r(icp_base + HFI_REG_A5_HW_VERSION);
 
 	while (retry_cnt < HFI_MAX_POLL_TRY) {
 		readw_poll_timeout((icp_base + HFI_REG_ICP_HOST_INIT_RESPONSE),
-			status, (status == ICP_INIT_RESP_SUCCESS), 100, 10000);
+				   status, (status == ICP_INIT_RESP_SUCCESS),
+				   100, 10000);
 
 		CAM_DBG(CAM_HFI, "1: status = %u rc = %d", status, rc);
 		status = cam_io_r_mb(icp_base + HFI_REG_ICP_HOST_INIT_RESPONSE);
@@ -900,26 +881,24 @@ int cam_hfi_init(uint8_t event_driven_mode, struct hfi_mem_info *hfi_mem,
 	}
 
 	if ((retry_cnt == HFI_MAX_POLL_TRY) &&
-		(status == ICP_INIT_RESP_RESET)) {
-		CAM_ERR(CAM_HFI, "Reached Max retries. status = %u",
-				status);
+	    (status == ICP_INIT_RESP_RESET)) {
+		CAM_ERR(CAM_HFI, "Reached Max retries. status = %u", status);
 		fw_version = cam_io_r(icp_base + HFI_REG_FW_VERSION);
-		CAM_ERR(CAM_HFI,
-			"hw version : : [%x], fw version : [%x]",
+		CAM_ERR(CAM_HFI, "hw version : : [%x], fw version : [%x]",
 			hw_version, fw_version);
 		goto regions_fail;
 	}
 
 	fw_version = cam_io_r(icp_base + HFI_REG_FW_VERSION);
-	CAM_DBG(CAM_HFI, "hw version : : [%x], fw version : [%x]",
-		hw_version, fw_version);
+	CAM_DBG(CAM_HFI, "hw version : : [%x], fw version : [%x]", hw_version,
+		fw_version);
 
 	g_hfi->csr_base = icp_base;
 	g_hfi->hfi_state = HFI_READY;
 	g_hfi->cmd_q_state = true;
 	g_hfi->msg_q_state = true;
-	cam_io_w_mb((uint32_t)(INTR_ENABLE|INTR_ENABLE_WD0),
-		icp_base + HFI_REG_A5_CSR_A2HOSTINTEN);
+	cam_io_w_mb((uint32_t)(INTR_ENABLE | INTR_ENABLE_WD0),
+		    icp_base + HFI_REG_A5_CSR_A2HOSTINTEN);
 
 	mutex_unlock(&hfi_cmd_q_mutex);
 	mutex_unlock(&hfi_msg_q_mutex);

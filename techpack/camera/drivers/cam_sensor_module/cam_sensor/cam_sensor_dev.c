@@ -8,12 +8,11 @@
 #include "cam_sensor_soc.h"
 #include "cam_sensor_core.h"
 
-static long cam_sensor_subdev_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, void *arg)
+static long cam_sensor_subdev_ioctl(struct v4l2_subdev *sd, unsigned int cmd,
+				    void *arg)
 {
 	int rc = 0;
-	struct cam_sensor_ctrl_t *s_ctrl =
-		v4l2_get_subdevdata(sd);
+	struct cam_sensor_ctrl_t *s_ctrl = v4l2_get_subdevdata(sd);
 
 	switch (cmd) {
 	case VIDIOC_CAM_CONTROL:
@@ -28,10 +27,9 @@ static long cam_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 }
 
 static int cam_sensor_subdev_close(struct v4l2_subdev *sd,
-	struct v4l2_subdev_fh *fh)
+				   struct v4l2_subdev_fh *fh)
 {
-	struct cam_sensor_ctrl_t *s_ctrl =
-		v4l2_get_subdevdata(sd);
+	struct cam_sensor_ctrl_t *s_ctrl = v4l2_get_subdevdata(sd);
 
 	if (!s_ctrl) {
 		CAM_ERR(CAM_SENSOR, "s_ctrl ptr is NULL");
@@ -47,13 +45,12 @@ static int cam_sensor_subdev_close(struct v4l2_subdev *sd,
 
 #ifdef CONFIG_COMPAT
 static long cam_sensor_init_subdev_do_ioctl(struct v4l2_subdev *sd,
-	unsigned int cmd, unsigned long arg)
+					    unsigned int cmd, unsigned long arg)
 {
 	struct cam_control cmd_data;
 	int32_t rc = 0;
 
-	if (copy_from_user(&cmd_data, (void __user *)arg,
-		sizeof(cmd_data))) {
+	if (copy_from_user(&cmd_data, (void __user *)arg, sizeof(cmd_data))) {
 		CAM_ERR(CAM_SENSOR, "Failed to copy from user_ptr=%pK size=%zu",
 			(void __user *)arg, sizeof(cmd_data));
 		return -EFAULT;
@@ -64,7 +61,7 @@ static long cam_sensor_init_subdev_do_ioctl(struct v4l2_subdev *sd,
 		rc = cam_sensor_subdev_ioctl(sd, cmd, &cmd_data);
 		if (rc < 0)
 			CAM_ERR(CAM_SENSOR, "cam_sensor_subdev_ioctl failed");
-			break;
+		break;
 	default:
 		CAM_ERR(CAM_SENSOR, "Invalid compat ioctl cmd_type: %d", cmd);
 		rc = -EINVAL;
@@ -72,7 +69,7 @@ static long cam_sensor_init_subdev_do_ioctl(struct v4l2_subdev *sd,
 
 	if (!rc) {
 		if (copy_to_user((void __user *)arg, &cmd_data,
-			sizeof(cmd_data))) {
+				 sizeof(cmd_data))) {
 			CAM_ERR(CAM_SENSOR,
 				"Failed to copy to user_ptr=%pK size=%zu",
 				(void __user *)arg, sizeof(cmd_data));
@@ -104,18 +101,14 @@ static int cam_sensor_init_subdev_params(struct cam_sensor_ctrl_t *s_ctrl)
 {
 	int rc = 0;
 
-	s_ctrl->v4l2_dev_str.internal_ops =
-		&cam_sensor_internal_ops;
-	s_ctrl->v4l2_dev_str.ops =
-		&cam_sensor_subdev_ops;
+	s_ctrl->v4l2_dev_str.internal_ops = &cam_sensor_internal_ops;
+	s_ctrl->v4l2_dev_str.ops = &cam_sensor_subdev_ops;
 	strlcpy(s_ctrl->device_name, CAMX_SENSOR_DEV_NAME,
 		sizeof(s_ctrl->device_name));
-	s_ctrl->v4l2_dev_str.name =
-		s_ctrl->device_name;
+	s_ctrl->v4l2_dev_str.name = s_ctrl->device_name;
 	s_ctrl->v4l2_dev_str.sd_flags =
 		(V4L2_SUBDEV_FL_HAS_DEVNODE | V4L2_SUBDEV_FL_HAS_EVENTS);
-	s_ctrl->v4l2_dev_str.ent_function =
-		CAM_SENSOR_DEVICE_TYPE;
+	s_ctrl->v4l2_dev_str.ent_function = CAM_SENSOR_DEVICE_TYPE;
 	s_ctrl->v4l2_dev_str.token = s_ctrl;
 
 	rc = cam_register_subdev(&(s_ctrl->v4l2_dev_str));
@@ -126,16 +119,16 @@ static int cam_sensor_init_subdev_params(struct cam_sensor_ctrl_t *s_ctrl)
 }
 
 static int32_t cam_sensor_driver_i2c_probe(struct i2c_client *client,
-	const struct i2c_device_id *id)
+					   const struct i2c_device_id *id)
 {
 	int32_t rc = 0;
 	int i = 0;
 	struct cam_sensor_ctrl_t *s_ctrl = NULL;
-	struct cam_hw_soc_info   *soc_info = NULL;
+	struct cam_hw_soc_info *soc_info = NULL;
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
-		CAM_ERR(CAM_SENSOR,
-			"%s :i2c_check_functionality failed", client->name);
+		CAM_ERR(CAM_SENSOR, "%s :i2c_check_functionality failed",
+			client->name);
 		return -EFAULT;
 	}
 
@@ -168,8 +161,8 @@ static int32_t cam_sensor_driver_i2c_probe(struct i2c_client *client,
 		goto free_s_ctrl;
 
 	s_ctrl->i2c_data.per_frame =
-		kzalloc(sizeof(struct i2c_settings_array) *
-		MAX_PER_FRAME_ARRAY, GFP_KERNEL);
+		kzalloc(sizeof(struct i2c_settings_array) * MAX_PER_FRAME_ARRAY,
+			GFP_KERNEL);
 	if (s_ctrl->i2c_data.per_frame == NULL) {
 		rc = -ENOMEM;
 		goto unreg_subdev;
@@ -202,9 +195,9 @@ free_s_ctrl:
 
 static int cam_sensor_platform_remove(struct platform_device *pdev)
 {
-	int                        i;
-	struct cam_sensor_ctrl_t  *s_ctrl;
-	struct cam_hw_soc_info    *soc_info;
+	int i;
+	struct cam_sensor_ctrl_t *s_ctrl;
+	struct cam_hw_soc_info *soc_info;
 
 	s_ctrl = platform_get_drvdata(pdev);
 	if (!s_ctrl) {
@@ -231,9 +224,9 @@ static int cam_sensor_platform_remove(struct platform_device *pdev)
 
 static int cam_sensor_driver_i2c_remove(struct i2c_client *client)
 {
-	int                        i;
-	struct cam_sensor_ctrl_t  *s_ctrl = i2c_get_clientdata(client);
-	struct cam_hw_soc_info    *soc_info;
+	int i;
+	struct cam_sensor_ctrl_t *s_ctrl = i2c_get_clientdata(client);
+	struct cam_hw_soc_info *soc_info;
 
 	if (!s_ctrl) {
 		CAM_ERR(CAM_SENSOR, "sensor device is NULL");
@@ -257,20 +250,19 @@ static int cam_sensor_driver_i2c_remove(struct i2c_client *client)
 }
 
 static const struct of_device_id cam_sensor_driver_dt_match[] = {
-	{.compatible = "qcom,cam-sensor"},
+	{ .compatible = "qcom,cam-sensor" },
 	{}
 };
 
-static int32_t cam_sensor_driver_platform_probe(
-	struct platform_device *pdev)
+static int32_t cam_sensor_driver_platform_probe(struct platform_device *pdev)
 {
 	int32_t rc = 0, i = 0;
 	struct cam_sensor_ctrl_t *s_ctrl = NULL;
 	struct cam_hw_soc_info *soc_info = NULL;
 
 	/* Create sensor control structure */
-	s_ctrl = devm_kzalloc(&pdev->dev,
-		sizeof(struct cam_sensor_ctrl_t), GFP_KERNEL);
+	s_ctrl = devm_kzalloc(&pdev->dev, sizeof(struct cam_sensor_ctrl_t),
+			      GFP_KERNEL);
 	if (!s_ctrl)
 		return -ENOMEM;
 
@@ -303,8 +295,8 @@ static int32_t cam_sensor_driver_platform_probe(
 		goto free_s_ctrl;
 
 	s_ctrl->i2c_data.per_frame =
-		kzalloc(sizeof(struct i2c_settings_array) *
-		MAX_PER_FRAME_ARRAY, GFP_KERNEL);
+		kzalloc(sizeof(struct i2c_settings_array) * MAX_PER_FRAME_ARRAY,
+			GFP_KERNEL);
 	if (s_ctrl->i2c_data.per_frame == NULL) {
 		rc = -ENOMEM;
 		goto unreg_subdev;
@@ -350,10 +342,9 @@ static struct platform_driver cam_sensor_platform_driver = {
 	.remove = cam_sensor_platform_remove,
 };
 
-static const struct i2c_device_id i2c_id[] = {
-	{SENSOR_DRIVER_I2C, (kernel_ulong_t)NULL},
-	{ }
-};
+static const struct i2c_device_id i2c_id[] = { { SENSOR_DRIVER_I2C,
+						 (kernel_ulong_t)NULL },
+					       {} };
 
 static struct i2c_driver cam_sensor_driver_i2c = {
 	.id_table = i2c_id,
