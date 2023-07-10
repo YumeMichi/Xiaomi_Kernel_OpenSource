@@ -42,7 +42,7 @@ KMAKE_FLAGS=(
 )
 
 # Kernel defconfig
-DEFCONFIG="vendor/xiaomi/pipa.config"
+DEFCONFIG="vendor/pipa_user_defconfig"
 
 # Functions
 function clean_all {
