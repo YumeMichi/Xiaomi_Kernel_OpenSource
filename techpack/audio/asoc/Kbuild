@@ -229,6 +229,7 @@ ifeq ($(CONFIG_MACH_XIAOMI_LMI), y)
 endif
 
 ifeq ($(CONFIG_MACH_XIAOMI_PIPA), y)
+$(warning "====================== YumeMichi ====================")
 	CDEFINES += -DCONFIG_SND_SOC_AW882XX_TDM
 endif
 
