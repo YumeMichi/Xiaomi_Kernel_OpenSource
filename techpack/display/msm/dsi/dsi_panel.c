@@ -965,8 +965,7 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		rc = -ENOTSUPP;
 	}
 
-	if (mi_cfg->last_bl_level == 0 && bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400 ||
-		panel->mi_cfg.panel_id == 0x4D38324100360200 || panel->mi_cfg.panel_id == 0x4D38324100420200)){
+	if ((mi_cfg->last_bl_level == 0 || (mi_cfg->dimming_state == STATE_DIM_RESTORE)) && bl_lvl) {
 		if (mi_cfg->panel_on_dimming_delay)
 			schedule_delayed_work(&mi_cfg->dimming_enable_delayed_work,
 				msecs_to_jiffies(mi_cfg->panel_on_dimming_delay));
@@ -975,7 +974,8 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 			mi_cfg->dimming_state = STATE_NONE;
 	}
 
-	if (mi_cfg->last_bl_level == 0 && bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400)){
+	if (mi_cfg->last_bl_level == 0 && bl_lvl && (panel->host_config.cphy_strength || panel->mi_cfg.panel_id == 0x4C38314100420400 ||
+		panel->mi_cfg.panel_id == 0x4D38324100360200 || panel->mi_cfg.panel_id == 0x4D38324100420200)){
 		dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_DISABLE_INSERT_BLACK);
 	}
 
@@ -2317,8 +2317,12 @@ const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
 	"mi,mdss-dsi-greenish-gamma-set-command-state",
 	"mi,mdss-dsi-black-setting-command-state",
 	"mi,mdss-dsi-read-lockdown-info-command-state",
+	"qcom,mdss-dsi-dispparam-pen-144hz-command-state",
 	"qcom,mdss-dsi-dispparam-pen-120hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-90hz-command-state",
 	"qcom,mdss-dsi-dispparam-pen-60hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-50hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-48hz-command-state",
 	"qcom,mdss-dsi-dispparam-pen-30hz-command-state",
 	"mi,mdss-dsi-disable-insert-black-command-state",
 	"mi,mdss-dsi-insert-black-screen-command-state",
@@ -2326,6 +2330,7 @@ const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
 	"mi,mdss-dsi-round-off-command-state",
 	"mi,mdss-dsi-dim-fp-dbv-max-in-hbm-command-state",
 	"mi,mdss-dsi-dim-fp-dbv-max-in-normal-command-state",
+	"mi,mdss-dsi-dispparam-pen-clear-command-state",
 };
 
 int dsi_panel_get_cmd_pkt_count(const char *data, u32 length, u32 *cnt)
@@ -4579,12 +4584,6 @@ int dsi_panel_update_pps(struct dsi_panel *panel)
 
 	dsi_panel_destroy_cmd_packets(set);
 error:
-	//for l3a && j11
-	if (panel->mi_cfg.panel_id == 0x4C334100420200 || panel->mi_cfg.panel_id == 0x4A323200380801)
-		panel->mi_cfg.bl_enable = false;
-	else
-		panel->mi_cfg.bl_enable = true;
-	panel->mi_cfg.bl_wait_frame = false;
 	mutex_unlock(&panel->panel_lock);
 	return rc;
 }
@@ -4622,6 +4621,12 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 		DSI_ERR("[%s] failed to send DSI_CMD_SET_LP1 cmd, rc=%d\n",
 		       panel->name, rc);
 exit:
+	//for l3a && j11
+	if (panel->mi_cfg.panel_id == 0x4C334100420200 || panel->mi_cfg.panel_id == 0x4A323200380801)
+		panel->mi_cfg.bl_enable = false;
+	else
+		panel->mi_cfg.bl_enable = true;
+	panel->mi_cfg.bl_wait_frame = false;
 	mutex_unlock(&panel->panel_lock);
 	display_utc_time_marker("DSI_CMD_SET_LP1");
 	return rc;
