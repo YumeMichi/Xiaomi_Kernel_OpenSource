@@ -62,7 +62,6 @@
 		(p) ? (p)->intf_idx - INTF_0 : -1, \
 		(p) ? ((p)->hw_pp ? (p)->hw_pp->idx - PINGPONG_0 : -1) : -1, \
 		##__VA_ARGS__)
-
 /*
  * Two to anticipate panels that can do cmd/vid dynamic switching
  * plan is to create all possible physical encoder types, and switch between
@@ -91,7 +90,6 @@
 		(msm_is_mode_seamless_dms(adj_mode) || \
 		(msm_is_mode_seamless_dyn_clk(adj_mode) && \
 		is_cmd_mode) || msm_is_mode_seamless_poms(adj_mode))
-
 extern struct frame_stat fm_stat;
 
 /**
@@ -344,6 +342,7 @@ void set_sde_encoder_virt_ready_kickoff(struct drm_connector *connector,bool ena
 	sde_enc = to_sde_encoder_virt(connector->encoder);
 	sde_enc->ready_kickoff = enable;
 }
+
 
 void sde_encoder_uidle_enable(struct drm_encoder *drm_enc, bool enable)
 {
@@ -2357,6 +2356,8 @@ static void sde_encoder_input_event_handler(struct input_handle *handle,
 		return;
 	}
 
+	SDE_DEBUG("%s: type[%d] code[%d] value[%d]\n", __func__, type, code, value);
+
 	drm_enc = (struct drm_encoder *)handle->handler->private;
 	if (!drm_enc->dev || !drm_enc->dev->dev_private) {
 		SDE_ERROR("invalid parameters\n");
@@ -2377,7 +2378,6 @@ static void sde_encoder_input_event_handler(struct input_handle *handle,
 	SDE_EVT32_VERBOSE(DRMID(drm_enc));
 
 	disp_thread = &priv->disp_thread[sde_enc->crtc->index];
-
 	kthread_queue_work(&disp_thread->worker,
 				&sde_enc->touch_notify_work);
 
@@ -3205,10 +3205,10 @@ error:
 
 static void _sde_encoder_input_disconnect(struct input_handle *handle)
 {
-	 SDE_EVT32(handle, SDE_EVTLOG_FUNC_EXIT);
-	 input_close_device(handle);
-	 input_unregister_handle(handle);
-	 kfree(handle);
+	SDE_EVT32(handle, SDE_EVTLOG_FUNC_EXIT);
+	input_close_device(handle);
+	input_unregister_handle(handle);
+	kfree(handle);
 }
 
 /**
@@ -3807,6 +3807,7 @@ static void sde_encoder_underrun_callback(struct drm_encoder *drm_enc,
 		atomic_read(&phy_enc->underrun_cnt));
 
 	SDE_DBG_CTRL("stop_ftrace");
+	SDE_ERROR("underrun: %d\n", atomic_read(&phy_enc->underrun_cnt));
 	SDE_DBG_CTRL("panic_underrun");
 
 	SDE_ATRACE_END("encoder_underrun_callback");
@@ -5125,6 +5126,7 @@ static int _sde_encoder_reset_ctl_hw(struct drm_encoder *drm_enc)
 	return rc;
 }
 
+
 void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error)
 {
 	struct sde_encoder_virt *sde_enc;
@@ -5159,7 +5161,7 @@ void sde_encoder_kickoff(struct drm_encoder *drm_enc, bool is_error)
 			&& adj_mode.dsi_mode_flags & DSI_MODE_FLAG_VRR) {
 			mutex_lock(&dsi_display->panel->panel_lock);
 			sde_encoder_vid_wait_for_active(drm_enc);
-		} else if (dsi_display && dsi_display->panel
+		}else if (dsi_display && dsi_display->panel
 			&& (dsi_display->panel->mi_cfg.panel_id == 0x4D38324100360200 || dsi_display->panel->mi_cfg.panel_id == 0x4D38324100420200)
 			&& adj_mode.dsi_mode_flags & DSI_MODE_FLAG_VRR) {
 			SDE_INFO("sde_encoder_vid_wait_for_active\n");

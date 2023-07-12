@@ -188,14 +188,18 @@ u32 dsi_ctrl_hw_22_log_line_count(struct dsi_ctrl_hw *ctrl, bool cmd_mode)
 
 	u32 reg = 0;
 
-	if (cmd_mode && ctrl->te_rd_ptr_reg)
-		reg = readl_relaxed(ctrl->te_rd_ptr_reg);
-	else if (ctrl->line_count_reg)
-		reg = readl_relaxed(ctrl->line_count_reg);
+	if (IS_ERR_OR_NULL(ctrl->mdp_intf_base))
+		return reg;
+
+	if (cmd_mode)
+		reg = readl_relaxed(ctrl->mdp_intf_base + MDP_INTF_TEAR_OFFSET
+					+ MDP_INTF_TEAR_LINE_COUNT_OFFSET);
+	else
+		reg = readl_relaxed(ctrl->mdp_intf_base
+					+ MDP_INTF_LINE_COUNT_OFFSET);
 
 	return reg;
 }
-
 /**
  * dsi_ctrl_hw_22_configure_cmddma_window() - configure DMA window for CMD TX
  * @ctrl:       Pointer to the controller host hardware.

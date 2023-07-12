@@ -297,6 +297,7 @@ static int set_dspp_pcc_feature(struct sde_hw_dspp *hw_dspp,
 		if (hw_cfg->payload_clear) {
 			pcc_cfg = hw_cfg->payload_clear;
 		}
+
 		hw_dspp->ops.setup_pcc(hw_dspp, hw_cfg);
 	}
 	return ret;
@@ -2024,6 +2025,7 @@ int sde_cp_crtc_set_property(struct drm_crtc *crtc,
 	}
 
 	mutex_lock(&sde_crtc->crtc_cp_lock);
+
 	if (!strncmp(property->name, "SDE_DSPP_PCC_V4", sizeof("SDE_DSPP_PCC_V4"))
 		&& pcc_info.crtc_id == crtc->base.id) {
 		pcc_info.pcc_val = val;
@@ -2505,7 +2507,6 @@ static void dspp_ltm_install_property(struct drm_crtc *crtc)
 	u32 version = 0, ltm_sw_fuse = 0;
 
 	kms = get_kms(crtc);
-
 	if (!kms || !kms->hw_sw_fuse) {
 		DRM_ERROR("!kms = %d\n", !kms);
 		return;
@@ -3097,9 +3098,10 @@ static void sde_cp_hist_interrupt_cb(void *arg, int irq_idx)
 			hw_dspp->ops.lock_histogram(hw_dspp, &lock_hist);
 	}
 
+	crtc->hist_irq_idx = irq_idx;
 	/* notify histogram event */
 	sde_crtc_event_queue(crtc_drm, sde_cp_notify_hist_event,
-							&crtc->hist_irq_idx, true);
+						&crtc->hist_irq_idx, true);
 }
 
 static void sde_cp_notify_hist_event(struct drm_crtc *crtc_drm, void *arg)
