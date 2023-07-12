@@ -98,12 +98,14 @@ static int sde_backlight_device_update_status(struct backlight_device *bd)
 		brightness = (brightness <= bd->thermal_brightness_limit) ? brightness : bd->thermal_brightness_limit;
 		bd->props.brightness = brightness;
 	}
+
 	if((display->panel->mi_cfg.panel_id == 0x4D38324100360200||
 		display->panel->mi_cfg.panel_id == 0x4D38324100420200)
 		&& (bd->thermal_brightness_clone_limit != 0)) {
 		brightness = (brightness <= bd->thermal_brightness_clone_limit) ? brightness : bd->thermal_brightness_clone_limit;
 		bd->props.brightness = brightness;
 	}
+
 	if ((bd->props.power != FB_BLANK_UNBLANK) ||
 			(bd->props.state & BL_CORE_FBBLANK) ||
 			(bd->props.state & BL_CORE_SUSPENDED))
@@ -188,6 +190,7 @@ static int sde_backlight_setup(struct sde_connector *c_conn,
 		return -ENODEV;
 	}
 	display_count++;
+
 	rc = sde_backlight_clone_setup(c_conn, dev->dev, c_conn->bl_device);
 	if (rc) {
 		SDE_ERROR("Failed to register backlight_clone_cdev: %ld\n",
@@ -197,6 +200,7 @@ static int sde_backlight_setup(struct sde_connector *c_conn,
 		c_conn->bl_device = NULL;
 		return -ENODEV;
 	}
+
 	return 0;
 }
 
@@ -1284,6 +1288,7 @@ void sde_connector_helper_bridge_enable(struct drm_connector *connector)
 
 	c_conn = to_sde_connector(connector);
 	display = (struct dsi_display *) c_conn->display;
+
 	/*
 	 * Special handling for some panels which need atleast
 	 * one frame to be transferred to GRAM before enabling backlight.
@@ -1303,7 +1308,7 @@ void sde_connector_helper_bridge_enable(struct drm_connector *connector)
 	if (c_conn->bl_device) {
 		c_conn->bl_device->props.power = FB_BLANK_UNBLANK;
 		c_conn->bl_device->props.state &= ~BL_CORE_FBBLANK;
-		if (!(display->panel->cur_mode->dsi_mode_flags & DSI_MODE_FLAG_DMS)
+	if (!(display->panel->cur_mode->dsi_mode_flags & DSI_MODE_FLAG_DMS)
 			&& !(display->panel->cur_mode->dsi_mode_flags & DSI_MODE_FLAG_DMS_FPS)){
 			if(c_conn->bl_device->props.brightness != 0)
 			{
@@ -1365,6 +1370,7 @@ void sde_connector_destroy(struct drm_connector *connector)
 		drm_property_blob_put(c_conn->blob_ext_hdr);
 	if (c_conn->cdev_clone)
 		backlight_clone_cdev_unregister(c_conn->cdev_clone);
+
 	if (c_conn->bl_device)
 		backlight_device_unregister(c_conn->bl_device);
 	drm_connector_unregister(connector);
@@ -1850,12 +1856,10 @@ static int sde_connector_atomic_set_property(struct drm_connector *connector,
 	 * atomic set property framework.
 	 */
 	case CONNECTOR_PROP_BL_SCALE:
-		//c_conn->bl_scale = val;
 		c_conn->bl_scale = MAX_BL_SCALE_LEVEL;
 		c_conn->bl_scale_dirty = true;
 		break;
 	case CONNECTOR_PROP_SV_BL_SCALE:
-		//c_conn->bl_scale_sv = val;
 		c_conn->bl_scale_sv = MAX_SV_BL_SCALE_LEVEL;
 		c_conn->bl_scale_dirty = true;
 		break;
@@ -2327,7 +2331,6 @@ static int _sde_debugfs_conn_esd_test_open(struct inode *inode, struct file *fil
 	file->private_data = inode->i_private;
 	return nonseekable_open(inode, file);
 }
-
 
 static ssize_t _sde_debugfs_conn_esd_test_write(struct file *file,
 			const char __user *p, size_t count, loff_t *ppos)
@@ -2863,7 +2866,7 @@ static int sde_connector_register_esd_irq(struct sde_connector *c_conn)
 					NULL, esd_err_irq_handle,
 					display->panel->mi_cfg.esd_err_irq_gpio_flags_sec,
 					"esd_err_irq_sec", c_conn);
-	
+
 				if (rc || rc2) {
 					SDE_ERROR("register esd irq failed\n");
 				} else {
@@ -3347,7 +3350,6 @@ struct drm_connector *sde_connector_init(struct drm_device *dev,
 			sde_connector_check_status_work);
 
 	sde_connector_register_esd_irq(c_conn);
-
 
 	return &c_conn->base;
 

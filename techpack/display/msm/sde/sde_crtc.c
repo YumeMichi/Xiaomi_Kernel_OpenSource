@@ -2561,7 +2561,6 @@ static void _sde_crtc_set_dim_layer_v1(struct drm_crtc *crtc,
 
 	/* populate from user space */
 	cstate->num_dim_layers = count;
-	cstate->num_dim_layers_bank = count;
 	for (i = 0; i < count; i++) {
 		user_cfg = &dim_layer_v1.layer_cfg[i];
 
@@ -3339,6 +3338,7 @@ static void sde_crtc_atomic_flush(struct drm_crtc *crtc,
 
 	event_thread = &priv->event_thread[crtc->index];
 	idle_time = sde_crtc_get_property(cstate, CRTC_PROP_IDLE_TIMEOUT);
+
 	if (!idle_time && idle_time_enable) {
 		idle_time = IDLE_TIMEOUT_DEFAULT;
 		idle_time_enable = false;
@@ -4863,15 +4863,7 @@ static int _sde_crtc_atomic_check_pstates(struct drm_crtc *crtc,
 			plane, multirect_plane, &cnt);
 	if (rc)
 		return rc;
-#if 0
-	/*
-	 * mi layer check
-	 *   need execute only sde_enc->disp_info.is_primary is true
-	*/
-	rc = sde_crtc_mi_atomic_check(sde_crtc, cstate, (void *)pstates, cnt);
-	if (rc)
-		return rc;
-#endif
+
 	/* assign mixer stages based on sorted zpos property */
 	rc = _sde_crtc_check_zpos(state, sde_crtc, pstates, cstate, mode, cnt);
 	if (rc)
@@ -6485,6 +6477,7 @@ static void __sde_crtc_idle_notify_work(struct kthread_work *work)
 		event.length = sizeof(u32);
 		msm_mode_object_event_notify(&crtc->base, crtc->dev,
 				&event, (u8 *)&ret);
+
 		fm_stat.idle_status = true;
 		SDE_DEBUG("crtc[%d]: idle timeout notified\n", crtc->base.id);
 	}

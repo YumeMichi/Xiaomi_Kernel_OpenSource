@@ -259,8 +259,7 @@ struct sde_crtc_misr_info {
  * @frame_pending : Whether or not an update is pending
  * @frame_events  : static allocation of in-flight frame events
  * @frame_event_list : available frame event list
- * @spin_lock     : spin lock for transaction status, etc...
- * @fevent_spin_lock     : spin lock for frame event
+ * @spin_lock     : spin lock for frame event, transaction status, etc...
  * @event_thread  : Pointer to event handler thread
  * @event_worker  : Event worker queue
  * @event_cache   : Local cache of event worker structures
@@ -288,7 +287,6 @@ struct sde_crtc_misr_info {
  * @ltm_lock        : Spinlock to protect ltm buffer_cnt, hist_en and ltm lists
  * @needs_hw_reset  : Initiate a hw ctl reset
  * @comp_ratio      : Compression ratio
- * @hist_irq_idx    : hist interrupt irq idx
  * @dspp_blob_info  : blob containing dspp hw capability information
  */
 struct sde_crtc {
@@ -458,7 +456,6 @@ struct sde_crtc_mi_state {
  * @ds_cfg: Destination scaler config
  * @scl3_lut_cfg: QSEED3 lut config
  * @new_perf: new performance state being requested
- * @mi_state: Mi part of crtc state
  * @secure_session: Indicates the type of secure session
  */
 struct sde_crtc_state {
@@ -489,10 +486,8 @@ struct sde_crtc_state {
 	struct sde_hw_scaler3_lut_cfg scl3_lut_cfg;
 
 	struct sde_core_perf_params new_perf;
-    /* Mi crtc state */
 	struct sde_crtc_mi_state mi_state;
 	uint32_t num_dim_layers_bank;
-  
 	int secure_session;
 };
 
